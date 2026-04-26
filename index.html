@@ -5,7 +5,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<meta name="version" content="v19.4-1777211166">
+<meta name="version" content="v19.5-1777212807">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -1409,6 +1409,55 @@ input, select, textarea {
   .filter-location-input { font-size: 16px !important; }
   .sheet-miles-input { font-size: 16px !important; }
 }
+
+/* ===== OWNER MOBILE NAV ===== */
+.owner-mobile-nav { display:none; }
+
+/* My Stand slide-up menu */
+.my-stand-menu-overlay {
+  display:none; position:fixed; inset:0;
+  background:rgba(42,31,22,0.5);
+  z-index:600; backdrop-filter:blur(2px);
+}
+.my-stand-menu-overlay.open { display:block; }
+.my-stand-menu {
+  position:fixed; bottom:0; left:0; right:0;
+  z-index:601; background:white;
+  border-radius:20px 20px 0 0;
+  padding:0 0 env(safe-area-inset-bottom);
+  transform:translateY(100%);
+  transition:transform 0.3s ease;
+  box-shadow:0 -4px 24px rgba(42,31,22,0.15);
+}
+.my-stand-menu-overlay.open .my-stand-menu { transform:translateY(0); }
+.my-stand-menu-handle { width:36px; height:4px; background:var(--border); border-radius:2px; margin:12px auto 0; }
+.my-stand-menu-title {
+  font-family:'Playfair Display',serif;
+  font-size:16px; font-weight:700;
+  color:var(--green); padding:12px 20px 8px;
+  border-bottom:1px solid var(--border);
+}
+.my-stand-menu-item {
+  display:flex; align-items:center; gap:14px;
+  padding:14px 20px; cursor:pointer;
+  border-bottom:1px solid var(--cream2);
+  font-family:'DM Sans',sans-serif;
+  font-size:15px; font-weight:500;
+  color:var(--text); transition:background 0.15s;
+}
+.my-stand-menu-item:hover { background:var(--cream); }
+.my-stand-menu-item-icon { font-size:20px; width:28px; text-align:center; }
+.my-stand-menu-signout {
+  display:flex; align-items:center; gap:14px;
+  padding:14px 20px; cursor:pointer;
+  font-family:'DM Sans',sans-serif;
+  font-size:15px; font-weight:500;
+  color:#c0392b;
+}
+
+@media (max-width:768px) {
+  .owner-mobile-nav { display:flex; }
+}
 </style>
 </head>
 <body>
@@ -2332,6 +2381,54 @@ input, select, textarea {
   </div>
 </div>
 
+<!-- Owner Mobile Nav (shown when logged in as owner) -->
+<div class="mobile-nav owner-mobile-nav" id="owner-mobile-nav" style="display:none">
+  <div class="mobile-nav-inner">
+    <button class="mobile-nav-item active" id="omnav-dashboard" onclick="ownerMobileNav('overview')">
+      <svg class="mn-svg" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+      Dashboard
+    </button>
+    <button class="mobile-nav-item" id="omnav-analytics" onclick="ownerMobileNav('analytics')">
+      <svg class="mn-svg" viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+      Analytics
+    </button>
+    <button class="mobile-nav-item" id="omnav-featured" onclick="ownerMobileNav('featured')">
+      <svg class="mn-svg" viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+      Grow
+    </button>
+    <button class="mobile-nav-item" id="omnav-mystand" onclick="openMyStandMenu()">
+      <svg class="mn-svg" viewBox="0 0 24 24"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+      My Stand
+    </button>
+  </div>
+</div>
+
+<!-- My Stand Slide-Up Menu -->
+<div class="my-stand-menu-overlay" id="my-stand-menu-overlay" onclick="closeMyStandMenu(event)">
+  <div class="my-stand-menu">
+    <div class="my-stand-menu-handle"></div>
+    <div class="my-stand-menu-title">🌾 My Stand</div>
+    <div class="my-stand-menu-item" onclick="ownerMobileNav('profile');closeMyStandMenu()">
+      <span class="my-stand-menu-item-icon">🌾</span> Profile
+    </div>
+    <div class="my-stand-menu-item" onclick="ownerMobileNav('news');closeMyStandMenu()">
+      <span class="my-stand-menu-item-icon">🗞</span> News Feed
+    </div>
+    <div class="my-stand-menu-item" onclick="ownerMobileNav('menu');closeMyStandMenu()">
+      <span class="my-stand-menu-item-icon">📋</span> Menu & Products
+    </div>
+    <div class="my-stand-menu-item" onclick="ownerMobileNav('hours');closeMyStandMenu()">
+      <span class="my-stand-menu-item-icon">🕐</span> Hours
+    </div>
+    <div class="my-stand-menu-item" onclick="ownerMobileNav('photos');closeMyStandMenu()">
+      <span class="my-stand-menu-item-icon">📸</span> Photos
+    </div>
+    <div class="my-stand-menu-signout" onclick="doLogout();closeMyStandMenu()">
+      <span class="my-stand-menu-item-icon">🚪</span> Sign Out
+    </div>
+  </div>
+</div>
+
 <!-- Portrait lock overlay -->
 <div class="landscape-warning">
   <div class="landscape-warning-icon">📱</div>
@@ -2425,6 +2522,8 @@ function doLogout() {
   menuItems = [];
   galleryPhotos = [];
   customItems = [];
+  // Restore buyer mobile nav
+  if (isMobile()) showBuyerMobileNav();
   showScreen('landing');
 }
 
@@ -2541,6 +2640,8 @@ async function loginSuccess(user) {
 
   showScreen('dashboard');
   setTimeout(() => updateDashboardStats(user.isGrow), 50);
+  // Switch to owner mobile nav
+  if (isMobile()) showOwnerMobileNav();
 }
 
 
@@ -2567,8 +2668,8 @@ function goMap() {
   if (mapScreen) mapScreen.classList.add('active');
   // Init map if needed
   if (!mapInited) { setTimeout(initMap, 100); mapInited = true; }
-  // Always reinitialize mobile UI — don't rely on isMobile() check
-  // since window.innerWidth may be unreliable during screen transition
+  // Restore buyer nav if no owner logged in
+  if (isMobile() && !currentUser) showBuyerMobileNav();
   setTimeout(() => {
     const topBar = document.getElementById('mobile-top-bar');
     const filterStrip = document.getElementById('mobile-filter-strip');
@@ -5000,6 +5101,54 @@ function zoomToRadius(lat, lng, miles) {
     mainMap.fitBounds(bounds, { animate: true, padding: [4, 4] });
   }, 100);
 }
+// ===================== OWNER MOBILE NAV =====================
+function showOwnerMobileNav() {
+  const buyerNav = document.getElementById('mobile-nav');
+  const ownerNav = document.getElementById('owner-mobile-nav');
+  if (buyerNav) buyerNav.style.display = 'none';
+  if (ownerNav) ownerNav.style.display = 'block';
+}
+
+function showBuyerMobileNav() {
+  const buyerNav = document.getElementById('mobile-nav');
+  const ownerNav = document.getElementById('owner-mobile-nav');
+  if (buyerNav) buyerNav.style.display = 'block';
+  if (ownerNav) ownerNav.style.display = 'none';
+}
+
+function ownerMobileNav(panel) {
+  // Update active state on owner nav buttons
+  document.querySelectorAll('.owner-mobile-nav .mobile-nav-item').forEach(b => b.classList.remove('active'));
+  const mapping = {
+    'overview': 'omnav-dashboard',
+    'analytics': 'omnav-analytics',
+    'featured': 'omnav-featured',
+    'profile': 'omnav-mystand',
+    'news': 'omnav-mystand',
+    'menu': 'omnav-mystand',
+    'hours': 'omnav-mystand',
+    'photos': 'omnav-mystand',
+  };
+  const btnId = mapping[panel];
+  if (btnId) {
+    const btn = document.getElementById(btnId);
+    if (btn) btn.classList.add('active');
+  }
+  // Show dashboard screen and navigate to the right panel
+  showScreen('dashboard');
+  setTimeout(() => showPanel(panel), 50);
+}
+
+function openMyStandMenu() {
+  document.getElementById('my-stand-menu-overlay').classList.add('open');
+}
+
+function closeMyStandMenu(e) {
+  if (!e || e.target === document.getElementById('my-stand-menu-overlay')) {
+    document.getElementById('my-stand-menu-overlay').classList.remove('open');
+  }
+}
+
 // ===================== TOAST =====================
 function showToast(msg) {
   const t = document.getElementById('toast');
