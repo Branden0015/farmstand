@@ -5,7 +5,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<meta name="version" content="v19.8-1777215128">
+<meta name="version" content="v20.0-1777216356">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -2750,58 +2750,114 @@ function toggleStatus() {
 const STANDS = [
   {
     id:1, name:"DEMO - Sunshine Valley Farm", emoji:"🌽", dist:"0.8 mi",
-    address:"W4821 County Road KW, Plymouth, WI 53073",
-    desc:"Family-run farm since 1978. Known for sweet corn, heirloom tomatoes, and fresh-cut sunflowers. Everything picked fresh daily.",
+    address:"W6028 County Road C, Plymouth, WI 53073",
+    lat:43.7558, lng:-88.0012,
+    status:"open", hours:"Mon–Sat 8AM–6PM",
+    desc:"Family-run farm since 1978. We grow sweet corn, heirloom tomatoes, zucchini, and fresh-cut sunflowers. Everything picked fresh daily.",
+    products:["Vegetables","Flowers","Honey"],
     cats:["Vegetables & Fruits","Flowers & Plants","Honey & Preserves"],
-    products:["Sweet Corn","Heirloom Tomatoes","Zucchini","Sunflowers","Raw Honey"],
-    status:"open", hours:"7AM–6PM daily",
-    lat:43.7558, lng:-88.0012
+    customItems:[], photo:null
   },
   {
     id:2, name:"DEMO - Miller's Egg & Dairy", emoji:"🥚", dist:"1.4 mi",
-    address:"N8910 Rolling Meadow Rd, Plymouth, WI 53073",
-    desc:"Pasture-raised eggs, artisan aged cheddars, and fresh farm butter. All animals on 80 acres of grass.",
-    cats:["Eggs & Dairy","Meat & Poultry"],
-    products:["Dozen Eggs – $5","Cheddar Cheese","Farm Butter","Whole Chickens"],
+    address:"N6004 Hillcrest Dr, Plymouth, WI 53073",
+    lat:43.7650, lng:-87.9620,
     status:"open", hours:"8AM–5PM Mon–Sat",
-    lat:43.7650, lng:-87.9620
+    desc:"Pasture-raised eggs, artisan aged cheddars, and fresh farm butter. All animals on 80 acres of grass.",
+    products:["Eggs","Dairy","Cheese"],
+    cats:["Eggs & Dairy","Meat & Poultry"],
+    customItems:[], photo:null
   },
   {
     id:3, name:"DEMO - Honeybee Hollow", emoji:"🍯", dist:"2.1 mi",
-    address:"W5540 Garton Rd, Plymouth, WI 53073",
-    desc:"Three generations of beekeeping. Raw wildflower honey, beeswax candles, and homemade jams from our own berry patches.",
-    cats:["Honey & Preserves","Baked Goods"],
-    products:["Raw Wildflower Honey","Raspberry Jam","Beeswax Candles","Honey Bread"],
+    address:"W5496 Winooski Rd, Plymouth, WI 53073",
+    lat:43.7380, lng:-87.9540,
     status:"closed", hours:"Opens Sat 9AM",
-    lat:43.7380, lng:-87.9540
+    desc:"Three generations of beekeeping. Raw wildflower honey, beeswax candles, and homemade jams.",
+    products:["Honey","Jam","Candles"],
+    cats:["Honey & Preserves","Baked Goods"],
+    customItems:[], photo:null
   },
   {
     id:4, name:"DEMO - Green Acres Bakery Stand", emoji:"🍞", dist:"3.0 mi",
-    address:"N9250 County Road A, Plymouth, WI 53073",
-    desc:"Fresh-baked sourdough, cinnamon rolls, and seasonal pies every Friday and Saturday morning. Locally grown wheat.",
-    cats:["Baked Goods","Honey & Preserves"],
-    products:["Sourdough Loaf – $8","Cinnamon Rolls","Apple Pie","Strawberry Preserves"],
+    address:"W7065 Silver Spring Ln, Plymouth, WI 53073",
+    lat:43.7820, lng:-87.9980,
     status:"open", hours:"Fri–Sat 8AM–Noon",
-    lat:43.7820, lng:-87.9980
+    desc:"Fresh-baked sourdough, cinnamon rolls, and seasonal pies every Friday and Saturday morning.",
+    products:["Bread","Pastries","Pies"],
+    cats:["Baked Goods","Honey & Preserves"],
+    customItems:[], photo:null
   },
   {
     id:5, name:"DEMO - Heritage Harvest Farm", emoji:"🥩", dist:"3.8 mi",
-    address:"W6890 Pioneer Rd, Elkhart Lake, WI 53020",
-    desc:"Grass-fed beef, pastured pork, and free-range poultry. All animals raised humanely on 200 acres. Custom cuts available.",
-    cats:["Meat & Poultry","Eggs & Dairy"],
-    products:["Ground Beef – $7/lb","Pork Chops","Whole Turkey","Farm Eggs"],
+    address:"W6623 County Road Z, Plymouth, WI 53073",
+    lat:43.7920, lng:-87.9380,
     status:"open", hours:"Mon–Sat 9AM–5PM",
-    lat:43.7920, lng:-87.9380
+    desc:"Grass-fed beef, pastured pork, and free-range poultry. All animals raised humanely on 200 acres.",
+    products:["Beef","Pork","Chicken"],
+    cats:["Meat & Poultry","Eggs & Dairy"],
+    customItems:[], photo:null
   },
   {
-    id:6, name:"DEMO - Prairie Bloom Flowers", emoji:"🌻", dist:"4.5 mi",
-    address:"W3990 Lakeview Dr, Sheboygan Falls, WI 53085",
-    desc:"U-pick and pre-cut wildflower bouquets, sunflowers, zinnias, and dahlias. Seasonal wreaths and dried arrangements.",
+    id:6, name:"DEMO - Prairie Bloom Flowers", emoji:"🌻", dist:"4.1 mi",
+    address:"N8200 Lakeview Dr, Elkhart Lake, WI 53020",
+    lat:43.7240, lng:-87.9820,
+    status:"closed", hours:"Wed–Sun 10AM–5PM",
+    desc:"U-pick and pre-cut wildflower bouquets, sunflowers, zinnias, and dahlias.",
+    products:["Flowers","Bouquets","Lavender"],
     cats:["Flowers & Plants","Seasonal/specialty items"],
-    products:["Mixed Bouquet – $12","Sunflower Bunch","U-Pick $8/dozen","Dried Wreaths"],
-    status:"closed", hours:"Thu–Sun 10AM–5PM",
-    lat:43.7240, lng:-87.9820
+    customItems:[], photo:null
   },
+  {
+    id:7, name:"DEMO - Green Mountain Farm Stand", emoji:"🍁", dist:"--",
+    address:"839 VT Route 12 S, Randolph, VT 05060",
+    lat:44.0537, lng:-72.6651,
+    status:"open", hours:"Tue–Sun 9AM–5PM",
+    desc:"Certified organic vegetables, pure Vermont maple syrup, fresh honey, and handmade jams. Family farmed for four generations.",
+    products:["Vegetables","Maple Syrup","Honey"],
+    cats:["Vegetables & Fruits","Honey & Preserves","Baked Goods"],
+    customItems:[], photo:null
+  },
+  {
+    id:8, name:"DEMO - Sweet Georgia Farm Stand", emoji:"🍑", dist:"--",
+    address:"1234 Peach Orchard Rd, Watkinsville, GA 30677",
+    lat:33.8651, lng:-83.4085,
+    status:"open", hours:"Tue–Sun 8AM–6PM",
+    desc:"Fresh Georgia peaches, sweet corn, field tomatoes, and pastured eggs. Pick your own strawberries in season.",
+    products:["Peaches","Corn","Eggs"],
+    cats:["Vegetables & Fruits","Eggs & Dairy","Seasonal/specialty items"],
+    customItems:[], photo:null
+  },
+  {
+    id:9, name:"DEMO - Prairie Wind Farm Stand", emoji:"🌽", dist:"--",
+    address:"2847 NE 126th Ave, Polk City, IA 50226",
+    lat:41.7753, lng:-93.7199,
+    status:"open", hours:"Mon–Sat 7AM–7PM",
+    desc:"Iowa sweet corn, heirloom tomatoes, free range eggs, and grass-fed beef. 200 acre family farm in the heart of Iowa.",
+    products:["Corn","Tomatoes","Beef"],
+    cats:["Vegetables & Fruits","Meat & Poultry","Eggs & Dairy"],
+    customItems:[], photo:null
+  },
+  {
+    id:10, name:"DEMO - Rocky Mountain Farm Stand", emoji:"🏔️", dist:"--",
+    address:"5431 W 52nd Ave, Arvada, CO 80002",
+    lat:39.8028, lng:-105.0875,
+    status:"open", hours:"Wed–Sun 9AM–5PM",
+    desc:"High altitude organic vegetables, Colorado wildflower honey, fresh herbs, and mountain lavender. Certified naturally grown.",
+    products:["Vegetables","Honey","Lavender"],
+    cats:["Vegetables & Fruits","Honey & Preserves","Flowers & Plants"],
+    customItems:[], photo:null
+  },
+  {
+    id:11, name:"DEMO - Willamette Valley Farm Stand", emoji:"🫐", dist:"--",
+    address:"7890 Wallace Rd NW, Salem, OR 97304",
+    lat:44.9429, lng:-123.0858,
+    status:"open", hours:"Thu–Sun 10AM–6PM",
+    desc:"Pacific Northwest berries, hazelnuts, marionberry jam, and organic greens. Regenerative farming in the beautiful Willamette Valley.",
+    products:["Berries","Hazelnuts","Greens"],
+    cats:["Vegetables & Fruits","Honey & Preserves","Baked Goods"],
+    customItems:[], photo:null
+  }
 ];
 
 function initMap() {
@@ -2811,28 +2867,62 @@ function initMap() {
     subdomains: 'abcd', maxZoom: 19
   }).addTo(mainMap);
 
-  // Wire map move to update location if using map center
   mainMap.on('moveend', onMapMove);
-  // Close all popups when clicking empty map area
   mainMap.on('click', closeAllPopups);
 
-  // Layer 1: Try GPS silently on load
-  // If GPS not available falls through to map center (Layer 3)
-  if (navigator.geolocation) {
-    navigator.geolocation.getCurrentPosition(
-      pos => {
-        setUserLocation(pos.coords.latitude, pos.coords.longitude, 'gps');
-        zoomToRadius(pos.coords.latitude, pos.coords.longitude, radiusMiles);
-      },
-      () => tryMapCenter(),
-      { timeout: 4000, maximumAge: 60000 }
-    );
-  } else {
-    tryMapCenter();
-  }
+  // Load live stand data from Supabase then render
+  loadStandsFromDB().then(() => {
+    renderAll();
+    // GPS location
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        pos => {
+          setUserLocation(pos.coords.latitude, pos.coords.longitude, 'gps');
+          zoomToRadius(pos.coords.latitude, pos.coords.longitude, radiusMiles);
+        },
+        () => tryMapCenter(),
+        { timeout: 4000, maximumAge: 60000 }
+      );
+    } else {
+      tryMapCenter();
+    }
+  });
 
   updateFavBadge();
-  renderAll();
+}
+
+async function loadStandsFromDB() {
+  try {
+    const { data, error } = await sb.from('owners')
+      .select('id, farm, description, addr, phone, lat, lng, photo, cats, custom_items, emoji, stand_id')
+      .not('lat', 'is', null)
+      .not('lng', 'is', null)
+      .not('stand_id', 'is', null);
+
+    if (error || !data) return;
+
+    // Merge database stand data into STANDS array
+    data.forEach(owner => {
+      const stand = STANDS.find(s => s.id === owner.stand_id);
+      if (stand && owner.lat && owner.lng) {
+        // Update with live data from database
+        if (owner.farm) stand.name = owner.farm;
+        if (owner.description) stand.desc = owner.description;
+        if (owner.addr) stand.address = owner.addr;
+        if (owner.phone) stand.phone = owner.phone;
+        if (owner.lat) stand.lat = parseFloat(owner.lat);
+        if (owner.lng) stand.lng = parseFloat(owner.lng);
+        if (owner.photo) stand.photo = owner.photo;
+        if (owner.cats && owner.cats.length) stand.cats = owner.cats;
+        if (owner.custom_items && owner.custom_items.length) stand.customItems = owner.custom_items;
+        if (owner.emoji) stand.emoji = owner.emoji;
+      }
+    });
+
+    console.log('✅ Loaded', data.length, 'stands from database');
+  } catch(e) {
+    console.warn('Could not load stands from DB, using defaults:', e);
+  }
 }
 
 function createIcon(emoji, selected, photoUrl) {
@@ -3229,7 +3319,32 @@ async function saveProfile() {
   currentUser.desc = document.getElementById('p-desc').value;
   const selectedCats = [...document.querySelectorAll('.cat-item.on')].map(el => el.textContent.trim());
 
-  // Save to Supabase
+  // Geocode address if it changed and we don't have pending coords
+  let saveLat = pendingLat || currentUser.lat;
+  let saveLng = pendingLng || currentUser.lng;
+
+  if (!pendingLat && currentUser.addr) {
+    try {
+      const res = await fetch(
+        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(currentUser.addr)}&limit=1`,
+        { headers: { 'Accept-Language': 'en' } }
+      );
+      const geoData = await res.json();
+      if (geoData && geoData.length) {
+        saveLat = parseFloat(geoData[0].lat);
+        saveLng = parseFloat(geoData[0].lon);
+        currentUser.lat = saveLat;
+        currentUser.lng = saveLng;
+        // Update the stand immediately
+        if (currentUser.stand_id) {
+          const stand = STANDS.find(s => s.id === currentUser.stand_id);
+          if (stand) { stand.lat = saveLat; stand.lng = saveLng; }
+        }
+      }
+    } catch(e) { console.warn('Geocode error:', e); }
+  }
+
+  // Save to Supabase with geocoded coordinates
   try {
     await sb.from('owners').update({
       farm: currentUser.farm,
@@ -3239,8 +3354,8 @@ async function saveProfile() {
       description: currentUser.desc,
       cats: selectedCats,
       custom_items: customItems,
-      lat: pendingLat || currentUser.lat,
-      lng: pendingLng || currentUser.lng,
+      lat: saveLat,
+      lng: saveLng,
     }).eq('id', currentUser.id);
   } catch(e) { console.warn('Profile save error:', e); }
 
@@ -3251,10 +3366,11 @@ async function saveProfile() {
       stand.name = currentUser.farm;
       stand.desc = currentUser.desc;
       stand.address = currentUser.addr;
+      stand.lat = saveLat;
+      stand.lng = saveLng;
       stand.customItems = customItems;
       stand.products = [...stand.products.filter(p => !stand._customAdded), ...customItems];
       stand._customAdded = true;
-      if (pendingLat && pendingLng) { stand.lat = pendingLat; stand.lng = pendingLng; }
       if (menuItems.length) {
         const grouped = {};
         menuItems.forEach(item => {
