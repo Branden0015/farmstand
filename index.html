@@ -5,7 +5,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<meta name="version" content="v19.1-1777208258">
+<meta name="version" content="v19.2-1777208942">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -2442,31 +2442,8 @@ function switchLandingTab(tab) {
   document.getElementById('panel-signup').classList.toggle('active', tab==='signup');
 }
 
-function doLogin() {
-  const email = document.getElementById('login-email').value.trim().toLowerCase();
-  const pw = document.getElementById('login-pw').value;
-  const user = DEMO_USERS.find(u => u.email === email && u.pw === pw);
-  if (!user) { document.getElementById('login-err').classList.add('show'); return; }
-  document.getElementById('login-err').classList.remove('show');
-  loginSuccess(user);
-}
 
-function doSignup() {
-  const name = document.getElementById('su-name').value.trim();
-  const email = document.getElementById('su-email').value.trim();
-  const pw = document.getElementById('su-pw').value;
-  const farm = document.getElementById('su-farm').value.trim();
-  if (!name || !email || !pw || !farm || pw.length < 6) {
-    document.getElementById('su-err').classList.add('show');
-    document.getElementById('su-err').textContent = pw.length < 6 && pw ? 'Password must be at least 6 characters.' : 'Please fill in all fields.';
-    return;
-  }
-  document.getElementById('su-err').classList.remove('show');
-  const initials = name.split(' ').map(n=>n[0]).join('').slice(0,2).toUpperCase();
-  const newUser = { email, pw, name, farm, initials };
-  DEMO_USERS.push(newUser);
-  loginSuccess(newUser);
-}
+
 
 async function loginSuccess(user) {
   currentUser = user;
