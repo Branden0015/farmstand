@@ -2,6 +2,10 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<meta name="version" content="v19.0-1777206932">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -2856,6 +2860,8 @@ function renderMarkersSmart(stands) {
 }
 
 function selectStand(id) {
+  // Close all open popups before opening the new one
+  if (mainMap) mainMap.closePopup();
   selectedId = id;
   const s = STANDS.find(x=>x.id===id);
   if (!s) return;
@@ -3449,13 +3455,41 @@ function addGroceryItem() {
   input.focus();
 }
 
-function quickAdd(item) { addItem(item); }
+function quickAdd(item) {
+  if (!item || !item.trim()) return;
+  addItem(item.trim());
+}
 
 function addItem(name) {
   const key = name.toLowerCase();
   const standId = findStandForItem(key);
   groceryList.push({ name, standId, id: Date.now() + Math.random() });
+
+  // Update desktop grocery panel
   renderGroceryList();
+
+  // Update mobile grocery screen immediately — whether visible or not
+  renderMobileGrocery();
+
+  // Update the grocery nav badge so user sees item count right away
+  updateGroceryBadge();
+
+  // Show a quick toast confirmation
+  showToast(`✅ "${name}" added to your list!`);
+}
+
+function updateGroceryBadge() {
+  const count = groceryList.length;
+  // Update desktop grocery count in collapsible header
+  const groceryCount = document.getElementById('grocery-count');
+  if (groceryCount) groceryCount.textContent = count;
+  // Update mobile nav badge if we add one
+  const mnavGrocery = document.getElementById('mnav-grocery');
+  if (mnavGrocery && count > 0) {
+    // Add count to the List button label
+    const icon = mnavGrocery.querySelector('.mn-svg');
+    mnavGrocery.innerHTML = (icon ? icon.outerHTML : '') + `List${count > 0 ? ' ('+count+')' : ''}`;
+  }
 }
 
 function findStandForItem(key) {
