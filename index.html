@@ -5,7 +5,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<meta name="version" content="v20.1-1777218108">
+<meta name="version" content="v20.2-1777243849">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -1460,6 +1460,31 @@ input, select, textarea {
 @media (max-width:768px) {
   .owner-mobile-nav { display:flex; }
 }
+
+/* ===== SEARCH THIS AREA BUTTON ===== */
+.search-this-area-btn {
+  display:none;
+  position:absolute;
+  bottom:20px; left:50%;
+  transform:translateX(-50%);
+  z-index:450;
+  background:white;
+  border:none;
+  border-radius:24px;
+  padding:10px 20px;
+  font-family:'DM Sans',sans-serif;
+  font-size:14px;
+  font-weight:600;
+  color:var(--text);
+  box-shadow:0 2px 16px rgba(0,0,0,0.2);
+  cursor:pointer;
+  white-space:nowrap;
+  align-items:center;
+  gap:8px;
+  transition:all 0.2s;
+}
+.search-this-area-btn:hover { background:var(--green); color:white; }
+.search-this-area-btn.visible { display:flex; }
 </style>
 </head>
 <body>
@@ -1627,14 +1652,15 @@ input, select, textarea {
             <div class="radius-location-dot"></div>
             <span id="radius-location-text">Detecting your location...</span>
           </div>
-          <div class="chips">
-            <div class="chip active" onclick="setFilter('all',this)">All</div>
-            <div class="chip" onclick="setFilter('Vegetables & Fruits',this)">🥦 Veggies</div>
-            <div class="chip" onclick="setFilter('Meat & Poultry',this)">🥩 Meat</div>
-            <div class="chip" onclick="setFilter('Eggs & Dairy',this)">🥚 Dairy</div>
-            <div class="chip" onclick="setFilter('Baked Goods',this)">🍞 Baked</div>
-            <div class="chip" onclick="setFilter('Honey & Preserves',this)">🍯 Honey</div>
-            <div class="chip" onclick="setFilter('Flowers & Plants',this)">🌻 Flowers</div>
+          <!-- Filter strip matching mobile style -->
+          <div style="display:flex;gap:6px;flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;padding:4px 0;-webkit-overflow-scrolling:touch">
+            <div class="chip active" onclick="setFilter('all',this)" style="flex-shrink:0;padding:6px 14px;border-radius:20px;font-size:13px;font-weight:600;cursor:pointer;background:var(--green);color:white;border:1.5px solid var(--green);white-space:nowrap">All</div>
+            <div class="chip" onclick="setFilter('Vegetables & Fruits',this)" style="flex-shrink:0;padding:6px 14px;border-radius:20px;font-size:13px;font-weight:600;cursor:pointer;background:white;color:var(--text);border:1.5px solid var(--border);white-space:nowrap;box-shadow:0 1px 4px rgba(0,0,0,0.08)">🥦 Veggies</div>
+            <div class="chip" onclick="setFilter('Meat & Poultry',this)" style="flex-shrink:0;padding:6px 14px;border-radius:20px;font-size:13px;font-weight:600;cursor:pointer;background:white;color:var(--text);border:1.5px solid var(--border);white-space:nowrap;box-shadow:0 1px 4px rgba(0,0,0,0.08)">🥩 Meat</div>
+            <div class="chip" onclick="setFilter('Eggs & Dairy',this)" style="flex-shrink:0;padding:6px 14px;border-radius:20px;font-size:13px;font-weight:600;cursor:pointer;background:white;color:var(--text);border:1.5px solid var(--border);white-space:nowrap;box-shadow:0 1px 4px rgba(0,0,0,0.08)">🥚 Dairy</div>
+            <div class="chip" onclick="setFilter('Baked Goods',this)" style="flex-shrink:0;padding:6px 14px;border-radius:20px;font-size:13px;font-weight:600;cursor:pointer;background:white;color:var(--text);border:1.5px solid var(--border);white-space:nowrap;box-shadow:0 1px 4px rgba(0,0,0,0.08)">🍞 Baked</div>
+            <div class="chip" onclick="setFilter('Honey & Preserves',this)" style="flex-shrink:0;padding:6px 14px;border-radius:20px;font-size:13px;font-weight:600;cursor:pointer;background:white;color:var(--text);border:1.5px solid var(--border);white-space:nowrap;box-shadow:0 1px 4px rgba(0,0,0,0.08)">🍯 Honey</div>
+            <div class="chip" onclick="setFilter('Flowers & Plants',this)" style="flex-shrink:0;padding:6px 14px;border-radius:20px;font-size:13px;font-weight:600;cursor:pointer;background:white;color:var(--text);border:1.5px solid var(--border);white-space:nowrap;box-shadow:0 1px 4px rgba(0,0,0,0.08)">🌻 Flowers</div>
           </div>
         </div>
         <div class="stands-list" id="stands-list"></div>
@@ -1718,6 +1744,11 @@ input, select, textarea {
     <div class="map-container">
       <div id="map"></div>
       <button class="locate-btn desktop-only" onclick="locateUser()" title="My location">◎</button>
+
+      <!-- Search This Area button -->
+      <button class="search-this-area-btn" id="search-this-area-btn" onclick="searchThisArea()">
+        🔍 Search This Area
+      </button>
 
       <!-- Mobile stops tab (right side pull tab) -->
       <div class="mobile-stops-tab" id="mobile-stops-tab" style="display:none">
@@ -2351,7 +2382,7 @@ input, select, textarea {
             autocomplete="off" autocorrect="off">
           <div class="location-suggestions" id="filter-location-suggestions" style="display:none"></div>
         </div>
-        <button class="filter-sheet-location-btn" onclick="locateUser()">📍 Use GPS</button>
+        <button class="filter-sheet-location-btn" onclick="useGPSLocation()">📍 Use GPS</button>
       </div>
 
       <!-- Radius -->
@@ -5168,15 +5199,89 @@ function locateUser() {
 
 // Listen for map moves — update to map center if using map method
 function onMapMove() {
-  if (locationMethod === 'map' || (!userLat && !userLng)) {
-    if (mainMap) {
-      const c = mainMap.getCenter();
-      userLat = c.lat;
-      userLng = c.lng;
-      updateStandDistances();
-      renderAll();
+  // Show "Search This Area" button when map is panned away from search center
+  if (mainMap) {
+    const center = mainMap.getCenter();
+    const btn = document.getElementById('search-this-area-btn');
+    if (btn) {
+      // Show button if map center has moved significantly from search center
+      if (userLat && userLng) {
+        const dist = distanceMiles(userLat, userLng, center.lat, center.lng);
+        if (dist > radiusMiles * 0.3) {
+          btn.classList.add('visible');
+        } else {
+          btn.classList.remove('visible');
+        }
+      } else {
+        // No search center set yet — show button to let user set one
+        btn.classList.add('visible');
+      }
     }
   }
+}
+
+function searchThisArea() {
+  if (!mainMap) return;
+  const center = mainMap.getCenter();
+  userLat = center.lat;
+  userLng = center.lng;
+  locationMethod = 'map';
+  updateStandDistances();
+
+  // Update location labels
+  const locName = 'Map center area';
+  currentLocationName = locName;
+  updateLocationLabels(locName);
+
+  // Try to reverse geocode the location name
+  fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${center.lat}&lon=${center.lng}`)
+    .then(r => r.json())
+    .then(data => {
+      const name = data.address?.city || data.address?.town || data.address?.village || data.address?.county || 'This area';
+      const state = data.address?.state_code || '';
+      const fullName = name + (state ? ', ' + state : '');
+      currentLocationName = fullName;
+      updateLocationLabels(fullName);
+      const filterInput = document.getElementById('filter-location-input');
+      if (filterInput) filterInput.value = fullName;
+    }).catch(() => {});
+
+  // Hide the button
+  const btn = document.getElementById('search-this-area-btn');
+  if (btn) btn.classList.remove('visible');
+
+  // Re-render with new center
+  renderAll();
+  if (typeof mobileViewMode !== 'undefined' && mobileViewMode === 'list') renderMobileListView();
+  showToast('🔍 Showing stands in this area');
+}
+
+function useGPSLocation() {
+  if (!navigator.geolocation) {
+    showToast('⚠️ GPS not available on this device');
+    return;
+  }
+  showToast('📍 Getting your location...');
+  navigator.geolocation.getCurrentPosition(
+    pos => {
+      const lat = pos.coords.latitude;
+      const lng = pos.coords.longitude;
+      setUserLocation(lat, lng, 'gps');
+      if (mainMap) mainMap.setView([lat, lng], 11, { animate: true });
+      zoomToRadius(lat, lng, radiusMiles);
+      renderAll();
+      // Hide search this area button
+      const btn = document.getElementById('search-this-area-btn');
+      if (btn) btn.classList.remove('visible');
+      // Close filter sheet if open
+      closeFilterSheet();
+      showToast('📍 Centered on your location!');
+    },
+    err => {
+      showToast('⚠️ Could not get your location — please enable GPS');
+    },
+    { timeout: 8000, enableHighAccuracy: true }
+  );
 }
 
 // ===================== MOBILE FILTER SHEET =====================
