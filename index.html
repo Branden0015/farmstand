@@ -786,22 +786,30 @@ body { font-family: 'DM Sans', sans-serif; background: var(--cream); color: var(
 .mobile-stops-handle {
   background:var(--green);
   color:white;
-  padding:16px 10px 16px 14px;
-  border-radius:14px 0 0 14px;
+  padding:12px 8px 12px 12px;
+  border-radius:12px 0 0 12px;
   cursor:pointer;
-  font-size:14px;
-  font-weight:700;
-  writing-mode:vertical-rl;
-  text-orientation:mixed;
-  transform:rotate(180deg);
-  letter-spacing:0.06em;
   box-shadow:-3px 2px 10px rgba(0,0,0,0.25);
   display:flex;
+  flex-direction:column;
   align-items:center;
-  gap:6px;
-  min-height:90px;
-  width:44px;
-  min-width:44px;
+  justify-content:center;
+  gap:5px;
+  width:48px;
+  min-height:80px;
+}
+.mobile-stops-handle-icon {
+  font-size:20px;
+  line-height:1;
+}
+.mobile-stops-handle-text {
+  font-size:9px;
+  font-weight:700;
+  letter-spacing:0.05em;
+  text-transform:uppercase;
+  text-align:center;
+  line-height:1.2;
+  writing-mode:horizontal-tb;
 }
 .mobile-stops-badge {
   background:var(--orange);
@@ -815,8 +823,6 @@ body { font-family: 'DM Sans', sans-serif; background: var(--cream); color: var(
   align-items:center;
   justify-content:center;
   padding:0 3px;
-  writing-mode:horizontal-tb;
-  transform:rotate(180deg);
 }
 .mobile-stops-panel {
   position:fixed;
@@ -1695,7 +1701,8 @@ input, select, textarea {
       <!-- Mobile stops tab (right side pull tab) -->
       <div class="mobile-stops-tab" id="mobile-stops-tab" style="display:none">
         <div class="mobile-stops-handle" onclick="toggleMobileStops()">
-          📍 Stops
+          <div class="mobile-stops-handle-icon">📍</div>
+          <div class="mobile-stops-handle-text">Stops</div>
           <span class="mobile-stops-badge" id="mobile-stops-badge">0</span>
         </div>
       </div>
@@ -2593,9 +2600,19 @@ function showScreen(id) {
   document.getElementById('screen-'+id).classList.add('active');
   if (id === 'map' && !mapInited) { setTimeout(initMap, 100); mapInited = true; }
   if (id === 'map' && mainMap) { setTimeout(() => mainMap.invalidateSize(), 100); }
+  if (id === 'map' && isMobile()) { setTimeout(initMobileUI, 150); }
 }
 
-function goMap() { showScreen('map'); }
+function goMap() {
+  showScreen('map');
+  // On mobile make sure everything is properly initialized
+  if (isMobile()) {
+    setTimeout(() => {
+      initMobileUI();
+      if (mainMap) mainMap.invalidateSize();
+    }, 200);
+  }
+}
 function goLanding() { showScreen('landing'); }
 
 // Start on map — initialize immediately
@@ -4900,16 +4917,17 @@ function applyFilterSheet() {
 // ===================== ZOOM TO RADIUS =====================
 function zoomToRadius(lat, lng, miles) {
   if (!mainMap || !lat || !lng) return;
-  // 1 degree latitude = 69.0 miles exactly
-  // Use 0.92 multiplier to fit radius snugly without extra space
-  const latDelta = (miles / 69.0) * 0.92;
-  const lngDelta = (miles / (69.0 * Math.cos(lat * Math.PI / 180))) * 0.92;
-  const bounds = [
-    [lat - latDelta, lng - lngDelta],
-    [lat + latDelta, lng + lngDelta]
-  ];
-  mainMap.fitBounds(bounds, { animate: true, padding: [4, 4] });
-  setTimeout(() => mainMap.invalidateSize(), 300);
+  // Small delay to ensure map is fully rendered before fitting bounds
+  setTimeout(() => {
+    mainMap.invalidateSize();
+    const latDelta = (miles / 69.0) * 0.92;
+    const lngDelta = (miles / (69.0 * Math.cos(lat * Math.PI / 180))) * 0.92;
+    const bounds = [
+      [lat - latDelta, lng - lngDelta],
+      [lat + latDelta, lng + lngDelta]
+    ];
+    mainMap.fitBounds(bounds, { animate: true, padding: [4, 4] });
+  }, 100);
 }
 // ===================== TOAST =====================
 function showToast(msg) {
