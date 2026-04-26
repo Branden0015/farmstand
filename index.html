@@ -2702,7 +2702,7 @@ const STANDS = [
 ];
 
 function initMap() {
-  mainMap = L.map('map', { zoomControl: true }).setView([43.755, -87.980], 12);
+  mainMap = L.map('map', { zoomControl: true, closePopupOnClick: false }).setView([43.755, -87.980], 12);
   L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
     attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> © <a href="https://carto.com/">CARTO</a>',
     subdomains: 'abcd', maxZoom: 19
@@ -2810,7 +2810,7 @@ function renderMarkers(stands) {
           <button class="pbtn pbtn-stop${manualStops.has(s.id)?' added':''}" id="popup-stop-${s.id}" onclick="toggleStop(${s.id})">${manualStops.has(s.id)?'📍 Added':'📍 Add Stop'}</button>
           <button class="pbtn pbtn-fav" id="popup-fav-${s.id}" onclick="toggleFav(${s.id});updatePopupFavBtn(${s.id})">${favorites.has(s.id)?'❤️ Saved':'🤍 Save'}</button>
         </div>
-      </div></div>`, { maxWidth:300, minWidth:290 });
+      </div></div>`, { maxWidth:300, minWidth:290, autoClose: false, closeOnClick: false });
     marker.on('click', () => selectStand(s.id));
     mapMarkers[s.id] = marker;
   });
@@ -2834,23 +2834,16 @@ function getDir(id) {
 }
 
 function setFilter(cat, el) {
-  if (cat === 'all') {
-    // All always resets everything
+  if (cat === 'all' || activeFilter === cat) {
+    // Clicking All OR clicking the already-active filter — reset to All
     document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
-    el.classList.add('active');
+    document.querySelector('.chip')?.classList.add('active');
     activeFilter = 'all';
   } else {
-    const isActive = el.classList.contains('active');
+    // Activate this filter
     document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
-    if (isActive) {
-      // Toggle off — revert to All
-      activeFilter = 'all';
-      const allChip = document.querySelector('.chip');
-      if (allChip) allChip.classList.add('active');
-    } else {
-      el.classList.add('active');
-      activeFilter = cat;
-    }
+    el.classList.add('active');
+    activeFilter = cat;
   }
   renderAll();
 }
@@ -4173,21 +4166,17 @@ function switchToMapAndSelect(standId) {
 
 function mobileSetFilter(cat, btn) {
   const stripBtns = document.querySelectorAll('.strip-btn[id^="strip-"]');
-  if (cat === 'all') {
+  if (cat === 'all' || activeFilter === cat) {
+    // Clicking All OR clicking the already-active filter — reset to All
     stripBtns.forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
+    const allBtn = document.getElementById('strip-all');
+    if (allBtn) allBtn.classList.add('active');
     activeFilter = 'all';
   } else {
-    const isActive = btn.classList.contains('active');
+    // Activate this filter
     stripBtns.forEach(b => b.classList.remove('active'));
-    if (isActive) {
-      activeFilter = 'all';
-      const allBtn = document.getElementById('strip-all');
-      if (allBtn) allBtn.classList.add('active');
-    } else {
-      btn.classList.add('active');
-      activeFilter = cat;
-    }
+    btn.classList.add('active');
+    activeFilter = cat;
   }
   renderAll();
   if (typeof mobileViewMode !== 'undefined' && mobileViewMode === 'list') renderMobileListView();
