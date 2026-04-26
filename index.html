@@ -5,7 +5,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<meta name="version" content="v19.6-1777214414">
+<meta name="version" content="v19.7-1777214831">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -49,6 +49,8 @@ body { font-family: 'DM Sans', sans-serif; background: var(--cream); color: var(
 /* ===================== SCREENS ===================== */
 .screen { display: none; flex-direction: column; flex: 1; overflow: hidden; min-height: 0; }
 .screen.active { display: flex; }
+/* Map screen always stays rendered so Leaflet never loses its container */
+#screen-map { display: flex !important; }
 
 /* ===================== LANDING ===================== */
 #screen-landing {
@@ -2648,43 +2650,42 @@ async function loginSuccess(user) {
 
 // ===================== NAVIGATION =====================
 function showScreen(id) {
-  // Hide all screens
+  // Hide all screens EXCEPT map (always keep map in DOM for Leaflet)
   document.querySelectorAll('.screen').forEach(s => {
+    if (s.id === 'screen-map') return; // never hide map screen
     s.classList.remove('active');
-    // Force landing screen hidden since it's position:fixed
     if (s.id === 'screen-landing') s.style.display = 'none';
   });
+
   // Show target screen
   const target = document.getElementById('screen-' + id);
-  if (target) {
-    target.classList.add('active');
-    if (id === 'screen-landing' || id === 'landing') target.style.display = 'flex';
-  }
+  if (!target) return;
+
   if (id === 'map') {
+    // Map is always visible — just hide landing overlay
+    const landing = document.getElementById('screen-landing');
+    if (landing) { landing.classList.remove('active'); landing.style.display = 'none'; }
+    // Hide other screens
+    document.querySelectorAll('.screen:not(#screen-map)').forEach(s => s.classList.remove('active'));
+    document.getElementById('screen-map').classList.add('active');
     if (!mapInited) { setTimeout(initMap, 100); mapInited = true; }
-    // Multiple invalidateSize calls to ensure Leaflet recalculates correctly
     if (mainMap) {
-      setTimeout(() => { mainMap.invalidateSize(); }, 100);
-      setTimeout(() => { mainMap.invalidateSize(); renderAll(); }, 300);
+      setTimeout(() => mainMap.invalidateSize(), 50);
+      setTimeout(() => mainMap.invalidateSize(), 250);
     }
-    if (isMobile()) setTimeout(initMobileUI, 150);
+    if (isMobile()) setTimeout(initMobileUI, 100);
+  } else if (id === 'landing') {
+    target.classList.add('active');
+    target.style.display = 'flex';
+  } else {
+    target.classList.add('active');
   }
 }
 
 function goMap() {
-  // Hide landing screen explicitly (position:fixed needs direct style override)
-  const landing = document.getElementById('screen-landing');
-  if (landing) { landing.classList.remove('active'); landing.style.display = 'none'; }
+  showScreen('map');
 
-  // Hide all screens, show map
-  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-  const mapScreen = document.getElementById('screen-map');
-  if (mapScreen) { mapScreen.classList.add('active'); mapScreen.style.display = 'flex'; }
-
-  // Init map if first time
-  if (!mapInited) { setTimeout(initMap, 200); mapInited = true; }
-
-  // Restore correct mobile nav based on login state
+  // Restore correct mobile nav
   if (window.innerWidth <= 768) {
     if (currentUser) showOwnerMobileNav();
     else showBuyerMobileNav();
@@ -2698,13 +2699,6 @@ function goMap() {
   document.querySelectorAll('.mobile-only').forEach(el => {
     if (el.tagName === 'BUTTON') el.style.display = window.innerWidth <= 768 ? 'flex' : 'none';
   });
-
-  // Critical: invalidate map size multiple times to fix offset/blank map issues
-  if (mainMap) {
-    setTimeout(() => mainMap.invalidateSize(), 50);
-    setTimeout(() => mainMap.invalidateSize(), 200);
-    setTimeout(() => { mainMap.invalidateSize(); renderAll(); }, 450);
-  }
 }
 function goLanding() { showScreen('landing'); }
 
