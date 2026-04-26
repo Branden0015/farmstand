@@ -5,7 +5,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<meta name="version" content="v20.0-1777216356">
+<meta name="version" content="v20.1-1777218108">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -1419,12 +1419,12 @@ input, select, textarea {
 .my-stand-menu-overlay {
   display:none; position:fixed; inset:0;
   background:rgba(42,31,22,0.5);
-  z-index:600; backdrop-filter:blur(2px);
+  z-index:1000; backdrop-filter:blur(2px);
 }
 .my-stand-menu-overlay.open { display:block; }
 .my-stand-menu {
   position:fixed; bottom:0; left:0; right:0;
-  z-index:601; background:white;
+  z-index:1001; background:white;
   border-radius:20px 20px 0 0;
   padding:0 0 env(safe-area-inset-bottom);
   transform:translateY(100%);
@@ -2896,22 +2896,50 @@ async function loadStandsFromDB() {
     const { data, error } = await sb.from('owners')
       .select('id, farm, description, addr, phone, lat, lng, photo, cats, custom_items, emoji, stand_id')
       .not('lat', 'is', null)
-      .not('lng', 'is', null)
-      .not('stand_id', 'is', null);
+      .not('lng', 'is', null);
 
     if (error || !data) return;
 
-    // Merge database stand data into STANDS array
     data.forEach(owner => {
-      const stand = STANDS.find(s => s.id === owner.stand_id);
-      if (stand && owner.lat && owner.lng) {
-        // Update with live data from database
+      if (!owner.lat || !owner.lng) return;
+      const lat = parseFloat(owner.lat);
+      const lng = parseFloat(owner.lng);
+
+      // Try to find existing stand by stand_id
+      let stand = owner.stand_id ? STANDS.find(s => s.id === owner.stand_id) : null;
+
+      // If no stand found but owner has valid coords, add as new stand
+      if (!stand && owner.farm && owner.lat && owner.lng) {
+        // Check if already added
+        const exists = STANDS.find(s => s.name === owner.farm);
+        if (!exists) {
+          stand = {
+            id: 1000 + STANDS.length,
+            name: owner.farm || 'Farm Stand',
+            emoji: owner.emoji || '🌾',
+            dist: '--',
+            address: owner.addr || '',
+            lat, lng,
+            status: 'open',
+            hours: 'See profile',
+            desc: owner.description || '',
+            products: [],
+            cats: owner.cats || [],
+            customItems: owner.custom_items || [],
+            photo: owner.photo || null
+          };
+          STANDS.push(stand);
+        }
+      }
+
+      // Update stand with live DB data
+      if (stand) {
         if (owner.farm) stand.name = owner.farm;
         if (owner.description) stand.desc = owner.description;
         if (owner.addr) stand.address = owner.addr;
         if (owner.phone) stand.phone = owner.phone;
-        if (owner.lat) stand.lat = parseFloat(owner.lat);
-        if (owner.lng) stand.lng = parseFloat(owner.lng);
+        stand.lat = lat;
+        stand.lng = lng;
         if (owner.photo) stand.photo = owner.photo;
         if (owner.cats && owner.cats.length) stand.cats = owner.cats;
         if (owner.custom_items && owner.custom_items.length) stand.customItems = owner.custom_items;
@@ -2919,7 +2947,7 @@ async function loadStandsFromDB() {
       }
     });
 
-    console.log('✅ Loaded', data.length, 'stands from database');
+    console.log('✅ Loaded', data.length, 'owners from database, total stands:', STANDS.length);
   } catch(e) {
     console.warn('Could not load stands from DB, using defaults:', e);
   }
