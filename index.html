@@ -5,7 +5,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<meta name="version" content="v20.4-1777245642">
+<meta name="version" content="v20.5-1777246228">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -489,6 +489,7 @@ body { font-family: 'DM Sans', sans-serif; background: var(--cream); color: var(
   background: rgba(255,255,255,0.15);
   font-size: 40px; display: flex; align-items: center; justify-content: center;
   border: 3px solid rgba(255,255,255,0.3); flex-shrink: 0;
+  overflow: hidden;
 }
 .profile-hero-name { font-family: 'Playfair Display', serif; font-size: 22px; font-weight: 700; color: white; line-height: 1.2; margin-bottom: 4px; }
 .profile-hero-addr { font-size: 12px; color: rgba(255,255,255,0.72); margin-bottom: 6px; }
@@ -2977,6 +2978,29 @@ async function loadStandsFromDB() {
     });
 
     console.log('✅ Loaded', data.length, 'owners from database, total stands:', STANDS.length);
+
+    // Load gallery photos for all stands
+    try {
+      const { data: allPhotos } = await sb.from('gallery_photos')
+        .select('owner_id, photo_url, sort_order')
+        .order('sort_order');
+      if (allPhotos && allPhotos.length) {
+        // Map owner_id to stand
+        const ownerToStand = {};
+        data.forEach(owner => {
+          const stand = STANDS.find(s => s.name === owner.farm || s.id === owner.stand_id);
+          if (stand) ownerToStand[owner.id] = stand;
+        });
+        allPhotos.forEach(p => {
+          const stand = ownerToStand[p.owner_id];
+          if (stand) {
+            if (!stand.galleryPhotos) stand.galleryPhotos = [];
+            stand.galleryPhotos.push(p.photo_url);
+          }
+        });
+      }
+    } catch(e) { console.warn('Could not load gallery photos:', e); }
+
   } catch(e) {
     console.warn('Could not load stands from DB, using defaults:', e);
   }
@@ -3609,21 +3633,52 @@ const STAND_HOURS_DISPLAY = {
   6: [['Monday','Closed',''],['Tuesday','Closed',''],['Wednesday','Closed',''],['Thursday','10:00 AM','5:00 PM'],['Friday','10:00 AM','5:00 PM'],['Saturday','10:00 AM','5:00 PM'],['Sunday','10:00 AM','5:00 PM']],
 };
 
-function openProfile(id) {
+async function openProfile(id) {
   const s = STANDS.find(x=>x.id===id);
   if (!s) return;
   currentProfileId = id;
 
-  document.getElementById('ph-avi').textContent = s.emoji;
+  // Show emoji first while loading
+  const aviEl = document.getElementById('ph-avi');
+  if (aviEl) {
+    if (s.photo) {
+      aviEl.innerHTML = `<img src="${s.photo}" style="width:100%;height:100%;object-fit:cover;border-radius:50%" onerror="this.parentElement.textContent='${s.emoji}'">`;
+    } else {
+      aviEl.textContent = s.emoji;
+    }
+  }
   document.getElementById('ph-name').textContent = s.name;
   document.getElementById('ph-addr').textContent = '📍 ' + s.address + '  ·  ' + s.hours;
   document.getElementById('ph-badges').innerHTML = s.cats.map(c=>`<span class="profile-hero-badge">${c}</span>`).join('');
 
   switchProfileTab('menu', document.querySelector('.profile-tab'));
   updateProfileFavBtn();
-
   document.getElementById('profile-overlay').classList.add('open');
   document.body.style.overflow = 'hidden';
+
+  // Load fresh data from DB in background
+  try {
+    const { data: ownerData } = await sb.from('owners')
+      .select('id, photo, description')
+      .eq('stand_id', id)
+      .maybeSingle();
+
+    if (ownerData) {
+      // Update profile photo with fresh DB version
+      if (ownerData.photo && aviEl) {
+        s.photo = ownerData.photo;
+        aviEl.innerHTML = `<img src="${ownerData.photo}" style="width:100%;height:100%;object-fit:cover;border-radius:50%" onerror="this.parentElement.textContent='${s.emoji}'">`;
+      }
+      // Load gallery photos fresh
+      const { data: photos } = await sb.from('gallery_photos')
+        .select('photo_url, sort_order')
+        .eq('owner_id', ownerData.id)
+        .order('sort_order');
+      if (photos && photos.length) {
+        s.galleryPhotos = photos.map(p => p.photo_url);
+      }
+    }
+  } catch(e) { /* use cached data */ }
 }
 
 function closeProfile(e) {
@@ -4959,32 +5014,49 @@ function loadCustomItemsForUser() {
 // ===================== PHOTO UPLOADS =====================
 let galleryPhotos = []; // array of base64 data URLs
 
-function handlePhotoUpload(event) {
+async function handlePhotoUpload(event) {
   const file = event.target.files[0];
   if (!file) return;
   if (file.size > 5 * 1024 * 1024) { showToast('⚠️ Photo must be under 5MB'); return; }
-  const reader = new FileReader();
-  reader.onload = async e => {
-    const dataUrl = e.target.result;
-    if (currentUser) {
-      currentUser.photo = dataUrl;
-      // Save to Supabase
-      try { await sb.from('owners').update({ photo: dataUrl }).eq('id', currentUser.id); } catch(err) {}
-      // Update stand map pin
-      if (currentUser.stand_id) {
-        const stand = STANDS.find(s => s.id === currentUser.stand_id);
-        if (stand) {
-          stand.photo = dataUrl;
-          if (mainMap) { Object.values(mapMarkers).forEach(m => mainMap.removeLayer(m)); mapMarkers = {}; renderMarkers(getFiltered()); }
-        }
+  if (!currentUser) return;
+  showToast('📸 Uploading photo...');
+  try {
+    // Upload to Supabase Storage
+    const ext = file.name.split('.').pop() || 'jpg';
+    const path = `profile/${currentUser.id}.${ext}`;
+    const { error: upErr } = await sb.storage.from('photos').upload(path, file, { upsert: true, contentType: file.type });
+    if (upErr) throw upErr;
+    // Get public URL
+    const { data: urlData } = sb.storage.from('photos').getPublicUrl(path);
+    const photoUrl = urlData.publicUrl + '?t=' + Date.now(); // cache bust
+    currentUser.photo = photoUrl;
+    // Save URL to Supabase owners table
+    await sb.from('owners').update({ photo: photoUrl }).eq('id', currentUser.id);
+    // Update stand map pin
+    if (currentUser.stand_id) {
+      const stand = STANDS.find(s => s.id === currentUser.stand_id);
+      if (stand) {
+        stand.photo = photoUrl;
+        if (mainMap) { Object.values(mapMarkers).forEach(m => mainMap.removeLayer(m)); mapMarkers = {}; renderMarkers(getFiltered()); }
       }
     }
-    showProfilePhotoPreview(dataUrl);
+    showProfilePhotoPreview(photoUrl);
     const userAvEl = document.getElementById('user-avatar');
-    if (userAvEl) { userAvEl.style.backgroundImage = `url(${dataUrl})`; userAvEl.style.backgroundSize = 'cover'; userAvEl.style.backgroundPosition = 'center'; userAvEl.textContent = ''; }
+    if (userAvEl) { userAvEl.style.backgroundImage = `url(${photoUrl})`; userAvEl.style.backgroundSize = 'cover'; userAvEl.style.backgroundPosition = 'center'; userAvEl.textContent = ''; }
     showToast('✅ Profile photo saved!');
-  };
-  reader.readAsDataURL(file);
+  } catch(err) {
+    console.error('Photo upload error:', err);
+    // Fallback to base64 if storage fails
+    const reader = new FileReader();
+    reader.onload = async e => {
+      const dataUrl = e.target.result;
+      currentUser.photo = dataUrl;
+      try { await sb.from('owners').update({ photo: dataUrl }).eq('id', currentUser.id); } catch(e2) {}
+      showProfilePhotoPreview(dataUrl);
+      showToast('✅ Profile photo saved!');
+    };
+    reader.readAsDataURL(file);
+  }
   event.target.value = '';
 }
 
@@ -5026,39 +5098,58 @@ function removePhoto() {
   showToast('Photo removed');
 }
 
-function handleGalleryUpload(event) {
+async function handleGalleryUpload(event) {
   const files = [...event.target.files];
-  if (!files.length) return;
-  let loaded = 0;
-  files.forEach(file => {
-    if (file.size > 5 * 1024 * 1024) { showToast('⚠️ Photos must be under 5MB'); return; }
-    const reader = new FileReader();
-    reader.onload = async e => {
-      const dataUrl = e.target.result;
-      galleryPhotos.push(dataUrl);
-      // Save to Supabase
-      if (currentUser) {
-        try {
-          await sb.from('gallery_photos').insert({
-            owner_id: currentUser.id,
-            photo_url: dataUrl,
-            sort_order: galleryPhotos.length
-          });
-        } catch(err) { console.warn('Photo save error:', err); }
-        // Update stand
-        if (currentUser.stand_id) {
-          const stand = STANDS.find(s => s.id === currentUser.stand_id);
-          if (stand) stand.galleryPhotos = [...galleryPhotos];
-        }
-      }
-      loaded++;
-      if (loaded === files.length) {
-        renderGallery();
-        showToast(`✅ ${files.length} photo${files.length>1?'s':''} saved!`);
-      }
-    };
-    reader.readAsDataURL(file);
-  });
+  if (!files.length || !currentUser) return;
+  showToast(`📸 Uploading ${files.length} photo${files.length>1?'s':''}...`);
+  let uploaded = 0;
+  for (const file of files) {
+    if (file.size > 5 * 1024 * 1024) { showToast('⚠️ Photos must be under 5MB'); continue; }
+    try {
+      // Upload to Supabase Storage
+      const ext = file.name.split('.').pop() || 'jpg';
+      const path = `gallery/${currentUser.id}/${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
+      const { error: upErr } = await sb.storage.from('photos').upload(path, file, { contentType: file.type });
+      if (upErr) throw upErr;
+      const { data: urlData } = sb.storage.from('photos').getPublicUrl(path);
+      const photoUrl = urlData.publicUrl;
+      galleryPhotos.push(photoUrl);
+      // Save URL to gallery_photos table
+      await sb.from('gallery_photos').insert({
+        owner_id: currentUser.id,
+        photo_url: photoUrl,
+        sort_order: galleryPhotos.length
+      });
+      uploaded++;
+    } catch(err) {
+      console.warn('Gallery upload error, falling back to base64:', err);
+      // Fallback to base64
+      await new Promise(resolve => {
+        const reader = new FileReader();
+        reader.onload = async e => {
+          const dataUrl = e.target.result;
+          galleryPhotos.push(dataUrl);
+          try {
+            await sb.from('gallery_photos').insert({
+              owner_id: currentUser.id,
+              photo_url: dataUrl,
+              sort_order: galleryPhotos.length
+            });
+          } catch(e2) {}
+          uploaded++;
+          resolve();
+        };
+        reader.readAsDataURL(file);
+      });
+    }
+  }
+  // Update stand galleryPhotos
+  if (currentUser.stand_id) {
+    const stand = STANDS.find(s => s.id === currentUser.stand_id);
+    if (stand) stand.galleryPhotos = [...galleryPhotos];
+  }
+  renderGallery();
+  showToast(`✅ ${uploaded} photo${uploaded>1?'s':''} saved!`);
   event.target.value = '';
 }
 
