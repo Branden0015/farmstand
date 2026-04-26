@@ -800,7 +800,8 @@ body { font-family: 'DM Sans', sans-serif; background: var(--cream); color: var(
   align-items:center;
   gap:6px;
   min-height:90px;
-  width:40px;
+  width:44px;
+  min-width:44px;
 }
 .mobile-stops-badge {
   background:var(--orange);
@@ -4900,16 +4901,14 @@ function applyFilterSheet() {
 function zoomToRadius(lat, lng, miles) {
   if (!mainMap || !lat || !lng) return;
   // 1 degree latitude = 69.0 miles exactly
-  const latDelta = miles / 69.0;
-  // Longitude degrees shrink as you move away from equator
-  const lngDelta = miles / (69.0 * Math.cos(lat * Math.PI / 180));
+  // Use 0.92 multiplier to fit radius snugly without extra space
+  const latDelta = (miles / 69.0) * 0.92;
+  const lngDelta = (miles / (69.0 * Math.cos(lat * Math.PI / 180))) * 0.92;
   const bounds = [
     [lat - latDelta, lng - lngDelta],
     [lat + latDelta, lng + lngDelta]
   ];
-  // padding[0] is top/bottom, padding[1] is left/right
-  // Use tight padding so the circle fills the view precisely
-  mainMap.fitBounds(bounds, { animate: true, padding: [8, 8] });
+  mainMap.fitBounds(bounds, { animate: true, padding: [4, 4] });
   setTimeout(() => mainMap.invalidateSize(), 300);
 }
 // ===================== TOAST =====================
