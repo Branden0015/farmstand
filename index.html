@@ -5,7 +5,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<meta name="version" content="v20.3-1777244705">
+<meta name="version" content="v20.4-1777245642">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -1631,9 +1631,7 @@ input, select, textarea {
             <button class="search-btn" onclick="handleDesktopSearchEnter(document.getElementById('search-input').value)">Go</button>
             <div class="location-suggestions" id="desktop-location-suggestions" style="display:none;position:absolute;top:100%;left:0;right:0;z-index:500"></div>
           </div>
-          <div id="desktop-location-label" style="font-size:11px;color:var(--green2);padding:2px 0 4px;display:none">
-            📍 Centered on <span id="desktop-location-name">Plymouth, WI</span> — <a href="#" onclick="clearDesktopLocationSearch();return false" style="color:var(--text3);text-decoration:underline">clear</a>
-          </div>
+          
           <!-- Radius filter -->
           <div class="radius-control">
             <span class="radius-label">📍 Within</span>
@@ -4445,11 +4443,16 @@ function clearDesktopLocationSearch() {
 
 function updateLocationLabels(name) {
   currentLocationName = name;
+  // Update all location display elements
   const labels = ['radius-location-text', 'mobile-radius-location-text', 'sheet-location-text'];
   labels.forEach(id => {
     const el = document.getElementById(id);
     if (el) el.textContent = `📍 Centered on ${name}`;
   });
+  // Update desktop read-only label
+  const desktopLabel = document.getElementById('desktop-search-area-label');
+  if (desktopLabel) desktopLabel.textContent = name;
+  // Update mobile filter sheet location input
   const filterInput = document.getElementById('filter-location-input');
   if (filterInput && !filterInput.matches(':focus')) filterInput.value = name;
 }
@@ -4473,7 +4476,16 @@ function clearMobileSearch() {
 const _origSetUserLocationV3 = setUserLocation;
 function setUserLocation(lat, lng, method) {
   _origSetUserLocationV3(lat, lng, method);
-  if (method === 'gps') updateLocationLabels('Your GPS location');
+  if (method === 'gps') {
+    // Reverse geocode to get real city name
+    fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`)
+      .then(r => r.json())
+      .then(data => {
+        const city = data.address?.city || data.address?.town || data.address?.village || data.address?.county || 'Your location';
+        const state = data.address?.state_code || '';
+        updateLocationLabels(city + (state ? ', ' + state : ''));
+      }).catch(() => updateLocationLabels('Your GPS location'));
+  }
   if (method === 'map') updateLocationLabels('Map center area');
 }
 
@@ -5190,11 +5202,8 @@ async function lookupZip(zip) {
 
 // Override locateUser to use our layered system
 function locateUser() {
-  ['radius-location-text','mobile-radius-location-text'].forEach(id => {
-    const el = document.getElementById(id);
-    if (el) el.textContent = 'Detecting your location...';
-  });
-  tryGPS();
+  // Use same useGPSLocation which pans the map too
+  useGPSLocation();
 }
 
 // Listen for map moves — update to map center if using map method
