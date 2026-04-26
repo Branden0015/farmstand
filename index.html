@@ -5,7 +5,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<meta name="version" content="v19.7-1777214831">
+<meta name="version" content="v19.8-1777215128">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -2685,6 +2685,10 @@ function showScreen(id) {
 function goMap() {
   showScreen('map');
 
+  // CRITICAL: Restore map-body which mobileNav hides when switching tabs
+  const mapBody = document.querySelector('.map-body');
+  if (mapBody) mapBody.style.display = 'flex';
+
   // Restore correct mobile nav
   if (window.innerWidth <= 768) {
     if (currentUser) showOwnerMobileNav();
@@ -2699,6 +2703,12 @@ function goMap() {
   document.querySelectorAll('.mobile-only').forEach(el => {
     if (el.tagName === 'BUTTON') el.style.display = window.innerWidth <= 768 ? 'flex' : 'none';
   });
+
+  // Invalidate map size now that container is visible again
+  if (mainMap) {
+    setTimeout(() => mainMap.invalidateSize(), 50);
+    setTimeout(() => { mainMap.invalidateSize(); renderAll(); }, 300);
+  }
 }
 function goLanding() { showScreen('landing'); }
 
@@ -4508,7 +4518,11 @@ function mobileNav(tab) {
 
   if (tab === 'map') {
     if (mapBody) mapBody.style.display = 'flex';
-    // mobile-panel deprecated — using stops tab instead
+    // Also invalidate map size when returning to map tab
+    if (mainMap) {
+      setTimeout(() => mainMap.invalidateSize(), 50);
+      setTimeout(() => mainMap.invalidateSize(), 200);
+    }
   } else {
     if (mapBody) mapBody.style.display = 'none';
     document.getElementById('mobile-panel').style.display = 'none';
