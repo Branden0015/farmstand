@@ -5,7 +5,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<meta name="version" content="v19.5-1777212807">
+<meta name="version" content="v19.6-1777214414">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -2648,46 +2648,63 @@ async function loginSuccess(user) {
 
 // ===================== NAVIGATION =====================
 function showScreen(id) {
-  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-  document.getElementById('screen-'+id).classList.add('active');
-  if (id === 'map' && !mapInited) { setTimeout(initMap, 100); mapInited = true; }
-  if (id === 'map' && mainMap) { setTimeout(() => mainMap.invalidateSize(), 100); }
-  if (id === 'map' && isMobile()) { setTimeout(initMobileUI, 150); }
+  // Hide all screens
+  document.querySelectorAll('.screen').forEach(s => {
+    s.classList.remove('active');
+    // Force landing screen hidden since it's position:fixed
+    if (s.id === 'screen-landing') s.style.display = 'none';
+  });
+  // Show target screen
+  const target = document.getElementById('screen-' + id);
+  if (target) {
+    target.classList.add('active');
+    if (id === 'screen-landing' || id === 'landing') target.style.display = 'flex';
+  }
+  if (id === 'map') {
+    if (!mapInited) { setTimeout(initMap, 100); mapInited = true; }
+    // Multiple invalidateSize calls to ensure Leaflet recalculates correctly
+    if (mainMap) {
+      setTimeout(() => { mainMap.invalidateSize(); }, 100);
+      setTimeout(() => { mainMap.invalidateSize(); renderAll(); }, 300);
+    }
+    if (isMobile()) setTimeout(initMobileUI, 150);
+  }
 }
 
 function goMap() {
-  // Explicitly hide landing screen
+  // Hide landing screen explicitly (position:fixed needs direct style override)
   const landing = document.getElementById('screen-landing');
-  if (landing) {
-    landing.classList.remove('active');
-    landing.style.display = 'none';
-  }
-  // Show map screen
+  if (landing) { landing.classList.remove('active'); landing.style.display = 'none'; }
+
+  // Hide all screens, show map
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   const mapScreen = document.getElementById('screen-map');
-  if (mapScreen) mapScreen.classList.add('active');
-  // Init map if needed
-  if (!mapInited) { setTimeout(initMap, 100); mapInited = true; }
-  // Restore buyer nav if no owner logged in
-  if (isMobile() && !currentUser) showBuyerMobileNav();
-  setTimeout(() => {
-    const topBar = document.getElementById('mobile-top-bar');
-    const filterStrip = document.getElementById('mobile-filter-strip');
-    const mobileNav = document.getElementById('mobile-nav');
-    if (topBar) topBar.style.display = window.innerWidth <= 768 ? 'flex' : 'none';
-    if (filterStrip) filterStrip.style.display = window.innerWidth <= 768 ? 'flex' : 'none';
-    if (mobileNav) mobileNav.style.display = window.innerWidth <= 768 ? 'block' : 'none';
-    document.querySelectorAll('.mobile-only').forEach(el => {
-      if (el.tagName === 'BUTTON') el.style.display = window.innerWidth <= 768 ? 'flex' : 'none';
-    });
-    if (mainMap) {
-      mainMap.invalidateSize();
-      renderAll();
-    }
-  }, 100);
-  setTimeout(() => {
-    if (mainMap) mainMap.invalidateSize();
-  }, 400);
+  if (mapScreen) { mapScreen.classList.add('active'); mapScreen.style.display = 'flex'; }
+
+  // Init map if first time
+  if (!mapInited) { setTimeout(initMap, 200); mapInited = true; }
+
+  // Restore correct mobile nav based on login state
+  if (window.innerWidth <= 768) {
+    if (currentUser) showOwnerMobileNav();
+    else showBuyerMobileNav();
+  }
+
+  // Show mobile UI elements
+  const topBar = document.getElementById('mobile-top-bar');
+  const filterStrip = document.getElementById('mobile-filter-strip');
+  if (topBar) topBar.style.display = window.innerWidth <= 768 ? 'flex' : 'none';
+  if (filterStrip) filterStrip.style.display = window.innerWidth <= 768 ? 'flex' : 'none';
+  document.querySelectorAll('.mobile-only').forEach(el => {
+    if (el.tagName === 'BUTTON') el.style.display = window.innerWidth <= 768 ? 'flex' : 'none';
+  });
+
+  // Critical: invalidate map size multiple times to fix offset/blank map issues
+  if (mainMap) {
+    setTimeout(() => mainMap.invalidateSize(), 50);
+    setTimeout(() => mainMap.invalidateSize(), 200);
+    setTimeout(() => { mainMap.invalidateSize(); renderAll(); }, 450);
+  }
 }
 function goLanding() { showScreen('landing'); }
 
@@ -4510,7 +4527,15 @@ function mobileNav(tab) {
       renderMobileGrocery();
     }
     if (tab === 'owner') {
-      showScreen('landing');
+      if (currentUser) {
+        // Already logged in — go straight to dashboard
+        showScreen('dashboard');
+        showOwnerMobileNav();
+      } else {
+        // Not logged in — show landing/login screen
+        const landing = document.getElementById('screen-landing');
+        if (landing) { landing.style.display = 'flex'; landing.classList.add('active'); }
+      }
     }
   }
 }
