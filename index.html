@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -1370,6 +1370,29 @@ body { font-family: 'DM Sans', sans-serif; background: var(--cream); color: var(
   font-weight:600; cursor:pointer;
   font-family:'DM Sans',sans-serif;
   white-space:nowrap; padding:0;
+}
+
+/* ===== PREVENT iOS AUTO-ZOOM ON INPUT FOCUS ===== */
+input, select, textarea {
+  font-size: 16px !important;
+}
+/* Override back to smaller sizes visually where needed */
+.radius-input { font-size: 13px !important; }
+.custom-item-input { font-size: 13px !important; }
+.grocery-input { font-size: 13px !important; }
+.pform-input { font-size: 14px !important; }
+.search-input { font-size: 13px !important; }
+
+/* The trick: keep font-size 16px on focus to prevent zoom,
+   but use transform to visually appear smaller */
+@media (max-width: 768px) {
+  input:not([type="range"]):not([type="checkbox"]) {
+    font-size: 16px !important;
+    transform-origin: left center;
+  }
+  .mobile-search-pill input { font-size: 16px !important; }
+  .filter-location-input { font-size: 16px !important; }
+  .sheet-miles-input { font-size: 16px !important; }
 }
 </style>
 </head>
