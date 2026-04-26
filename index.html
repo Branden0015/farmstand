@@ -2607,13 +2607,29 @@ function showScreen(id) {
 }
 
 function goMap() {
-  showScreen('map');
-  // On mobile make sure everything is properly initialized
+  // Explicitly hide landing screen
+  const landing = document.getElementById('screen-landing');
+  if (landing) {
+    landing.classList.remove('active');
+    landing.style.display = 'none';
+  }
+  // Show map screen
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  const mapScreen = document.getElementById('screen-map');
+  if (mapScreen) mapScreen.classList.add('active');
+  // Init map if needed
+  if (!mapInited) { setTimeout(initMap, 100); mapInited = true; }
+  // On mobile reinitialize UI fully
   if (isMobile()) {
     setTimeout(() => {
       initMobileUI();
-      if (mainMap) mainMap.invalidateSize();
+      if (mainMap) {
+        mainMap.invalidateSize();
+        renderAll();
+      }
     }, 200);
+  } else {
+    if (mainMap) setTimeout(() => mainMap.invalidateSize(), 100);
   }
 }
 function goLanding() { showScreen('landing'); }
