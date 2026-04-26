@@ -5,7 +5,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<meta name="version" content="v19.3-1777210676">
+<meta name="version" content="v19.4-1777211166">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -2808,19 +2808,25 @@ function createMarker(s) {
   marker.bindPopup(buildPopupHTML(s), POPUP_OPTIONS);
   marker.on('click', () => {
     selectStand(s.id);
-    // After popup opens, pan map so popup is fully visible below search bar
+    // Pan map to ensure popup is fully visible below the floating search bar
     setTimeout(() => {
       if (marker.isPopupOpen()) {
         const isMob = window.innerWidth <= 768;
-        const topOffset = isMob ? 130 : 20; // account for floating search bar on mobile
+        // Mobile: search bar(50) + filter strip(44) + some buffer = 130px
+        // Desktop: just a small buffer
+        const topClearance = isMob ? 140 : 30;
+        // Popup is roughly 300px tall, pin is at marker position
+        // We want: pin position on screen > topClearance + popupHeight
+        const popupHeight = isMob ? 320 : 300;
         const px = mainMap.latLngToContainerPoint(marker.getLatLng());
-        const mapH = mainMap.getSize().y;
-        // Pan up if popup would be hidden behind top bar
-        if (px.y < topOffset + 200) {
-          mainMap.panBy([0, -(topOffset + 200 - px.y)], { animate: true });
+        const neededY = topClearance + popupHeight;
+        if (px.y < neededY) {
+          // Pan down by however much we need
+          const panAmount = neededY - px.y;
+          mainMap.panBy([0, -panAmount], { animate: true, duration: 0.3 });
         }
       }
-    }, 50);
+    }, 100);
   });
   return marker;
 }
