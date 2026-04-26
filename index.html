@@ -2586,18 +2586,26 @@ function goMap() {
   if (mapScreen) mapScreen.classList.add('active');
   // Init map if needed
   if (!mapInited) { setTimeout(initMap, 100); mapInited = true; }
-  // On mobile reinitialize UI fully
-  if (isMobile()) {
-    setTimeout(() => {
-      initMobileUI();
-      if (mainMap) {
-        mainMap.invalidateSize();
-        renderAll();
-      }
-    }, 200);
-  } else {
-    if (mainMap) setTimeout(() => mainMap.invalidateSize(), 100);
-  }
+  // Always reinitialize mobile UI — don't rely on isMobile() check
+  // since window.innerWidth may be unreliable during screen transition
+  setTimeout(() => {
+    const topBar = document.getElementById('mobile-top-bar');
+    const filterStrip = document.getElementById('mobile-filter-strip');
+    const mobileNav = document.getElementById('mobile-nav');
+    if (topBar) topBar.style.display = window.innerWidth <= 768 ? 'flex' : 'none';
+    if (filterStrip) filterStrip.style.display = window.innerWidth <= 768 ? 'flex' : 'none';
+    if (mobileNav) mobileNav.style.display = window.innerWidth <= 768 ? 'block' : 'none';
+    document.querySelectorAll('.mobile-only').forEach(el => {
+      if (el.tagName === 'BUTTON') el.style.display = window.innerWidth <= 768 ? 'flex' : 'none';
+    });
+    if (mainMap) {
+      mainMap.invalidateSize();
+      renderAll();
+    }
+  }, 100);
+  setTimeout(() => {
+    if (mainMap) mainMap.invalidateSize();
+  }, 400);
 }
 function goLanding() { showScreen('landing'); }
 
@@ -2826,17 +2834,23 @@ function getDir(id) {
 }
 
 function setFilter(cat, el) {
-  const isActive = el.classList.contains('active');
-  // Deselect all first
-  document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
-  if (isActive && cat !== 'all') {
-    // Was active — toggle off, revert to All
-    activeFilter = 'all';
-    document.querySelector('.chip')?.classList.add('active'); // highlight All
-  } else {
-    // Activate this one
+  if (cat === 'all') {
+    // All always resets everything
+    document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
     el.classList.add('active');
-    activeFilter = cat;
+    activeFilter = 'all';
+  } else {
+    const isActive = el.classList.contains('active');
+    document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+    if (isActive) {
+      // Toggle off — revert to All
+      activeFilter = 'all';
+      const allChip = document.querySelector('.chip');
+      if (allChip) allChip.classList.add('active');
+    } else {
+      el.classList.add('active');
+      activeFilter = cat;
+    }
   }
   renderAll();
 }
@@ -4158,22 +4172,25 @@ function switchToMapAndSelect(standId) {
 }
 
 function mobileSetFilter(cat, btn) {
-  const isActive = btn.classList.contains('active');
-  // Deselect all strip buttons
-  document.querySelectorAll('.strip-btn').forEach(b => {
-    if (b.id && b.id.startsWith('strip-')) b.classList.remove('active');
-  });
-  if (isActive && cat !== 'all') {
-    // Toggle off — revert to All
-    activeFilter = 'all';
-    const allBtn = document.getElementById('strip-all');
-    if (allBtn) allBtn.classList.add('active');
-  } else {
+  const stripBtns = document.querySelectorAll('.strip-btn[id^="strip-"]');
+  if (cat === 'all') {
+    stripBtns.forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
-    activeFilter = cat === 'all' ? 'all' : cat;
+    activeFilter = 'all';
+  } else {
+    const isActive = btn.classList.contains('active');
+    stripBtns.forEach(b => b.classList.remove('active'));
+    if (isActive) {
+      activeFilter = 'all';
+      const allBtn = document.getElementById('strip-all');
+      if (allBtn) allBtn.classList.add('active');
+    } else {
+      btn.classList.add('active');
+      activeFilter = cat;
+    }
   }
   renderAll();
-  if (mobileViewMode === 'list') renderMobileListView();
+  if (typeof mobileViewMode !== 'undefined' && mobileViewMode === 'list') renderMobileListView();
 }
 
 function initMobileUI() {
@@ -4187,9 +4204,9 @@ function initMobileUI() {
   document.querySelectorAll('.mobile-only').forEach(el => {
     if (el.tagName === 'BUTTON') el.style.display = 'flex';
   });
-  // Show stops tab
+  // Always show stops tab on mobile with 0 badge
   const stopsTab = document.getElementById('mobile-stops-tab');
-  if (stopsTab) stopsTab.style.display = 'none'; // hidden until stops added
+  if (stopsTab) stopsTab.style.display = 'flex';
   updateMobileFavBadge();
   if (mainMap) setTimeout(() => mainMap.invalidateSize(), 200);
 }
@@ -4836,7 +4853,10 @@ function stageRadius(val) {
 
 function applyRadius() {
   updateRadius(stagedRadius);
-  zoomToRadius(userLat || 43.7517, userLng || -87.9768, stagedRadius);
+  const center = mainMap ? mainMap.getCenter() : null;
+  const lat = userLat || (center ? center.lat : 43.7517);
+  const lng = userLng || (center ? center.lng : -87.9768);
+  zoomToRadius(lat, lng, stagedRadius);
   showToast(`🗺 Showing stands within ${stagedRadius} miles`);
 }
 
@@ -4894,7 +4914,10 @@ function applyFilterSheet() {
   const stripBadge = document.getElementById('strip-radius-badge');
   if (stripBadge) stripBadge.textContent = miles + 'mi';
   closeFilterSheet();
-  zoomToRadius(userLat || 43.7517, userLng || -87.9768, miles);
+  const center = mainMap ? mainMap.getCenter() : null;
+  const zLat = userLat || (center ? center.lat : 43.7517);
+  const zLng = userLng || (center ? center.lng : -87.9768);
+  zoomToRadius(zLat, zLng, miles);
   showToast(`🗺 Showing stands within ${miles} miles`);
   if (typeof mobileViewMode !== 'undefined' && mobileViewMode === 'list') renderMobileListView();
 }
