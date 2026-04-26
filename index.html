@@ -45,13 +45,16 @@ body { font-family: 'DM Sans', sans-serif; background: var(--cream); color: var(
 /* ===================== SCREENS ===================== */
 .screen { display: none; flex-direction: column; flex: 1; overflow: hidden; min-height: 0; }
 .screen.active { display: flex; }
-.screen.active { display: flex; }
 
 /* ===================== LANDING ===================== */
 #screen-landing {
   background: linear-gradient(160deg, #1a3d28 0%, #2d5a3d 50%, #3d7a55 100%);
   align-items: center; justify-content: center;
   position: fixed; inset: 0; overflow: hidden; z-index: 200;
+  display: none; /* hidden by default */
+}
+#screen-landing.active {
+  display: flex; /* only show when active */
 }
 
 .landing-bg {
