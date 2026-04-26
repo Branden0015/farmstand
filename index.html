@@ -786,10 +786,10 @@ body { font-family: 'DM Sans', sans-serif; background: var(--cream); color: var(
 .mobile-stops-handle {
   background:var(--green);
   color:white;
-  padding:14px 8px 14px 12px;
+  padding:16px 10px 16px 14px;
   border-radius:14px 0 0 14px;
   cursor:pointer;
-  font-size:13px;
+  font-size:14px;
   font-weight:700;
   writing-mode:vertical-rl;
   text-orientation:mixed;
@@ -799,7 +799,8 @@ body { font-family: 'DM Sans', sans-serif; background: var(--cream); color: var(
   display:flex;
   align-items:center;
   gap:6px;
-  min-height:80px;
+  min-height:90px;
+  width:40px;
 }
 .mobile-stops-badge {
   background:var(--orange);
@@ -2821,9 +2822,18 @@ function getDir(id) {
 }
 
 function setFilter(cat, el) {
-  document.querySelectorAll('.chip').forEach(c=>c.classList.remove('active'));
-  el.classList.add('active');
-  activeFilter = cat;
+  const isActive = el.classList.contains('active');
+  // Deselect all first
+  document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+  if (isActive && cat !== 'all') {
+    // Was active — toggle off, revert to All
+    activeFilter = 'all';
+    document.querySelector('.chip')?.classList.add('active'); // highlight All
+  } else {
+    // Activate this one
+    el.classList.add('active');
+    activeFilter = cat;
+  }
   renderAll();
 }
 
@@ -4144,11 +4154,20 @@ function switchToMapAndSelect(standId) {
 }
 
 function mobileSetFilter(cat, btn) {
+  const isActive = btn.classList.contains('active');
+  // Deselect all strip buttons
   document.querySelectorAll('.strip-btn').forEach(b => {
     if (b.id && b.id.startsWith('strip-')) b.classList.remove('active');
   });
-  btn.classList.add('active');
-  activeFilter = cat === 'all' ? 'all' : cat;
+  if (isActive && cat !== 'all') {
+    // Toggle off — revert to All
+    activeFilter = 'all';
+    const allBtn = document.getElementById('strip-all');
+    if (allBtn) allBtn.classList.add('active');
+  } else {
+    btn.classList.add('active');
+    activeFilter = cat === 'all' ? 'all' : cat;
+  }
   renderAll();
   if (mobileViewMode === 'list') renderMobileListView();
 }
@@ -4299,9 +4318,15 @@ function mobileNav(tab) {
 }
 
 function mobileSetFilter(cat, el) {
+  const isActive = el.classList.contains('active');
   document.querySelectorAll('.mobile-chips-bar .chip').forEach(c => c.classList.remove('active'));
-  el.classList.add('active');
-  activeFilter = cat;
+  if (isActive && cat !== 'all') {
+    activeFilter = 'all';
+    document.querySelector('.mobile-chips-bar .chip')?.classList.add('active');
+  } else {
+    el.classList.add('active');
+    activeFilter = cat;
+  }
   renderAll();
   renderMobilePanel();
 }
@@ -4874,16 +4899,17 @@ function applyFilterSheet() {
 // ===================== ZOOM TO RADIUS =====================
 function zoomToRadius(lat, lng, miles) {
   if (!mainMap || !lat || !lng) return;
-  // Convert miles to degrees (approximate)
-  // 1 degree latitude ≈ 69 miles
-  const latDelta = miles / 69;
-  // 1 degree longitude varies by latitude
-  const lngDelta = miles / (69 * Math.cos(lat * Math.PI / 180));
+  // 1 degree latitude = 69.0 miles exactly
+  const latDelta = miles / 69.0;
+  // Longitude degrees shrink as you move away from equator
+  const lngDelta = miles / (69.0 * Math.cos(lat * Math.PI / 180));
   const bounds = [
     [lat - latDelta, lng - lngDelta],
     [lat + latDelta, lng + lngDelta]
   ];
-  mainMap.fitBounds(bounds, { animate: true, padding: [20, 20] });
+  // padding[0] is top/bottom, padding[1] is left/right
+  // Use tight padding so the circle fills the view precisely
+  mainMap.fitBounds(bounds, { animate: true, padding: [8, 8] });
   setTimeout(() => mainMap.invalidateSize(), 300);
 }
 // ===================== TOAST =====================
