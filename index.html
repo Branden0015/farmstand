@@ -2764,8 +2764,8 @@ function getFiltered() {
 function renderAll() {
   const filtered = getFiltered();
   renderSidebar(filtered);
-  renderMarkers(filtered);
-  if (isMobile()) { renderMobilePanel(); updateMobileFavBadge(); }
+  renderMarkersSmart(filtered);
+  if (isMobile()) { updateMobileFavBadge(); }
 }
 
 function renderSidebar(stands) {
@@ -2788,31 +2788,70 @@ function renderSidebar(stands) {
       </div>`).join('');
 }
 
+function buildPopupHTML(s) {
+  return `<div class="popup-inner">
+    <div class="pop-head" onclick="openProfile(${s.id})">
+      <div class="pop-avi">${s.photo ? '<img src="' + s.photo + '" style="width:100%;height:100%;object-fit:cover;border-radius:8px">' : s.emoji}</div>
+      <div style="flex:1">
+        <div class="pop-name">${s.name}</div>
+        <div class="pop-meta">📍 ${s.dist} · ${s.status==='open'?'🟢 Open':'🔴 Closed'} · ${s.hours}</div>
+        <div class="pop-head-hint">👆 Click to view full profile →</div>
+      </div>
+    </div>
+    <div class="pop-body">
+      <div class="pop-desc">${s.desc}</div>
+      <div class="pop-prods">${[...s.products.slice(0,3), ...(s.customItems||[]).slice(0,2)].map(p=>'<span class="pop-prod">'+p+'</span>').join('')}</div>
+      <div class="pop-acts">
+        <button class="pbtn pbtn-dir" onclick="getDir(${s.id})">🗺 Directions</button>
+        <button class="pbtn pbtn-stop${manualStops.has(s.id)?' added':''}" id="popup-stop-${s.id}" onclick="toggleStop(${s.id})">${manualStops.has(s.id)?'📍 Added':'📍 Add Stop'}</button>
+        <button class="pbtn pbtn-fav" id="popup-fav-${s.id}" onclick="toggleFav(${s.id});updatePopupFavBtn(${s.id})">${favorites.has(s.id)?'❤️ Saved':'🤍 Save'}</button>
+      </div>
+    </div></div>`;
+}
+
+const POPUP_OPTIONS = { maxWidth:300, minWidth:290, autoClose: false, closeOnClick: false };
+
+function createMarker(s) {
+  const marker = L.marker([s.lat, s.lng], {
+    icon: createIcon(s.emoji, selectedId===s.id, s.photo||null)
+  }).addTo(mainMap);
+  marker.bindPopup(buildPopupHTML(s), POPUP_OPTIONS);
+  marker.on('click', () => selectStand(s.id));
+  return marker;
+}
+
 function renderMarkers(stands) {
+  // Full redraw — used when markers need complete reset
   Object.values(mapMarkers).forEach(m => mainMap.removeLayer(m));
   mapMarkers = {};
+  stands.forEach(s => { mapMarkers[s.id] = createMarker(s); });
+}
+
+function renderMarkersSmart(stands) {
+  // Smart redraw — preserves open popups
+  const openId = Object.entries(mapMarkers).find(([id, m]) => m.isPopupOpen())
+    ? parseInt(Object.entries(mapMarkers).find(([id, m]) => m.isPopupOpen())[0])
+    : null;
+
+  const standIds = new Set(stands.map(s => s.id));
+
+  // Remove markers no longer in filtered set
+  Object.entries(mapMarkers).forEach(([id, m]) => {
+    if (!standIds.has(parseInt(id))) {
+      mainMap.removeLayer(m);
+      delete mapMarkers[id];
+    }
+  });
+
+  // Add new markers for stands not yet on map
   stands.forEach(s => {
-    const marker = L.marker([s.lat, s.lng], { icon: createIcon(s.emoji, selectedId===s.id, s.photo||null) }).addTo(mainMap);
-    marker.bindPopup(`<div class="popup-inner">
-      <div class="pop-head" onclick="openProfile(${s.id})">
-        <div class="pop-avi">${s.photo ? '<img src="' + s.photo + '" style="width:100%;height:100%;object-fit:cover;border-radius:8px">' : s.emoji}</div>
-        <div style="flex:1">
-          <div class="pop-name">${s.name}</div>
-          <div class="pop-meta">📍 ${s.dist} · ${s.status==='open'?'🟢 Open':'🔴 Closed'} · ${s.hours}</div>
-          <div class="pop-head-hint">👆 Click to view full profile →</div>
-        </div>
-      </div>
-      <div class="pop-body">
-        <div class="pop-desc">${s.desc}</div>
-        <div class="pop-prods">${[...s.products.slice(0,3), ...(s.customItems||[]).slice(0,2)].map(p=>'<span class="pop-prod">'+p+'</span>').join('')}</div>
-        <div class="pop-acts">
-          <button class="pbtn pbtn-dir" onclick="getDir(${s.id})">🗺 Directions</button>
-          <button class="pbtn pbtn-stop${manualStops.has(s.id)?' added':''}" id="popup-stop-${s.id}" onclick="toggleStop(${s.id})">${manualStops.has(s.id)?'📍 Added':'📍 Add Stop'}</button>
-          <button class="pbtn pbtn-fav" id="popup-fav-${s.id}" onclick="toggleFav(${s.id});updatePopupFavBtn(${s.id})">${favorites.has(s.id)?'❤️ Saved':'🤍 Save'}</button>
-        </div>
-      </div></div>`, { maxWidth:300, minWidth:290, autoClose: false, closeOnClick: false });
-    marker.on('click', () => selectStand(s.id));
-    mapMarkers[s.id] = marker;
+    if (!mapMarkers[s.id]) {
+      mapMarkers[s.id] = createMarker(s);
+      // Reopen popup if this marker had it open
+      if (openId === s.id) {
+        setTimeout(() => mapMarkers[s.id]?.openPopup(), 50);
+      }
+    }
   });
 }
 
@@ -4325,20 +4364,6 @@ function mobileNav(tab) {
       showScreen('landing');
     }
   }
-}
-
-function mobileSetFilter(cat, el) {
-  const isActive = el.classList.contains('active');
-  document.querySelectorAll('.mobile-chips-bar .chip').forEach(c => c.classList.remove('active'));
-  if (isActive && cat !== 'all') {
-    activeFilter = 'all';
-    document.querySelector('.mobile-chips-bar .chip')?.classList.add('active');
-  } else {
-    el.classList.add('active');
-    activeFilter = cat;
-  }
-  renderAll();
-  renderMobilePanel();
 }
 
 function renderMobileFavList() {
