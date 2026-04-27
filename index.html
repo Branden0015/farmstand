@@ -5,7 +5,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<meta name="version" content="v20.5-1777246228">
+<meta name="version" content="v20.6-1777293082">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -2255,6 +2255,7 @@ input, select, textarea {
         <div class="dash-panel-title">Photos</div>
         <div class="dash-panel-sub">Add photos of your stand, products, and farm — buyers see these on your profile</div>
         <input type="file" id="gallery-file-input" accept="image/*" multiple style="display:none" onchange="handleGalleryUpload(event)">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><span style="font-size:12px;font-weight:600;color:var(--text2)">Gallery Photos</span><span id="gallery-photo-count" style="font-size:12px;color:var(--text3)">0 photos</span></div>
         <div id="photo-gallery-grid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:12px">
           <!-- Add button always first -->
           <div style="aspect-ratio:1;border:2px dashed var(--border);border-radius:12px;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:6px;cursor:pointer;color:var(--text3);font-size:13px;background:white;transition:all 0.15s"
@@ -5101,9 +5102,31 @@ function removePhoto() {
 async function handleGalleryUpload(event) {
   const files = [...event.target.files];
   if (!files.length || !currentUser) return;
-  showToast(`📸 Uploading ${files.length} photo${files.length>1?'s':''}...`);
+
+  // Check photo limit
+  const limit = getPhotoLimit('gallery');
+  const current = galleryPhotos.length;
+  if (current >= limit) {
+    const plan = getPlanName();
+    if (plan === 'Free') {
+      showToast(`📸 Free plan includes ${PHOTO_LIMITS.gallery.free} photos — upgrade to Grow for ${PHOTO_LIMITS.gallery.grow}!`);
+    } else if (plan === 'Grow') {
+      showToast(`📸 Grow plan includes ${PHOTO_LIMITS.gallery.grow} photos — upgrade to Pro for unlimited!`);
+    }
+    // Show upgrade prompt in dashboard
+    showPhotoUpgradePrompt(plan, limit);
+    return;
+  }
+  // Limit how many from this batch can be added
+  const canAdd = limit === Infinity ? files.length : Math.min(files.length, limit - current);
+  const filesToUpload = files.slice(0, canAdd);
+  if (canAdd < files.length) {
+    showToast(`📸 Adding ${canAdd} of ${files.length} photos (${limit - current} remaining on your plan)`);
+  }
+
+  showToast(`📸 Uploading ${filesToUpload.length} photo${filesToUpload.length>1?'s':''}...`);
   let uploaded = 0;
-  for (const file of files) {
+  for (const file of filesToUpload) {
     if (file.size > 5 * 1024 * 1024) { showToast('⚠️ Photos must be under 5MB'); continue; }
     try {
       // Upload to Supabase Storage
@@ -5153,16 +5176,52 @@ async function handleGalleryUpload(event) {
   event.target.value = '';
 }
 
+
+function showPhotoUpgradePrompt(currentPlan, currentLimit) {
+  const nextPlan = currentPlan === 'Free' ? 'Grow' : 'Pro';
+  const nextLimit = currentPlan === 'Free' ? PHOTO_LIMITS.gallery.grow : 'Unlimited';
+  const toast = document.createElement('div');
+  toast.style.cssText = `
+    position:fixed; bottom:80px; left:50%; transform:translateX(-50%);
+    background:var(--green); color:white; border-radius:14px;
+    padding:14px 20px; z-index:9999; font-family:'DM Sans',sans-serif;
+    font-size:13px; box-shadow:0 4px 20px rgba(0,0,0,0.2);
+    display:flex; flex-direction:column; gap:8px; max-width:300px;
+    text-align:center;
+  `;
+  toast.innerHTML = `
+    <div style="font-weight:700">📸 Photo limit reached</div>
+    <div style="opacity:0.9;font-size:12px">Upgrade to ${nextPlan} for ${nextLimit} gallery photos</div>
+    <button onclick="showPanel('featured');this.closest('div').remove()" 
+      style="background:white;color:var(--green);border:none;border-radius:8px;padding:8px 16px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:13px">
+      ⭐ View ${nextPlan} Plan
+    </button>
+  `;
+  document.body.appendChild(toast);
+  setTimeout(() => toast.remove(), 6000);
+}
 function renderGallery() {
   const grid = document.getElementById('photo-gallery-grid');
   if (!grid) return;
+  const limit = getPhotoLimit('gallery');
+  const count = galleryPhotos.length;
+  const atLimit = limit !== Infinity && count >= limit;
+  const limitLabel = limit === Infinity ? 'Unlimited' : `${count}/${limit}`;
+  // Update photo count label if it exists
+  const countEl = document.getElementById('gallery-photo-count');
+  if (countEl) countEl.textContent = `${limitLabel} photos`;
   // Build add button + all uploaded photos
-  let html = `<div style="aspect-ratio:1;border:2px dashed var(--border);border-radius:12px;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:6px;cursor:pointer;color:var(--text3);font-size:13px;background:white;transition:all 0.15s"
-    onclick="document.getElementById('gallery-file-input').click()"
-    onmouseover="this.style.borderColor='var(--green2)';this.style.color='var(--green)'"
-    onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text3)'">
-    <div style="font-size:32px">+</div><div style="font-weight:500">Add Photo</div>
-  </div>`;
+  let html = atLimit
+    ? `<div style="aspect-ratio:1;border:2px dashed var(--orange);border-radius:12px;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:6px;cursor:pointer;color:var(--orange);font-size:13px;background:var(--orange3);transition:all 0.15s"
+        onclick="showPhotoUpgradePrompt('${getPlanName()}', ${limit})">
+        <div style="font-size:24px">⭐</div><div style="font-weight:600;text-align:center;font-size:11px">Upgrade for more</div>
+      </div>`
+    : `<div style="aspect-ratio:1;border:2px dashed var(--border);border-radius:12px;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:6px;cursor:pointer;color:var(--text3);font-size:13px;background:white;transition:all 0.15s"
+        onclick="document.getElementById('gallery-file-input').click()"
+        onmouseover="this.style.borderColor='var(--green2)';this.style.color='var(--green)'"
+        onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text3)'">
+        <div style="font-size:32px">+</div><div style="font-weight:500">Add Photo</div>
+      </div>`;
   galleryPhotos.forEach((photo, i) => {
     html += `<div style="aspect-ratio:1;border-radius:12px;overflow:hidden;position:relative;border:1px solid var(--border)">
       <img src="${photo}" style="width:100%;height:100%;object-fit:cover">
@@ -5186,6 +5245,26 @@ async function removeGalleryPhoto(i) {
   showToast('Photo removed');
 }
 
+
+// ===================== PHOTO LIMITS BY PLAN =====================
+const PHOTO_LIMITS = {
+  gallery: { free: 5, grow: 15, pro: Infinity },
+  profile: { free: 1, grow: 1, pro: 1 } // everyone gets 1 profile photo
+};
+
+function getPhotoLimit(type) {
+  if (!currentUser) return PHOTO_LIMITS[type].free;
+  if (currentUser.isPro) return PHOTO_LIMITS[type].pro;
+  if (currentUser.isGrow) return PHOTO_LIMITS[type].grow;
+  return PHOTO_LIMITS[type].free;
+}
+
+function getPlanName() {
+  if (!currentUser) return 'Free';
+  if (currentUser.isPro) return 'Pro';
+  if (currentUser.isGrow) return 'Grow';
+  return 'Free';
+}
 // ===================== RADIUS & LOCATION =====================
 let userLat = null;
 let userLng = null;
