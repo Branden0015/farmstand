@@ -2,10 +2,8 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-<meta http-equiv="Pragma" content="no-cache">
-<meta http-equiv="Expires" content="0">
-<meta name="version" content="v20.7-1777334971">
+<!-- Cache policy: versioned deployments handle cache busting -->
+<meta name="version" content="v21.1-1777338821">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -55,12 +53,17 @@ body { font-family: 'DM Sans', sans-serif; background: var(--cream); color: var(
 /* ===================== LANDING ===================== */
 #screen-landing {
   background: linear-gradient(160deg, #1a3d28 0%, #2d5a3d 50%, #3d7a55 100%);
-  align-items: center; justify-content: center;
-  position: fixed; inset: 0; overflow: hidden; z-index: 2000;
+  justify-content: center;
+  position: fixed; inset: 0; overflow-y: auto; z-index: 2000;
   display: none;
+  padding: 40px 20px;
+  -webkit-overflow-scrolling: touch;
+  box-sizing: border-box;
+  align-items: flex-start;
 }
 #screen-landing.active {
-  display: flex;
+  display: block;
+  padding: 40px 20px;
 }
 
 .landing-bg {
@@ -80,6 +83,7 @@ body { font-family: 'DM Sans', sans-serif; background: var(--cream); color: var(
   position: relative;
   z-index: 2;
   animation: fadeUp 0.5s ease;
+  margin: 0 auto;
 }
 
 @keyframes fadeUp {
@@ -987,7 +991,7 @@ body { font-family: 'DM Sans', sans-serif; background: var(--cream); color: var(
   .hours-g { grid-template-columns:auto 1fr 1fr; }
 
   /* landing */
-  .landing-card { padding:28px 20px; margin:12px; max-width:100%; }
+  .landing-card { padding:24px 16px; max-width:100%; margin:0 auto; }
   .landing-logo-text { font-size:26px; }
 
   /* bottom spacing */
@@ -1486,6 +1490,40 @@ input, select, textarea {
 }
 .search-this-area-btn:hover { background:var(--green); color:white; }
 .search-this-area-btn.visible { display:flex; }
+
+@media (max-width: 768px) {
+  #screen-landing {
+    padding: 20px 16px 60px;
+  }
+}
+
+/* ===== MAP LOADING STATE ===== */
+.map-loading-overlay {
+  position:absolute; inset:0; z-index:400;
+  display:flex; flex-direction:column;
+  align-items:center; justify-content:center;
+  background:rgba(255,255,255,0.85);
+  backdrop-filter:blur(4px);
+  pointer-events:none;
+  transition:opacity 0.4s ease;
+}
+.map-loading-overlay.hidden {
+  opacity:0; pointer-events:none;
+}
+.map-loading-spinner {
+  width:36px; height:36px;
+  border:3px solid var(--green3);
+  border-top-color:var(--green);
+  border-radius:50%;
+  animation:spin 0.8s linear infinite;
+  margin-bottom:12px;
+}
+@keyframes spin { to { transform:rotate(360deg); } }
+.map-loading-text {
+  font-family:'DM Sans',sans-serif;
+  font-size:14px; font-weight:600;
+  color:var(--green); text-align:center;
+}
 </style>
 </head>
 <body>
@@ -1519,6 +1557,10 @@ input, select, textarea {
       </div>
       <div class="form-err" id="login-err">Incorrect email or password. Please try again.</div>
       <button class="form-btn" id="login-btn" onclick="doLogin()">Sign In to My Farm Stand</button>
+      <div style="text-align:center;margin-top:8px">
+        <span style="font-size:12px;color:var(--text3)">Forgot your password? </span>
+        <span style="font-size:12px;color:var(--green);cursor:pointer;font-weight:600;text-decoration:underline" onclick="showForgotPassword()">Reset it</span>
+      </div>
       <div class="divider">or</div>
       <button class="buyer-btn" onclick="goMap()">🗺 Browse as a Buyer — No Account Needed</button>
     </div>
@@ -1542,11 +1584,42 @@ input, select, textarea {
         <input class="form-input" id="su-farm" type="text" placeholder="e.g. Sunny Acres Farm Stand">
       </div>
       <div class="form-err" id="su-err">Please fill in all fields.</div>
-      <button class="form-btn" id="signup-btn" onclick="doSignup()">Create My Farm Stand Account</button>
+
+      <!-- Ownership acknowledgment checkbox -->
+      <div style="display:flex;align-items:flex-start;gap:10px;background:var(--cream);border-radius:10px;padding:12px;margin-bottom:12px;border:1px solid var(--border)">
+        <input type="checkbox" id="owner-confirm-check"
+          style="width:18px;height:18px;margin-top:1px;flex-shrink:0;accent-color:var(--green);cursor:pointer"
+          onchange="updateSignupBtn()">
+        <label for="owner-confirm-check" style="font-size:12px;color:var(--text2);cursor:pointer;line-height:1.5">
+          By checking this box I confirm that I am the owner or authorized operator of a farm stand and agree to FarmStand's terms of service.
+        </label>
+      </div>
+
+      <button class="form-btn" id="signup-btn" onclick="doSignup()" disabled style="opacity:0.5;cursor:not-allowed">
+        Create My Farm Stand Account
+      </button>
       <div class="divider">or</div>
       <button class="buyer-btn" onclick="goMap()">🗺 Browse as a Buyer — No Account Needed</button>
     </div>
 
+    <!-- Forgot Password Panel -->
+    <div id="forgot-pw-panel" style="display:none;padding:8px 0">
+      <div style="text-align:center;padding:16px 0 8px">
+        <div style="font-size:32px;margin-bottom:8px">🔐</div>
+        <div style="font-family:'Playfair Display',serif;font-size:18px;font-weight:700;color:var(--green);margin-bottom:6px">Reset Password</div>
+        <div style="font-size:13px;color:var(--text3);margin-bottom:16px;line-height:1.5">Enter your email and we'll send you a reset link</div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">EMAIL ADDRESS</label>
+        <input class="form-input" id="forgot-email" type="email" placeholder="you@example.com"
+          onkeydown="if(event.key==='Enter')sendPasswordReset()">
+      </div>
+      <div class="form-err" id="forgot-err" style="display:none">Please enter a valid email address.</div>
+      <button class="form-btn" onclick="sendPasswordReset()">📧 Send Reset Link</button>
+      <div style="text-align:center;margin-top:10px">
+        <span style="font-size:12px;color:var(--green);cursor:pointer;text-decoration:underline" onclick="hideForgotPassword()">← Back to Sign In</span>
+      </div>
+    </div>
 
   </div>
 </div>
@@ -1743,6 +1816,12 @@ input, select, textarea {
     <div class="map-container">
       <div id="map"></div>
       <button class="locate-btn desktop-only" onclick="locateUser()" title="My location">◎</button>
+
+      <!-- Map loading overlay -->
+      <div class="map-loading-overlay" id="map-loading-overlay">
+        <div class="map-loading-spinner"></div>
+        <div class="map-loading-text">📍 Finding your location...</div>
+      </div>
 
       <!-- Search This Area button -->
       <button class="search-this-area-btn" id="search-this-area-btn" onclick="searchThisArea()">
@@ -2480,9 +2559,63 @@ const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 // ===================== AUTH =====================
 
+
+function showForgotPassword() {
+  const loginForm = document.getElementById('landing-form');
+  const forgotPanel = document.getElementById('forgot-pw-panel');
+  if (loginForm) loginForm.style.display = 'none';
+  if (forgotPanel) forgotPanel.style.display = 'block';
+  // Pre-fill email if already typed
+  const loginEmail = document.getElementById('login-email')?.value;
+  const forgotEmail = document.getElementById('forgot-email');
+  if (loginEmail && forgotEmail) forgotEmail.value = loginEmail;
+}
+
+function hideForgotPassword() {
+  const loginForm = document.getElementById('landing-form');
+  const forgotPanel = document.getElementById('forgot-pw-panel');
+  if (loginForm) loginForm.style.display = 'block';
+  if (forgotPanel) forgotPanel.style.display = 'none';
+}
+
+async function sendPasswordReset() {
+  const email = document.getElementById('forgot-email')?.value.trim().toLowerCase();
+  const errEl = document.getElementById('forgot-err');
+  if (!email || !email.includes('@')) {
+    if (errEl) { errEl.style.display = 'block'; errEl.textContent = 'Please enter a valid email address.'; }
+    return;
+  }
+  if (errEl) errEl.style.display = 'none';
+
+  try {
+    const { error } = await sb.auth.resetPasswordForEmail(email, {
+      redirectTo: 'https://branden0015.github.io/farmstand'
+    });
+    if (error) throw error;
+    // Show success message
+    const forgotPanel = document.getElementById('forgot-pw-panel');
+    if (forgotPanel) {
+      forgotPanel.innerHTML = `
+        <div style="text-align:center;padding:20px 0">
+          <div style="font-size:48px;margin-bottom:12px">📧</div>
+          <div style="font-family:'Playfair Display',serif;font-size:18px;font-weight:700;color:var(--green);margin-bottom:8px">Check your email!</div>
+          <div style="font-size:13px;color:var(--text2);margin-bottom:6px;line-height:1.5">We sent a password reset link to:</div>
+          <div style="font-size:14px;font-weight:700;color:var(--text);margin-bottom:16px">${email}</div>
+          <div style="font-size:12px;color:var(--text3);margin-bottom:20px;line-height:1.5">Click the link in your email to set a new password, then come back and sign in.</div>
+          <button class="form-btn" onclick="hideForgotPassword();document.getElementById('forgot-pw-panel').innerHTML=''">Back to Sign In</button>
+        </div>
+      `;
+    }
+  } catch(e) {
+    if (errEl) {
+      errEl.style.display = 'block';
+      errEl.textContent = 'Could not send reset email. Please check the address and try again.';
+    }
+  }
+}
 function updateSignupBtn() {
   const checked = document.getElementById('owner-confirm-check')?.checked;
-  const btn = document.getElementById('signup-submit-btn');
+  const btn = document.getElementById('signup-btn');
   if (btn) {
     btn.disabled = !checked;
     btn.style.opacity = checked ? '1' : '0.5';
@@ -2964,61 +3097,130 @@ function initMap() {
   mainMap.on('moveend', onMapMove);
   mainMap.on('click', closeAllPopups);
 
-  // Load live stand data from Supabase then render
-  loadStandsFromDB().then(() => {
-    renderAll();
-    // GPS location
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        pos => {
-          setUserLocation(pos.coords.latitude, pos.coords.longitude, 'gps');
-          zoomToRadius(pos.coords.latitude, pos.coords.longitude, radiusMiles);
-        },
-        () => tryMapCenter(),
-        { timeout: 4000, maximumAge: 60000 }
-      );
-    } else {
-      tryMapCenter();
-    }
-  });
+  // Show loading state — don't render stands until location is known
+  showMapLoading('📍 Finding your location...');
+
+  // Step 1: Get location first
+  getLocationThenLoadStands();
 
   updateFavBadge();
 }
 
-async function loadStandsFromDB() {
+
+function showMapLoading(msg) {
+  const overlay = document.getElementById('map-loading-overlay');
+  if (overlay) {
+    overlay.querySelector('.map-loading-text').textContent = msg || '📍 Finding your location...';
+    overlay.classList.remove('hidden');
+  }
+}
+
+function hideMapLoading() {
+  const overlay = document.getElementById('map-loading-overlay');
+  if (overlay) overlay.classList.add('hidden');
+}
+
+async function getLocationThenLoadStands() {
+  // Try GPS first
+  if (navigator.geolocation) {
+    await new Promise(resolve => {
+      navigator.geolocation.getCurrentPosition(
+        pos => {
+          setUserLocation(pos.coords.latitude, pos.coords.longitude, 'gps');
+          resolve();
+        },
+        () => {
+          // GPS failed — use map center (Plymouth WI default)
+          userLat = 43.755; userLng = -87.980;
+          resolve();
+        },
+        { timeout: 5000, maximumAge: 60000 }
+      );
+    });
+  } else {
+    userLat = 43.755; userLng = -87.980;
+  }
+
+  // Now we have a location — load only nearby stands
+  showMapLoading('🌾 Loading farm stands...');
+  await loadStandsFromDB(userLat, userLng, radiusMiles);
+  updateStandDistances();
+
+  // Render and zoom
+  renderAll();
+  hideMapLoading();
+  if (userLat && userLng) {
+    zoomToRadius(userLat, userLng, radiusMiles);
+    // Update location labels
+    fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${userLat}&lon=${userLng}`)
+      .then(r => r.json())
+      .then(data => {
+        const city = data.address?.city || data.address?.town || data.address?.village || data.address?.county || 'Your area';
+        const state = data.address?.state_code || '';
+        updateLocationLabels(city + (state ? ', ' + state : ''));
+      }).catch(() => updateLocationLabels('Your area'));
+  }
+}
+
+// Also reload stands when search area changes significantly
+async function reloadStandsForArea(lat, lng, miles) {
+  showMapLoading('🌾 Loading farm stands...');
+  await loadStandsFromDB(lat, lng, miles);
+  updateStandDistances();
+  renderAll();
+  hideMapLoading();
+}
+function calcBoundingBox(lat, lng, miles) {
+  // 1 degree lat = 69 miles, 1 degree lng varies by lat
+  const latDelta = miles / 69.0;
+  const lngDelta = miles / (69.0 * Math.cos(lat * Math.PI / 180));
+  return {
+    minLat: lat - latDelta, maxLat: lat + latDelta,
+    minLng: lng - lngDelta, maxLng: lng + lngDelta
+  };
+}
+
+async function loadStandsFromDB(centerLat, centerLng, miles) {
   try {
-    const { data, error } = await sb.from('owners')
+    let query = sb.from('owners')
       .select('id, farm, description, addr, phone, lat, lng, photo, cats, custom_items, emoji, stand_id')
       .not('lat', 'is', null)
       .not('lng', 'is', null);
 
+    // If we have a location, filter by bounding box server-side
+    if (centerLat && centerLng && miles) {
+      const box = calcBoundingBox(centerLat, centerLng, miles);
+      query = query
+        .gte('lat', box.minLat).lte('lat', box.maxLat)
+        .gte('lng', box.minLng).lte('lng', box.maxLng);
+    }
+
+    const { data, error } = await query;
     if (error || !data) return;
+
+    // Reset STANDS to hardcoded defaults then merge DB data
+    // Remove any previously dynamically added stands (id >= 1000)
+    for (let i = STANDS.length - 1; i >= 0; i--) {
+      if (STANDS[i].id >= 1000) STANDS.splice(i, 1);
+    }
 
     data.forEach(owner => {
       if (!owner.lat || !owner.lng) return;
       const lat = parseFloat(owner.lat);
       const lng = parseFloat(owner.lng);
-
-      // Try to find existing stand by stand_id
       let stand = owner.stand_id ? STANDS.find(s => s.id === owner.stand_id) : null;
 
-      // If no stand found but owner has valid coords, add as new stand
-      if (!stand && owner.farm && owner.lat && owner.lng) {
-        // Check if already added
+      if (!stand && owner.farm) {
         const exists = STANDS.find(s => s.name === owner.farm);
         if (!exists) {
           stand = {
             id: 1000 + STANDS.length,
             name: owner.farm || 'Farm Stand',
             emoji: owner.emoji || '🌾',
-            dist: '--',
-            address: owner.addr || '',
-            lat, lng,
-            status: 'open',
-            hours: 'See profile',
+            dist: '--', address: owner.addr || '',
+            lat, lng, status: 'open', hours: 'See profile',
             desc: owner.description || '',
-            products: [],
-            cats: owner.cats || [],
+            products: [], cats: owner.cats || [],
             customItems: owner.custom_items || [],
             photo: owner.photo || null
           };
@@ -3026,14 +3228,12 @@ async function loadStandsFromDB() {
         }
       }
 
-      // Update stand with live DB data
       if (stand) {
         if (owner.farm) stand.name = owner.farm;
         if (owner.description) stand.desc = owner.description;
         if (owner.addr) stand.address = owner.addr;
         if (owner.phone) stand.phone = owner.phone;
-        stand.lat = lat;
-        stand.lng = lng;
+        stand.lat = lat; stand.lng = lng;
         if (owner.photo) stand.photo = owner.photo;
         if (owner.cats && owner.cats.length) stand.cats = owner.cats;
         if (owner.custom_items && owner.custom_items.length) stand.customItems = owner.custom_items;
@@ -3041,32 +3241,34 @@ async function loadStandsFromDB() {
       }
     });
 
-    console.log('✅ Loaded', data.length, 'owners from database, total stands:', STANDS.length);
+    // Load gallery photos
+    if (data.length) {
+      try {
+        const ownerIds = data.map(o => o.id);
+        const { data: allPhotos } = await sb.from('gallery_photos')
+          .select('owner_id, photo_url, sort_order')
+          .in('owner_id', ownerIds)
+          .order('sort_order');
+        if (allPhotos) {
+          const ownerToStand = {};
+          data.forEach(owner => {
+            const stand = STANDS.find(s => s.name === owner.farm || s.id === owner.stand_id);
+            if (stand) ownerToStand[owner.id] = stand;
+          });
+          allPhotos.forEach(p => {
+            const stand = ownerToStand[p.owner_id];
+            if (stand) {
+              if (!stand.galleryPhotos) stand.galleryPhotos = [];
+              stand.galleryPhotos.push(p.photo_url);
+            }
+          });
+        }
+      } catch(e) {}
+    }
 
-    // Load gallery photos for all stands
-    try {
-      const { data: allPhotos } = await sb.from('gallery_photos')
-        .select('owner_id, photo_url, sort_order')
-        .order('sort_order');
-      if (allPhotos && allPhotos.length) {
-        // Map owner_id to stand
-        const ownerToStand = {};
-        data.forEach(owner => {
-          const stand = STANDS.find(s => s.name === owner.farm || s.id === owner.stand_id);
-          if (stand) ownerToStand[owner.id] = stand;
-        });
-        allPhotos.forEach(p => {
-          const stand = ownerToStand[p.owner_id];
-          if (stand) {
-            if (!stand.galleryPhotos) stand.galleryPhotos = [];
-            stand.galleryPhotos.push(p.photo_url);
-          }
-        });
-      }
-    } catch(e) { console.warn('Could not load gallery photos:', e); }
-
+    console.log('✅ Loaded', data.length, 'stands for area, total:', STANDS.length);
   } catch(e) {
-    console.warn('Could not load stands from DB, using defaults:', e);
+    console.warn('Could not load stands from DB:', e);
   }
 }
 
@@ -5492,8 +5694,8 @@ function searchThisArea() {
   const btn = document.getElementById('search-this-area-btn');
   if (btn) btn.classList.remove('visible');
 
-  // Re-render with new center
-  renderAll();
+  // Reload stands for new area from DB
+  reloadStandsForArea(center.lat, center.lng, radiusMiles);
   if (typeof mobileViewMode !== 'undefined' && mobileViewMode === 'list') renderMobileListView();
   showToast('🔍 Showing stands in this area');
 }
@@ -5548,6 +5750,8 @@ function applyRadius() {
   const lat = userLat || (center ? center.lat : 43.7517);
   const lng = userLng || (center ? center.lng : -87.9768);
   zoomToRadius(lat, lng, stagedRadius);
+  // Reload stands for new radius
+  reloadStandsForArea(lat, lng, stagedRadius);
   showToast(`🗺 Showing stands within ${stagedRadius} miles`);
 }
 
