@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <!-- Cache policy: versioned deployments handle cache busting -->
-<meta name="version" content="v21.2-1777339932">
+<meta name="version" content="v21.3-1777341357">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -307,7 +307,7 @@ body { font-family: 'DM Sans', sans-serif; background: var(--cream); color: var(
 .pbtn-stop.added { background: var(--green); color: white; border-color: var(--green); }
 
 /* ===================== DASHBOARD ===================== */
-#screen-dashboard { flex-direction: column; overflow: hidden; }
+#screen-dashboard { flex-direction: column; overflow: hidden; position: fixed; inset: 0; z-index: 500; }
 .dash-body { display: flex; flex: 1; overflow: hidden; }
 
 /* Dash sidebar nav */
@@ -2741,9 +2741,18 @@ function doLogout() {
   menuItems = [];
   galleryPhotos = [];
   customItems = [];
+  // Hide dashboard
+  const dashboard = document.getElementById('screen-dashboard');
+  if (dashboard) { dashboard.classList.remove('active'); dashboard.style.display = 'none'; }
   // Restore buyer mobile nav
-  if (isMobile()) showBuyerMobileNav();
-  showScreen('landing');
+  if (isMobile()) {
+    showBuyerMobileNav();
+    // Reset list view if active
+    mobileViewMode = 'map';
+    const listView = document.getElementById('mobile-list-view');
+    if (listView) listView.style.display = 'none';
+  }
+  showLanding();
 }
 
 let currentUser = null;
@@ -2857,33 +2866,44 @@ async function loginSuccess(user) {
     if (stand) { pendingLat = user.lat || stand.lat; pendingLng = user.lng || stand.lng; }
   }
 
+  // Clean up all mobile UI layers before showing dashboard
+  if (isMobile()) {
+    // Hide list view if active
+    mobileViewMode = 'map';
+    const listView = document.getElementById('mobile-list-view');
+    if (listView) listView.style.display = 'none';
+    // Reset toggle button
+    const toggleLabel = document.getElementById('toggle-label');
+    const toggleIcon = document.getElementById('toggle-icon');
+    if (toggleLabel) toggleLabel.textContent = 'List';
+    if (toggleIcon) toggleIcon.innerHTML = '<line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/>';
+    // Hide landing screen
+    const landing = document.getElementById('screen-landing');
+    if (landing) { landing.classList.remove('active'); landing.style.display = 'none'; }
+    // Show owner nav
+    showOwnerMobileNav();
+  }
+
   showScreen('dashboard');
   setTimeout(() => updateDashboardStats(user.isGrow), 50);
-  // Switch to owner mobile nav
-  if (isMobile()) showOwnerMobileNav();
 }
 
 
 
 // ===================== NAVIGATION =====================
 function showScreen(id) {
-  // Hide all screens EXCEPT map (always keep map in DOM for Leaflet)
+  // Hide all non-map screens
   document.querySelectorAll('.screen').forEach(s => {
-    if (s.id === 'screen-map') return; // never hide map screen
+    if (s.id === 'screen-map') return; // never hide map
     s.classList.remove('active');
-    if (s.id === 'screen-landing') s.style.display = 'none';
+    s.style.display = 'none';
   });
 
-  // Show target screen
   const target = document.getElementById('screen-' + id);
   if (!target) return;
 
   if (id === 'map') {
-    // Map is always visible — just hide landing overlay
-    const landing = document.getElementById('screen-landing');
-    if (landing) { landing.classList.remove('active'); landing.style.display = 'none'; }
-    // Hide other screens
-    document.querySelectorAll('.screen:not(#screen-map)').forEach(s => s.classList.remove('active'));
+    // Show map — it's always rendered
     document.getElementById('screen-map').classList.add('active');
     if (!mapInited) { setTimeout(initMap, 100); mapInited = true; }
     if (mainMap) {
@@ -2894,12 +2914,22 @@ function showScreen(id) {
   } else if (id === 'landing') {
     target.classList.add('active');
     target.style.display = 'flex';
+  } else if (id === 'dashboard') {
+    target.classList.add('active');
+    target.style.display = 'flex';
   } else {
     target.classList.add('active');
+    target.style.display = 'flex';
   }
 }
 
 function goMap() {
+  // Hide dashboard and landing explicitly (position:fixed screens)
+  const dashboard = document.getElementById('screen-dashboard');
+  if (dashboard) { dashboard.classList.remove('active'); dashboard.style.display = 'none'; }
+  const landing = document.getElementById('screen-landing');
+  if (landing) { landing.classList.remove('active'); landing.style.display = 'none'; }
+
   showScreen('map');
 
   // CRITICAL: Restore map-body which mobileNav hides when switching tabs
