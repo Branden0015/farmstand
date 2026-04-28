@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <!-- Cache policy: versioned deployments handle cache busting -->
-<meta name="version" content="v21.7-1777344999">
+<meta name="version" content="v21.9-1777346925">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -2348,7 +2348,7 @@ input, select, textarea {
 
         <!-- Save Menu button -->
         <div class="save-bar" style="margin-top:16px">
-          <button class="save-btn" onclick="saveMenuItems()" style="width:100%;padding:14px;font-size:15px">✓ Save Menu</button>
+          <button class="save-btn" onclick="saveMenuItems()">✓ Save Menu</button>
         </div>
       </div>
 
@@ -2810,7 +2810,7 @@ function doLogout() {
   // Hide dashboard
   const dashboard = document.getElementById('screen-dashboard');
   if (dashboard) { dashboard.classList.remove('active'); dashboard.style.display = 'none'; }
-  updateOwnerHeaderBtn();
+  updateOwnerHeaderBtn(); // Reset button text to Sign In
   // Restore buyer mobile nav
   if (isMobile()) {
     showBuyerMobileNav();
@@ -2906,6 +2906,8 @@ async function loginSuccess(user) {
   } catch(e) { menuItems = []; }
   renderMenuList();
   updateMenuCount();
+  // Sync to STAND_MENU so profile view matches
+  setTimeout(syncMenuItemsToStand, 200);
 
   // Load gallery photos from database
   try {
@@ -3048,6 +3050,8 @@ window.addEventListener('load', () => {
 });
 
 function showPanel(name) {
+  // Revert any unsaved price edits when leaving menu panel
+  if (name !== 'menu') revertAllPrices();
   document.querySelectorAll('.dash-panel').forEach(p => p.classList.remove('active'));
   document.getElementById('panel-'+name).classList.add('active');
   document.querySelectorAll('.dash-nav-item').forEach(b => b.classList.remove('active'));
@@ -3758,16 +3762,36 @@ function renderMenuList() {
   }).join('');
 }
 
+
+function revertAllPrices() {
+  // Revert any open price inputs back to their original display
+  document.querySelectorAll('[id^="price-wrap-"]').forEach(wrap => {
+    const original = wrap.getAttribute('data-original');
+    if (original) {
+      const i = wrap.id.replace('price-wrap-', '');
+      wrap.removeAttribute('data-original');
+      wrap.innerHTML = `
+        <span class="menu-row-price" id="price-display-${i}">${original}</span>
+        <button class="price-edit-btn" onclick="startEditPrice(${i})" title="Edit price">✏️</button>
+      `;
+      // Also revert the menuItems array
+      menuItems[parseInt(i)].price = original === '—' ? '' : original;
+    }
+  });
+}
 function startEditPrice(i) {
   const priceWrap = document.getElementById('price-wrap-' + i);
   if (!priceWrap) return;
   const numericPrice = (menuItems[i].price || '').replace(/[^0-9.]/g, '');
+  // Store original price so we can revert if needed
+  priceWrap.setAttribute('data-original', menuItems[i].price || '—');
   priceWrap.innerHTML = `
     <div style="display:flex;align-items:center;gap:2px;border:2px solid var(--green);border-radius:6px;padding:4px 8px;background:white">
       <span style="color:var(--green);font-weight:700;font-size:14px">$</span>
-      <input type="number" id="price-input-${i}" value="${numericPrice}" min="0" step="0.01"
+      <input type="text" inputmode="decimal" id="price-input-${i}" value="${numericPrice}" 
         data-index="${i}"
         style="width:70px;border:none;outline:none;font-size:14px;font-weight:600;color:var(--green);font-family:'DM Sans',sans-serif;background:transparent"
+        onkeypress="return /[0-9.]/.test(event.key)"
         onkeydown="if(event.key==='Escape')cancelEditPrice(${i})">
     </div>
   `;
@@ -3790,7 +3814,7 @@ async function saveMenuItems() {
   document.querySelectorAll('[id^="price-input-"]').forEach(input => {
     const i = parseInt(input.getAttribute('data-index'));
     if (isNaN(i)) return;
-    const val = parseFloat(input.value);
+    const val = parseFloat(input.value.replace(/[^0-9.]/g, ''));
     if (!isNaN(val) && val >= 0) {
       menuItems[i].price = '$' + val.toFixed(2);
     }
@@ -3800,11 +3824,37 @@ async function saveMenuItems() {
   if (!currentUser) return;
   try {
     await sb.from('owners').update({ menu_items: menuItems }).eq('id', currentUser.id);
+
+    // Sync to STAND_MENU so profile view shows updated items
+    syncMenuItemsToStand();
+
     showToast('✅ Menu saved!');
     renderMenuList(); // Re-render to show updated prices in display mode
   } catch(e) {
     showToast('⚠️ Could not save menu — please try again');
     console.warn('Menu save error:', e);
+  }
+}
+
+function syncMenuItemsToStand() {
+  if (!currentUser || !currentUser.stand_id) return;
+  // Group menu items by category for STAND_MENU
+  const grouped = {};
+  menuItems.forEach(item => {
+    if (!grouped[item.cat]) grouped[item.cat] = [];
+    grouped[item.cat].push({
+      name: item.name,
+      price: item.price,
+      avail: item.avail,
+      desc: item.desc || ''
+    });
+  });
+  STAND_MENU[currentUser.stand_id] = Object.entries(grouped).map(([cat, items]) => ({ cat, items }));
+
+  // Also update the stand's products list for search/filtering
+  const stand = STANDS.find(s => s.id === currentUser.stand_id);
+  if (stand) {
+    stand.products = menuItems.filter(i => i.avail).map(i => i.name);
   }
 }
 
