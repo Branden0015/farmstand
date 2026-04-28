@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <!-- Cache policy: versioned deployments handle cache busting -->
-<meta name="version" content="v21.1-1777338821">
+<meta name="version" content="v21.2-1777339932">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -1250,7 +1250,7 @@ body { font-family: 'DM Sans', sans-serif; background: var(--cream); color: var(
 .mobile-list-view {
   display: none;
   position: fixed;
-  top: 52px; left: 0; right: 0; bottom: 58px;
+  top: 154px; left: 0; right: 0; bottom: 58px;
   z-index: 300;
   background: var(--cream);
   flex-direction: column;
@@ -1284,17 +1284,21 @@ body { font-family: 'DM Sans', sans-serif; background: var(--cream); color: var(
   cursor: pointer;
   box-shadow: 0 1px 6px rgba(42,31,22,0.06);
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
+  height: 100px;
+  flex-shrink: 0;
 }
 .mobile-list-card-img {
-  width: 100%;
-  height: 140px;
+  width: 100px;
+  height: 100px;
+  min-width: 100px;
   background: var(--green3);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 56px;
+  font-size: 48px;
   position: relative;
+  flex-shrink: 0;
 }
 .mobile-list-card-img img {
   width: 100%; height: 100%;
@@ -1302,20 +1306,21 @@ body { font-family: 'DM Sans', sans-serif; background: var(--cream); color: var(
 }
 .mobile-list-card-status {
   position: absolute;
-  top: 10px; left: 10px;
-  padding: 3px 10px;
-  border-radius: 12px;
-  font-size: 11px;
+  bottom: 6px; left: 6px;
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-size: 10px;
   font-weight: 700;
   font-family: 'DM Sans', sans-serif;
 }
 .mobile-list-card-status.open { background: var(--green); color: white; }
 .mobile-list-card-status.closed { background: rgba(0,0,0,0.5); color: white; }
-.mobile-list-card-body { padding: 12px 14px; }
+.mobile-list-card-body { padding: 10px 14px; flex: 1; display: flex; flex-direction: column; justify-content: center; min-width: 0; overflow: hidden; }
 .mobile-list-card-name {
   font-family: 'Playfair Display', serif;
-  font-size: 16px; font-weight: 700;
-  color: var(--text); margin-bottom: 3px;
+  font-size: 14px; font-weight: 700;
+  color: var(--text); margin-bottom: 2px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
 .mobile-list-card-dist {
   font-size: 12px; color: var(--text3);
@@ -4856,21 +4861,33 @@ function renderMobileListView() {
     return;
   }
   scroll.innerHTML = filtered.map(s => `
-    <div class="mobile-list-card" onclick="switchToMapAndSelect(${s.id})">
+    <div class="mobile-list-card" onclick="openProfileFromList(${s.id})">
       <div class="mobile-list-card-img">
         ${s.photo ? `<img src="${s.photo}" alt="${s.name}">` : `<span>${s.emoji}</span>`}
         <div class="mobile-list-card-status ${s.status}">${s.status === 'open' ? 'Open' : 'Closed'}</div>
       </div>
       <div class="mobile-list-card-body">
         <div class="mobile-list-card-name">${s.name}</div>
-        <div class="mobile-list-card-dist">📍 ${s.dist || 'Nearby'} · ${s.hours || ''}</div>
+        <div class="mobile-list-card-dist">📍 ${s.dist || 'Nearby'} · <span style="color:${s.status==='open'?'var(--green)':'var(--text3)'}">${s.status === 'open' ? '🟢 Open' : '🔴 Closed'}</span></div>
         <div class="mobile-list-card-tags">
-          ${s.products.slice(0,3).map(p => `<span class="mobile-list-card-tag">${p}</span>`).join('')}
+          ${s.cats ? s.cats.slice(0,2).map(c => `<span class="mobile-list-card-tag">${c.split(' ')[0]}</span>`).join('') : s.products.slice(0,2).map(p => `<span class="mobile-list-card-tag">${p}</span>`).join('')}
         </div>
       </div>
     </div>`).join('');
 }
 
+
+function openProfileFromList(standId) {
+  // Switch to map view first (so profile overlay has a map behind it)
+  if (mobileViewMode === 'list') {
+    mobileViewMode = 'list'; // keep track
+    toggleMobileView(); // switch to map
+  }
+  // Small delay to let map render then open profile
+  setTimeout(() => {
+    openProfile(standId);
+  }, 100);
+}
 function switchToMapAndSelect(standId) {
   mobileViewMode = 'list';
   toggleMobileView();
