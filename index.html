@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <!-- Cache policy: versioned deployments handle cache busting -->
-<meta name="version" content="v21.6-1777344376">
+<meta name="version" content="v21.7-1777344999">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -2345,6 +2345,11 @@ input, select, textarea {
             <button class="add-row-btn" onclick="addMenuItem()" style="padding:9px 20px">+ Add Item</button>
           </div>
         </div>
+
+        <!-- Save Menu button -->
+        <div class="save-bar" style="margin-top:16px">
+          <button class="save-btn" onclick="saveMenuItems()" style="width:100%;padding:14px;font-size:15px">✓ Save Menu</button>
+        </div>
       </div>
 
       <!-- Hours Panel -->
@@ -3758,35 +3763,15 @@ function startEditPrice(i) {
   if (!priceWrap) return;
   const numericPrice = (menuItems[i].price || '').replace(/[^0-9.]/g, '');
   priceWrap.innerHTML = `
-    <div style="display:flex;align-items:center;gap:2px;border:2px solid var(--green);border-radius:6px;padding:3px 8px;background:white;min-width:80px">
+    <div style="display:flex;align-items:center;gap:2px;border:2px solid var(--green);border-radius:6px;padding:4px 8px;background:white">
       <span style="color:var(--green);font-weight:700;font-size:14px">$</span>
       <input type="number" id="price-input-${i}" value="${numericPrice}" min="0" step="0.01"
-        style="width:65px;border:none;outline:none;font-size:14px;font-weight:600;color:var(--green);font-family:'DM Sans',sans-serif;background:transparent"
-        onkeydown="if(event.key==='Enter'){stagePrice(${i});this.blur()}if(event.key==='Escape')cancelEditPrice(${i})"
-        onblur="stagePrice(${i})">
+        data-index="${i}"
+        style="width:70px;border:none;outline:none;font-size:14px;font-weight:600;color:var(--green);font-family:'DM Sans',sans-serif;background:transparent"
+        onkeydown="if(event.key==='Escape')cancelEditPrice(${i})">
     </div>
   `;
   setTimeout(() => { const inp = document.getElementById('price-input-' + i); if(inp){inp.focus();inp.select();} }, 50);
-}
-
-function stagePrice(i) {
-  // Stage the price change in memory — will be saved when Save Menu is clicked
-  const input = document.getElementById('price-input-' + i);
-  if (!input) return;
-  const val = parseFloat(input.value);
-  if (isNaN(val) || val < 0) {
-    cancelEditPrice(i);
-    return;
-  }
-  const formatted = '$' + val.toFixed(2);
-  menuItems[i].price = formatted;
-  const priceWrap = document.getElementById('price-wrap-' + i);
-  if (priceWrap) {
-    priceWrap.innerHTML = `
-      <span class="menu-row-price" id="price-display-${i}" style="color:var(--green);font-style:italic">${formatted} ✓</span>
-      <button class="price-edit-btn" onclick="startEditPrice(${i})" title="Edit price">✏️</button>
-    `;
-  }
 }
 
 function cancelEditPrice(i) {
@@ -3797,6 +3782,29 @@ function cancelEditPrice(i) {
       <span class="menu-row-price" id="price-display-${i}">${priceDisplay}</span>
       <button class="price-edit-btn" onclick="startEditPrice(${i})" title="Edit price">✏️</button>
     `;
+  }
+}
+
+async function saveMenuItems() {
+  // Collect any open price inputs first
+  document.querySelectorAll('[id^="price-input-"]').forEach(input => {
+    const i = parseInt(input.getAttribute('data-index'));
+    if (isNaN(i)) return;
+    const val = parseFloat(input.value);
+    if (!isNaN(val) && val >= 0) {
+      menuItems[i].price = '$' + val.toFixed(2);
+    }
+  });
+
+  // Save to Supabase
+  if (!currentUser) return;
+  try {
+    await sb.from('owners').update({ menu_items: menuItems }).eq('id', currentUser.id);
+    showToast('✅ Menu saved!');
+    renderMenuList(); // Re-render to show updated prices in display mode
+  } catch(e) {
+    showToast('⚠️ Could not save menu — please try again');
+    console.warn('Menu save error:', e);
   }
 }
 
