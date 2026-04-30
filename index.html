@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <!-- Cache policy: versioned deployments handle cache busting -->
-<meta name="version" content="v22.5-1777513417">
+<meta name="version" content="v22.6-1777513791">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -1620,9 +1620,10 @@ input, select, textarea {
   transition: border 0.15s;
   width: 100%;
   box-sizing: border-box;
+  cursor: pointer;
 }
 .hours-in:focus { border-color: var(--green2); background: white; }
-.hours-in.closed { color: var(--text3); font-style: italic; }
+.hours-in:disabled { color: var(--text3); background: var(--cream2); cursor: not-allowed; opacity: 0.5; }
 .hours-closed-toggle {
   background: none;
   border: none;
@@ -6209,7 +6210,6 @@ function renderHoursPanel() {
   const grid = document.getElementById('hours-grid');
   if (!grid) return;
 
-  // Add column headers
   grid.innerHTML = `
     <div></div>
     <div style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:0.05em">Opens</div>
@@ -6217,21 +6217,18 @@ function renderHoursPanel() {
     <div></div>
   ` + DAYS.map(day => {
     const h = ownerHours[day] || {};
-    const isClosed = h.closed || (!h.open && !h.close);
+    const isClosed = h.closed || false;
     return `
       <div class="hours-day-label">${day.slice(0,3)}</div>
-      <input class="hours-in${isClosed?' closed':''}" id="hours-open-${day}"
-        value="${isClosed ? '' : (h.open || '')}"
-        placeholder="${isClosed ? 'Closed' : '8:00 AM'}"
+      <input type="time" class="hours-in${isClosed?' closed':''}" id="hours-open-${day}"
+        value="${isClosed ? '' : (h.open || '08:00')}"
         ${isClosed ? 'disabled' : ''}
-        onchange="ownerHours['${day}'] = ownerHours['${day}'] || {}; ownerHours['${day}'].open = this.value;">
-      <input class="hours-in${isClosed?' closed':''}" id="hours-close-${day}"
-        value="${isClosed ? '' : (h.close || '')}"
-        placeholder="${isClosed ? 'Closed' : '5:00 PM'}"
+        onchange="if(!ownerHours['${day}'])ownerHours['${day}']={};ownerHours['${day}'].open=this.value;">
+      <input type="time" class="hours-in${isClosed?' closed':''}" id="hours-close-${day}"
+        value="${isClosed ? '' : (h.close || '17:00')}"
         ${isClosed ? 'disabled' : ''}
-        onchange="ownerHours['${day}'] = ownerHours['${day}'] || {}; ownerHours['${day}'].close = this.value;">
-      <button class="hours-closed-toggle${isClosed?' is-closed':''}" 
-        id="hours-toggle-${day}"
+        onchange="if(!ownerHours['${day}'])ownerHours['${day}']={};ownerHours['${day}'].close=this.value;">
+      <button class="hours-closed-toggle${isClosed?' is-closed':''}"
         onclick="toggleDayClosed('${day}')"
         title="${isClosed ? 'Mark as open' : 'Mark as closed'}">
         ${isClosed ? '✕ Closed' : 'Open'}
@@ -6246,19 +6243,25 @@ function toggleDayClosed(day) {
   renderHoursPanel();
 }
 
+function formatTime12(t) {
+  if (!t) return '';
+  const [h, m] = t.split(':').map(Number);
+  const ampm = h >= 12 ? 'PM' : 'AM';
+  const hour = h % 12 || 12;
+  return m === 0 ? `${hour}${ampm}` : `${hour}:${String(m).padStart(2,'0')}${ampm}`;
+}
+
 function getHoursString() {
-  // Build a short summary string for the stand card e.g. "Mon–Fri 8AM–5PM"
   const openDays = DAYS.filter(d => ownerHours[d] && !ownerHours[d].closed && ownerHours[d].open);
   if (!openDays.length) return 'Hours vary';
-  // Simple format: show first and last open day
   if (openDays.length === 1) {
     const h = ownerHours[openDays[0]];
-    return `${openDays[0].slice(0,3)} ${h.open}–${h.close}`;
+    return `${openDays[0].slice(0,3)} ${formatTime12(h.open)}–${formatTime12(h.close)}`;
   }
   const first = openDays[0];
   const last = openDays[openDays.length - 1];
   const h = ownerHours[first];
-  return `${first.slice(0,3)}–${last.slice(0,3)} ${h.open || ''}–${h.close || ''}`;
+  return `${first.slice(0,3)}–${last.slice(0,3)} ${formatTime12(h.open)}–${formatTime12(h.close)}`;
 }
 
 async function saveHours() {
@@ -6309,15 +6312,15 @@ async function loadOwnerHours() {
       // Default — all days open
       DAYS.forEach(day => {
         ownerHours[day] = {
-          open: day === 'Sunday' ? '' : '8:00 AM',
-          close: day === 'Sunday' ? '' : '5:00 PM',
+          open: day === 'Sunday' ? '' : '08:00',
+          close: day === 'Sunday' ? '' : '17:00',
           closed: day === 'Sunday'
         };
       });
     }
     renderHoursPanel();
   } catch(e) {
-    DAYS.forEach(day => { ownerHours[day] = { open: '8:00 AM', close: '5:00 PM', closed: false }; });
+    DAYS.forEach(day => { ownerHours[day] = { open: '08:00', close: '17:00', closed: false }; });
     renderHoursPanel();
   }
 }
