@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <!-- Cache policy: versioned deployments handle cache busting -->
-<meta name="version" content="v22.2-1777510991">
+<meta name="version" content="v22.3-1777512044">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -2306,7 +2306,7 @@ input, select, textarea {
               <option value="seasonal">🌿 Seasonal Item</option>
               <option value="alert">⚠️ Important Notice</option>
             </select>
-            <button class="composer-post-btn" onclick="postNews()">Post Update →</button>
+            <div style="display:flex;align-items:center;gap:10px;justify-content:space-between"><span id="news-post-count" style="font-size:11px;color:var(--text3)"></span><button class="composer-post-btn" onclick="postNews()">Post Update →</button></div>
           </div>
         </div>
 
@@ -2893,6 +2893,8 @@ async function loginSuccess(user) {
   updateMenuCount();
   // Sync to STAND_MENU so profile view matches
   setTimeout(syncMenuItemsToStand, 200);
+  // Load real news posts
+  loadOwnerNewsPosts();
 
   // Load gallery photos from database
   try {
@@ -3938,30 +3940,19 @@ async function saveProfile() {
 }
 
 // ===================== NEWS FEED =====================
-let newsPosts = {
-  1: [
-    { id:1, tag:'seasonal', text:'Sweet corn is HERE! First harvest of the season just came in this morning — tender, sweet, and as fresh as it gets. Stop by early, we sell out fast!', time:'2 hours ago', emoji:'🌽' },
-    { id:2, tag:'special', text:'Buy 3 dozen ears of corn and get a free bouquet of sunflowers this weekend only. Come see us Saturday and Sunday 7AM–6PM!', time:'1 day ago', emoji:'🌻' },
-    { id:3, tag:'news', text:'We\'ve added fresh heirloom tomatoes to our stand — 6 varieties including Cherokee Purple, Brandywine, and Green Zebra. Priced at $3.50/lb.', time:'3 days ago', emoji:'🍅' },
-  ],
-  2: [
-    { id:1, tag:'news', text:'New batch of aged cheddar is ready! Been aging for 6 months — sharp, rich, and perfect. Available in 1/2 lb and 1 lb portions.', time:'5 hours ago', emoji:'🧀' },
-    { id:2, tag:'seasonal', text:'Fall laying season is in full swing — eggs are extra rich and golden-yolked right now. Grab a few dozen while supply is high!', time:'2 days ago', emoji:'🥚' },
-  ],
-  3: [
-    { id:1, tag:'special', text:'Fall honey harvest is complete! This year\'s wildflower honey is exceptional — lighter color, floral notes from the late-season clover. Limited supply.', time:'1 day ago', emoji:'🍯' },
-    { id:2, tag:'alert', text:'Closed this Saturday for the county fair — back open Sunday 10AM. Thanks for your patience!', time:'3 days ago', emoji:'📅' },
-  ],
-  4: [
-    { id:1, tag:'news', text:'Sourdough Friday is back! Fresh loaves every Friday morning starting at 8AM. We sell out by 10 most weeks so come early.', time:'4 hours ago', emoji:'🍞' },
-  ],
-  5: [
-    { id:1, tag:'seasonal', text:'Beef quarters and halves available for pre-order for winter. Grass-fed, dry-aged 21 days. Contact us for pricing and availability.', time:'2 days ago', emoji:'🥩' },
-  ],
-  6: [
-    { id:1, tag:'news', text:'Dahlias are at peak bloom! Over 40 varieties available for U-pick or pre-cut bundles. Best selection on Thursdays and Fridays.', time:'6 hours ago', emoji:'🌸' },
-  ],
-};
+// News posts loaded from Supabase — keyed by stand_id
+let newsPosts = {};
+
+// ===================== NEWS POST LIMITS =====================
+const NEWS_LIMITS = { free: 5, grow: 25, pro: Infinity };
+
+function getNewsLimit() {
+  if (!currentUser) return NEWS_LIMITS.free;
+  if (currentUser.isPro) return NEWS_LIMITS.pro;
+  if (currentUser.isGrow) return NEWS_LIMITS.grow;
+  return NEWS_LIMITS.free;
+}
+
 
 let ownerNewsPosts = [];
 
@@ -3969,35 +3960,69 @@ async function postNews() {
   const text = document.getElementById('news-composer').value.trim();
   const tag = document.getElementById('news-tag').value;
   if (!text) { showToast('⚠️ Write something before posting!'); return; }
+  if (!currentUser) return;
 
-  const post = { id: Date.now(), tag, text, time: 'Just now', emoji: currentUser?.name?.[0] || '🌾' };
-  ownerNewsPosts.unshift(post);
+  const limit = getNewsLimit();
 
-  // Save to Supabase
-  if (currentUser) {
-    try {
-      await sb.from('news_posts').insert({
-        owner_id: currentUser.id,
-        stand_id: currentUser.stand_id,
-        tag, text
-      });
-      // Add to local newsPosts so buyers see it immediately
-      const sid = currentUser.stand_id;
-      if (sid) {
-        if (!newsPosts[sid]) newsPosts[sid] = [];
-        newsPosts[sid].unshift({ ...post, time: 'Just now' });
+  try {
+    // Check current post count
+    const { data: existing } = await sb.from('news_posts')
+      .select('id, created_at')
+      .eq('owner_id', currentUser.id)
+      .order('created_at', { ascending: true }); // oldest first
+
+    // Auto-delete oldest if at limit (and limit is not Infinity)
+    if (existing && limit !== Infinity && existing.length >= limit) {
+      const toDelete = existing.slice(0, existing.length - limit + 1);
+      for (const old of toDelete) {
+        await sb.from('news_posts').delete().eq('id', old.id);
       }
-    } catch(e) { console.warn('News post error:', e); }
-  }
+    }
 
-  document.getElementById('news-composer').value = '';
-  renderOwnerNewsList();
-  showToast('✅ Update posted! Buyers can see it now.');
+    // Insert new post
+    const { data: newPost } = await sb.from('news_posts').insert({
+      owner_id: currentUser.id,
+      stand_id: currentUser.stand_id,
+      tag, text
+    }).select().single();
+
+    // Update local state
+    const post = {
+      id: newPost?.id || Date.now(),
+      tag, text,
+      time: 'Just now',
+      emoji: currentUser.initials || '🌾'
+    };
+    ownerNewsPosts.unshift(post);
+    // Trim local array to limit
+    if (limit !== Infinity) ownerNewsPosts = ownerNewsPosts.slice(0, limit);
+
+    // Update buyer-facing newsPosts
+    const sid = currentUser.stand_id;
+    if (sid) {
+      if (!newsPosts[sid]) newsPosts[sid] = [];
+      newsPosts[sid].unshift(post);
+      if (limit !== Infinity) newsPosts[sid] = newsPosts[sid].slice(0, limit);
+    }
+
+    document.getElementById('news-composer').value = '';
+    renderOwnerNewsList();
+    showToast('✅ Update posted! Buyers can see it now.');
+
+  } catch(e) {
+    console.warn('News post error:', e);
+    showToast('⚠️ Could not post update — please try again');
+  }
 }
 
-async function loadNewsForStand(standId) {
+async function loadNewsForStand(standId, ownerLimit) {
   try {
-    const { data } = await sb.from('news_posts').select('*').eq('stand_id', standId).order('created_at', { ascending: false }).limit(20);
+    const limit = ownerLimit || 25; // default to grow limit for display
+    const { data } = await sb.from('news_posts')
+      .select('*')
+      .eq('stand_id', standId)
+      .order('created_at', { ascending: false })
+      .limit(limit);
     if (data && data.length) {
       newsPosts[standId] = data.map(p => ({
         id: p.id, tag: p.tag, text: p.text,
@@ -4005,6 +4030,30 @@ async function loadNewsForStand(standId) {
       }));
     }
   } catch(e) {}
+}
+
+async function loadOwnerNewsPosts() {
+  if (!currentUser) return;
+  try {
+    const limit = getNewsLimit();
+    const { data } = await sb.from('news_posts')
+      .select('*')
+      .eq('owner_id', currentUser.id)
+      .order('created_at', { ascending: false })
+      .limit(limit === Infinity ? 1000 : limit);
+    if (data) {
+      ownerNewsPosts = data.map(p => ({
+        id: p.id, tag: p.tag, text: p.text,
+        time: timeAgo(p.created_at),
+        emoji: currentUser.initials || '🌾'
+      }));
+      // Also update buyer-facing newsPosts
+      if (currentUser.stand_id) {
+        newsPosts[currentUser.stand_id] = [...ownerNewsPosts];
+      }
+    }
+    renderOwnerNewsList();
+  } catch(e) { console.warn('Could not load news posts:', e); }
 }
 
 function timeAgo(dateStr) {
@@ -4019,11 +4068,26 @@ function renderOwnerNewsList() {
   const el = document.getElementById('owner-news-list');
   if (!el) return;
   const posts = ownerNewsPosts;
+  const limit = getNewsLimit();
+  const limitLabel = limit === Infinity ? 'Unlimited' : `${posts.length}/${limit}`;
+
+  // Update post count indicator
+  const countEl = document.getElementById('news-post-count');
+  if (countEl) {
+    countEl.textContent = `${limitLabel} posts`;
+    if (limit !== Infinity && posts.length >= limit) {
+      countEl.textContent += ' — oldest auto-removed when you post';
+      countEl.style.color = 'var(--orange)';
+    } else {
+      countEl.style.color = 'var(--text3)';
+    }
+  }
+
   if (!posts.length) {
     el.innerHTML = '<div style="text-align:center;color:var(--text3);font-size:13px;padding:20px">No posts yet — share your first update above!</div>';
     return;
   }
-  el.innerHTML = posts.map(p => ownerNewsCard(p)).join('');
+  el.innerHTML = posts.map(p => ownerNewsCard(p, limit !== Infinity)).join('');
 }
 
 function ownerNewsCard(p) {
