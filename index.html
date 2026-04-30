@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <!-- Cache policy: versioned deployments handle cache busting -->
-<meta name="version" content="v21.9-1777346925">
+<meta name="version" content="v22.1-1777508838">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -2676,12 +2676,11 @@ function updateOwnerHeaderBtn() {
   const desktopBtn = document.getElementById('header-owner-btn');
   const mobileBtn = document.getElementById('mobile-mystand-btn');
   if (currentUser) {
-    // Change text to Sign Out — keep original onclick (showLanding) which goes to sign in
-    if (desktopBtn) desktopBtn.textContent = '🌾 Sign Out';
-    if (mobileBtn) mobileBtn.textContent = '🌾 Sign Out';
+    if (desktopBtn) { desktopBtn.textContent = '🌾 Sign Out'; desktopBtn.setAttribute('onclick', 'doLogout()'); }
+    if (mobileBtn) { mobileBtn.textContent = '🌾 Sign Out'; mobileBtn.setAttribute('onclick', 'doLogout()'); }
   } else {
-    if (desktopBtn) desktopBtn.textContent = '🌾 Farm Stand Owner? Sign In';
-    if (mobileBtn) mobileBtn.textContent = '🌾 My Stand';
+    if (desktopBtn) { desktopBtn.textContent = '🌾 Farm Stand Owner? Sign In'; desktopBtn.setAttribute('onclick', 'showLanding()'); }
+    if (mobileBtn) { mobileBtn.textContent = '🌾 My Stand'; mobileBtn.setAttribute('onclick', 'showLanding()'); }
   }
 }
 function updateSignupBtn() {
@@ -2803,23 +2802,9 @@ function resetBtn(id, text) {
 }
 
 function doLogout() {
+  // Clear session and reload — cleanest possible logout
   currentUser = null;
-  menuItems = [];
-  galleryPhotos = [];
-  customItems = [];
-  // Hide dashboard
-  const dashboard = document.getElementById('screen-dashboard');
-  if (dashboard) { dashboard.classList.remove('active'); dashboard.style.display = 'none'; }
-  updateOwnerHeaderBtn(); // Reset button text to Sign In
-  // Restore buyer mobile nav
-  if (isMobile()) {
-    showBuyerMobileNav();
-    // Reset list view if active
-    mobileViewMode = 'map';
-    const listView = document.getElementById('mobile-list-view');
-    if (listView) listView.style.display = 'none';
-  }
-  showLanding();
+  window.location.reload();
 }
 
 let currentUser = null;
@@ -3030,13 +3015,13 @@ function goMap() {
 function goLanding() { showLanding(); }
 
 function showLanding() {
-  // Hide all mobile nav bars when showing landing screen
+  // Hide ALL mobile UI elements
   const buyerNav = document.getElementById('mobile-nav');
   const ownerNav = document.getElementById('owner-mobile-nav');
   const topBar = document.getElementById('mobile-top-bar');
   const filterStrip = document.getElementById('mobile-filter-strip');
   if (buyerNav) buyerNav.style.display = 'none';
-  if (ownerNav) ownerNav.style.display = 'none';
+  if (ownerNav) ownerNav.style.display = 'none'; // always hide owner nav
   if (topBar) topBar.style.display = 'none';
   if (filterStrip) filterStrip.style.display = 'none';
   // Show landing screen
