@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <!-- Cache policy: versioned deployments handle cache busting -->
-<meta name="version" content="v22.1-1777508838">
+<meta name="version" content="v22.2-1777510991">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -4301,18 +4301,25 @@ function addItem(name) {
 
 function updateGroceryBadge() {
   const count = groceryList.length;
-  // Update desktop grocery count in collapsible header
+  // Update desktop grocery count
   const groceryCount = document.getElementById('grocery-count');
   if (groceryCount) groceryCount.textContent = count;
-  // Update mobile nav badge if we add one
+  // Update mobile nav List button — always update regardless of count
   const mnavGrocery = document.getElementById('mnav-grocery');
-  if (mnavGrocery && count > 0) {
-    // Add count to the List button label
+  if (mnavGrocery) {
     const icon = mnavGrocery.querySelector('.mn-svg');
-    mnavGrocery.innerHTML = (icon ? icon.outerHTML : '') + `List${count > 0 ? ' ('+count+')' : ''}`;
+    const iconHTML = icon ? icon.outerHTML : '';
+    mnavGrocery.innerHTML = iconHTML + (count > 0 ? `List (${count})` : 'List');
   }
 }
 
+function removeGroceryItem(id) {
+  groceryList = groceryList.filter(i => i.id !== id);
+  removedStands = new Set();
+  renderGroceryList();
+  updateGroceryBadge(); // Always update badge when items are removed
+  renderMobileGrocery(); // Update mobile grocery screen too
+}
 function findStandForItem(key) {
   // Only match stands within the current radius
   const nearbyStandIds = new Set(STANDS.filter(s => isWithinRadius(s)).map(s => s.id));
@@ -4325,11 +4332,6 @@ function findStandForItem(key) {
   return null;
 }
 
-function removeGroceryItem(id) {
-  groceryList = groceryList.filter(i => i.id !== id);
-  removedStands = new Set();
-  renderGroceryList();
-}
 function removeStop(standId) {
   removedStands.add(standId);
   manualStops.delete(standId);
