@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <!-- Cache policy: versioned deployments handle cache busting -->
-<meta name="version" content="v22.6-1777513791">
+<meta name="version" content="v22.6-1777552194">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -4383,7 +4383,7 @@ async function openProfile(id) {
   // Load fresh data from DB in background
   try {
     const { data: ownerData } = await sb.from('owners')
-      .select('id, photo, description')
+      .select('id, photo, description, hours, hours_display')
       .eq('stand_id', id)
       .maybeSingle();
 
@@ -4392,6 +4392,12 @@ async function openProfile(id) {
       if (ownerData.photo && aviEl) {
         s.photo = ownerData.photo;
         aviEl.innerHTML = `<img src="${ownerData.photo}" style="width:100%;height:100%;object-fit:cover;border-radius:50%" onerror="this.parentElement.textContent='${s.emoji}'">`;
+      }
+      // Update hours display
+      if (ownerData.hours_display) {
+        s.hours = ownerData.hours_display;
+        const addrEl = document.getElementById('ph-addr');
+        if (addrEl) addrEl.textContent = '📍 ' + s.address + '  ·  ' + s.hours;
       }
       // Load gallery photos fresh
       const { data: photos } = await sb.from('gallery_photos')
