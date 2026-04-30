@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <!-- Cache policy: versioned deployments handle cache busting -->
-<meta name="version" content="v22.4-1777512905">
+<meta name="version" content="v22.5-1777513417">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -1595,6 +1595,52 @@ input, select, textarea {
 .row-menu-option:hover { background: var(--cream); }
 .row-menu-option.delete { color: #c0392b; }
 .row-menu-option.delete:hover { background: #fdf0f0; }
+
+/* ===== HOURS PANEL ===== */
+.hours-g {
+  display: grid;
+  grid-template-columns: 100px 1fr 1fr auto;
+  gap: 8px;
+  align-items: center;
+}
+.hours-day-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text2);
+}
+.hours-in {
+  border: 1.5px solid var(--border);
+  border-radius: 7px;
+  padding: 7px 10px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 13px;
+  color: var(--text);
+  background: var(--cream);
+  outline: none;
+  transition: border 0.15s;
+  width: 100%;
+  box-sizing: border-box;
+}
+.hours-in:focus { border-color: var(--green2); background: white; }
+.hours-in.closed { color: var(--text3); font-style: italic; }
+.hours-closed-toggle {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 11px;
+  color: var(--text3);
+  padding: 4px;
+  border-radius: 4px;
+  transition: color 0.15s;
+  white-space: nowrap;
+}
+.hours-closed-toggle:hover { color: var(--green); }
+.hours-closed-toggle.is-closed { color: var(--orange); }
+.hours-separator {
+  text-align: center;
+  color: var(--text3);
+  font-size: 11px;
+}
 </style>
 </head>
 <body>
@@ -2390,19 +2436,13 @@ input, select, textarea {
       <!-- Hours Panel -->
       <div class="dash-panel" id="panel-hours">
         <div class="dash-panel-title">Hours of Operation</div>
-        <div class="dash-panel-sub">Let buyers know when you're open</div>
-        <div class="pcard" style="max-width:400px">
-          <div class="hours-g">
-            <div class="hours-day">Monday</div><input class="hours-in" placeholder="8:00 AM"><input class="hours-in" placeholder="6:00 PM">
-            <div class="hours-day">Tuesday</div><input class="hours-in" placeholder="8:00 AM"><input class="hours-in" placeholder="6:00 PM">
-            <div class="hours-day">Wednesday</div><input class="hours-in" placeholder="8:00 AM"><input class="hours-in" placeholder="6:00 PM">
-            <div class="hours-day">Thursday</div><input class="hours-in" placeholder="8:00 AM"><input class="hours-in" placeholder="6:00 PM">
-            <div class="hours-day">Friday</div><input class="hours-in" placeholder="8:00 AM"><input class="hours-in" placeholder="6:00 PM">
-            <div class="hours-day">Saturday</div><input class="hours-in" placeholder="7:00 AM"><input class="hours-in" placeholder="4:00 PM">
-            <div class="hours-day">Sunday</div><input class="hours-in" placeholder="Closed"><input class="hours-in" placeholder="Closed">
+        <div class="dash-panel-sub">Let buyers know when you're open — leave blank or type "Closed" for days you're not open</div>
+        <div class="pcard" style="max-width:460px">
+          <div class="hours-g" id="hours-grid">
+            <!-- Rendered by renderHoursPanel() -->
           </div>
         </div>
-        <div class="save-bar"><button class="save-btn" onclick="showToast('✅ Hours saved!')">✓ Save Hours</button></div>
+        <div class="save-bar"><button class="save-btn" onclick="saveHours()">✓ Save Hours</button></div>
       </div>
 
       <!-- Photos Panel -->
@@ -2930,6 +2970,8 @@ async function loginSuccess(user) {
   setTimeout(syncMenuItemsToStand, 200);
   // Load real news posts
   loadOwnerNewsPosts();
+  // Load hours
+  loadOwnerHours();
 
   // Load gallery photos from database
   try {
@@ -3089,6 +3131,7 @@ function showPanel(name) {
     if (isGrow) setTimeout(renderSparkline, 50);
   }
   if (name === 'featured') updateFeaturedPreview();
+  if (name === 'hours') renderHoursPanel();
   if (name === 'profile' && geocodeMap) setTimeout(() => geocodeMap.invalidateSize(), 100);
 }
 
@@ -3312,7 +3355,7 @@ function calcBoundingBox(lat, lng, miles) {
 async function loadStandsFromDB(centerLat, centerLng, miles) {
   try {
     let query = sb.from('owners')
-      .select('id, farm, description, addr, phone, lat, lng, photo, cats, custom_items, emoji, stand_id')
+      .select('id, farm, description, addr, phone, lat, lng, photo, cats, custom_items, emoji, stand_id, hours_display')
       .not('lat', 'is', null)
       .not('lng', 'is', null);
 
@@ -6157,6 +6200,127 @@ function useGPSLocation() {
 }
 
 // ===================== MOBILE FILTER SHEET =====================
+
+// ===================== HOURS OF OPERATION =====================
+const DAYS = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
+let ownerHours = {};
+
+function renderHoursPanel() {
+  const grid = document.getElementById('hours-grid');
+  if (!grid) return;
+
+  // Add column headers
+  grid.innerHTML = `
+    <div></div>
+    <div style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:0.05em">Opens</div>
+    <div style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:0.05em">Closes</div>
+    <div></div>
+  ` + DAYS.map(day => {
+    const h = ownerHours[day] || {};
+    const isClosed = h.closed || (!h.open && !h.close);
+    return `
+      <div class="hours-day-label">${day.slice(0,3)}</div>
+      <input class="hours-in${isClosed?' closed':''}" id="hours-open-${day}"
+        value="${isClosed ? '' : (h.open || '')}"
+        placeholder="${isClosed ? 'Closed' : '8:00 AM'}"
+        ${isClosed ? 'disabled' : ''}
+        onchange="ownerHours['${day}'] = ownerHours['${day}'] || {}; ownerHours['${day}'].open = this.value;">
+      <input class="hours-in${isClosed?' closed':''}" id="hours-close-${day}"
+        value="${isClosed ? '' : (h.close || '')}"
+        placeholder="${isClosed ? 'Closed' : '5:00 PM'}"
+        ${isClosed ? 'disabled' : ''}
+        onchange="ownerHours['${day}'] = ownerHours['${day}'] || {}; ownerHours['${day}'].close = this.value;">
+      <button class="hours-closed-toggle${isClosed?' is-closed':''}" 
+        id="hours-toggle-${day}"
+        onclick="toggleDayClosed('${day}')"
+        title="${isClosed ? 'Mark as open' : 'Mark as closed'}">
+        ${isClosed ? '✕ Closed' : 'Open'}
+      </button>
+    `;
+  }).join('');
+}
+
+function toggleDayClosed(day) {
+  if (!ownerHours[day]) ownerHours[day] = {};
+  ownerHours[day].closed = !ownerHours[day].closed;
+  renderHoursPanel();
+}
+
+function getHoursString() {
+  // Build a short summary string for the stand card e.g. "Mon–Fri 8AM–5PM"
+  const openDays = DAYS.filter(d => ownerHours[d] && !ownerHours[d].closed && ownerHours[d].open);
+  if (!openDays.length) return 'Hours vary';
+  // Simple format: show first and last open day
+  if (openDays.length === 1) {
+    const h = ownerHours[openDays[0]];
+    return `${openDays[0].slice(0,3)} ${h.open}–${h.close}`;
+  }
+  const first = openDays[0];
+  const last = openDays[openDays.length - 1];
+  const h = ownerHours[first];
+  return `${first.slice(0,3)}–${last.slice(0,3)} ${h.open || ''}–${h.close || ''}`;
+}
+
+async function saveHours() {
+  if (!currentUser) return;
+  try {
+    // Collect current input values before saving
+    DAYS.forEach(day => {
+      if (!ownerHours[day]) ownerHours[day] = {};
+      const openEl = document.getElementById('hours-open-' + day);
+      const closeEl = document.getElementById('hours-close-' + day);
+      if (openEl && !openEl.disabled) ownerHours[day].open = openEl.value.trim();
+      if (closeEl && !closeEl.disabled) ownerHours[day].close = closeEl.value.trim();
+    });
+
+    // Save to Supabase
+    await sb.from('owners').update({
+      hours: ownerHours,
+      hours_display: getHoursString()
+    }).eq('id', currentUser.id);
+
+    // Update local stand data
+    if (currentUser.stand_id) {
+      const stand = STANDS.find(s => s.id === currentUser.stand_id);
+      if (stand) {
+        stand.hours = getHoursString();
+        stand.hoursDetail = ownerHours;
+      }
+    }
+    currentUser.hours = ownerHours;
+
+    showToast('✅ Hours saved!');
+  } catch(e) {
+    console.warn('Hours save error:', e);
+    showToast('⚠️ Could not save hours — please try again');
+  }
+}
+
+async function loadOwnerHours() {
+  if (!currentUser) return;
+  try {
+    const { data } = await sb.from('owners')
+      .select('hours, hours_display')
+      .eq('id', currentUser.id)
+      .single();
+    if (data && data.hours) {
+      ownerHours = data.hours;
+    } else {
+      // Default — all days open
+      DAYS.forEach(day => {
+        ownerHours[day] = {
+          open: day === 'Sunday' ? '' : '8:00 AM',
+          close: day === 'Sunday' ? '' : '5:00 PM',
+          closed: day === 'Sunday'
+        };
+      });
+    }
+    renderHoursPanel();
+  } catch(e) {
+    DAYS.forEach(day => { ownerHours[day] = { open: '8:00 AM', close: '5:00 PM', closed: false }; });
+    renderHoursPanel();
+  }
+}
 // ===================== RADIUS STAGING =====================
 let stagedRadius = 25;
 
