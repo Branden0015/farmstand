@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <!-- Cache policy: versioned deployments handle cache busting -->
-<meta name="version" content="v22.3-1777512044">
+<meta name="version" content="v22.4-1777512905">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -1540,26 +1540,61 @@ input, select, textarea {
 }
 .menu-item-row:hover .price-edit-btn { opacity: 1; }
 
-.menu-row-price-wrap {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
+/* ===== THREE DOT MENU — shared across dashboard ===== */
+.row-menu-wrap {
+  position: relative;
+  flex-shrink: 0;
 }
-.price-edit-btn {
+.row-menu-btn {
   background: none;
   border: none;
   cursor: pointer;
-  font-size: 11px;
-  opacity: 0;
-  padding: 1px;
-  transition: opacity 0.15s;
+  color: var(--text3);
+  font-size: 18px;
+  padding: 4px 8px;
+  border-radius: 6px;
   line-height: 1;
+  transition: background 0.15s, color 0.15s;
+  opacity: 0;
 }
-.menu-row:hover .price-edit-btn,
-.menu-item-row:hover .price-edit-btn { opacity: 1; }
+.menu-row:hover .row-menu-btn,
+.news-post:hover .row-menu-btn,
+.row-menu-btn:focus,
+.row-menu-btn.open { opacity: 1; color: var(--text); }
 @media (max-width: 768px) {
-  .price-edit-btn { opacity: 0.6; } /* always slightly visible on mobile */
+  .row-menu-btn { opacity: 0.5; } /* always slightly visible on mobile */
 }
+.row-menu-dropdown {
+  display: none;
+  position: absolute;
+  right: 0; top: 100%;
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  box-shadow: 0 4px 16px rgba(42,31,22,0.12);
+  z-index: 600;
+  min-width: 140px;
+  overflow: hidden;
+}
+.row-menu-dropdown.open { display: block; }
+.row-menu-option {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  cursor: pointer;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text);
+  border-bottom: 1px solid var(--cream2);
+  transition: background 0.1s;
+  white-space: nowrap;
+}
+.row-menu-option:last-child { border-bottom: none; }
+.row-menu-option:hover { background: var(--cream); }
+.row-menu-option.delete { color: #c0392b; }
+.row-menu-option.delete:hover { background: #fdf0f0; }
 </style>
 </head>
 <body>
@@ -3738,33 +3773,82 @@ function renderMenuList() {
     const priceDisplay = item.price ? (item.price.startsWith('$') ? item.price : '$' + item.price) : '—';
     return `<div class="menu-row" id="menu-row-${i}">
       <span class="menu-row-name">${item.name}</span>
-      <span class="menu-row-price-wrap" id="price-wrap-${i}">
-        <span class="menu-row-price" id="price-display-${i}">${priceDisplay}</span>
-        <button class="price-edit-btn" onclick="startEditPrice(${i})" title="Edit price">✏️</button>
-      </span>
+      <span class="menu-row-price">${priceDisplay}</span>
       <span class="menu-row-cat">${item.cat}</span>
       <button class="avail-badge ${item.avail?'avail-y':'avail-n'}" onclick="toggleAvail(${i})">${item.avail?'In Stock':'Out of Stock'}</button>
-      <button class="del-btn" onclick="removeItem(${i})" title="Remove item">✕</button>
+      <div class="row-menu-wrap">
+        <button class="row-menu-btn" onclick="toggleRowMenu(this,'menu-dropdown-${i}')" title="Options">⋮</button>
+        <div class="row-menu-dropdown" id="menu-dropdown-${i}">
+          <div class="row-menu-option" onclick="startEditMenuItem(${i})">✏️ Edit Item</div>
+          <div class="row-menu-option delete" onclick="confirmDeleteMenuItem(${i})">🗑️ Delete</div>
+        </div>
+      </div>
     </div>`;
   }).join('');
 }
 
 
 function revertAllPrices() {
-  // Revert any open price inputs back to their original display
-  document.querySelectorAll('[id^="price-wrap-"]').forEach(wrap => {
-    const original = wrap.getAttribute('data-original');
-    if (original) {
-      const i = wrap.id.replace('price-wrap-', '');
-      wrap.removeAttribute('data-original');
-      wrap.innerHTML = `
-        <span class="menu-row-price" id="price-display-${i}">${original}</span>
-        <button class="price-edit-btn" onclick="startEditPrice(${i})" title="Edit price">✏️</button>
-      `;
-      // Also revert the menuItems array
-      menuItems[parseInt(i)].price = original === '—' ? '' : original;
-    }
-  });
+  // Close any open edit rows by re-rendering
+  renderMenuList();
+}
+
+function startEditMenuItem(i) {
+  // Close dropdown
+  document.querySelectorAll('.row-menu-dropdown.open').forEach(d => d.classList.remove('open'));
+  const row = document.getElementById('menu-row-' + i);
+  if (!row) return;
+  const item = menuItems[i];
+  const priceNum = (item.price || '').replace(/[^0-9.]/g, '');
+  const cats = ['Vegetables & Fruits','Meat & Poultry','Eggs & Dairy','Baked Goods','Honey & Preserves','Flowers & Plants','Seasonal','Other'];
+  row.innerHTML = `
+    <div style="display:flex;flex-direction:column;gap:8px;padding:4px 0;flex:1">
+      <input type="text" id="edit-name-${i}" value="${item.name}"
+        style="border:2px solid var(--green);border-radius:6px;padding:6px 10px;font-size:13px;font-family:'DM Sans',sans-serif;outline:none;width:100%;box-sizing:border-box">
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <div style="display:flex;align-items:center;gap:2px;border:2px solid var(--green);border-radius:6px;padding:4px 8px;background:white">
+          <span style="color:var(--green);font-weight:700">$</span>
+          <input type="text" inputmode="decimal" id="edit-price-${i}" value="${priceNum}"
+            style="width:65px;border:none;outline:none;font-size:13px;font-weight:600;color:var(--green);font-family:'DM Sans',sans-serif;background:transparent"
+            onkeypress="return /[0-9.]/.test(event.key)">
+        </div>
+        <select id="edit-cat-${i}" style="border:2px solid var(--green);border-radius:6px;padding:4px 8px;font-size:12px;font-family:'DM Sans',sans-serif;outline:none;color:var(--text)">
+          ${cats.map(c => `<option ${c===item.cat?'selected':''}>${c}</option>`).join('')}
+        </select>
+      </div>
+      <div style="display:flex;gap:8px">
+        <button onclick="saveEditMenuItem(${i})" style="background:var(--green);color:white;border:none;border-radius:6px;padding:6px 16px;font-size:12px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif">✓ Save</button>
+        <button onclick="renderMenuList()" style="background:none;border:1px solid var(--border);border-radius:6px;padding:6px 12px;font-size:12px;cursor:pointer;color:var(--text3)">Cancel</button>
+      </div>
+    </div>
+  `;
+  setTimeout(() => document.getElementById('edit-name-' + i)?.focus(), 50);
+}
+
+function saveEditMenuItem(i) {
+  const name = document.getElementById('edit-name-' + i)?.value.trim();
+  const priceVal = parseFloat(document.getElementById('edit-price-' + i)?.value);
+  const cat = document.getElementById('edit-cat-' + i)?.value;
+  if (!name) { showToast('⚠️ Product name cannot be empty'); return; }
+  menuItems[i].name = name;
+  menuItems[i].price = isNaN(priceVal) ? menuItems[i].price : '$' + priceVal.toFixed(2);
+  menuItems[i].cat = cat || menuItems[i].cat;
+  renderMenuList();
+  showToast('✅ Item updated — tap Save Menu to keep changes');
+}
+
+function confirmDeleteMenuItem(i) {
+  document.querySelectorAll('.row-menu-dropdown.open').forEach(d => d.classList.remove('open'));
+  const row = document.getElementById('menu-row-' + i);
+  if (!row) return;
+  const name = menuItems[i].name;
+  row.innerHTML = `
+    <div style="display:flex;align-items:center;gap:10px;flex:1;padding:4px 0;flex-wrap:wrap">
+      <span style="font-size:13px;color:var(--text2)">Delete <strong>${name}</strong>?</span>
+      <button onclick="removeItem(${i})" style="background:#c0392b;color:white;border:none;border-radius:6px;padding:5px 14px;font-size:12px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif">Delete</button>
+      <button onclick="renderMenuList()" style="background:none;border:1px solid var(--border);border-radius:6px;padding:5px 10px;font-size:12px;cursor:pointer;color:var(--text3)">Cancel</button>
+    </div>
+  `;
 }
 function startEditPrice(i) {
   const priceWrap = document.getElementById('price-wrap-' + i);
@@ -3797,15 +3881,8 @@ function cancelEditPrice(i) {
 }
 
 async function saveMenuItems() {
-  // Collect any open price inputs first
-  document.querySelectorAll('[id^="price-input-"]').forEach(input => {
-    const i = parseInt(input.getAttribute('data-index'));
-    if (isNaN(i)) return;
-    const val = parseFloat(input.value.replace(/[^0-9.]/g, ''));
-    if (!isNaN(val) && val >= 0) {
-      menuItems[i].price = '$' + val.toFixed(2);
-    }
-  });
+  // Close any open edit rows first
+  renderMenuList();
 
   // Save to Supabase
   if (!currentUser) return;
@@ -4093,7 +4170,7 @@ function renderOwnerNewsList() {
 function ownerNewsCard(p) {
   const tagLabels = { news:'📢 Update', special:'⭐ Special', seasonal:'🌿 Seasonal', alert:'⚠️ Notice' };
   const tagClasses = { news:'tag-news', special:'tag-special', seasonal:'tag-seasonal', alert:'tag-alert' };
-  return `<div class="news-post">
+  return `<div class="news-post" id="news-post-${p.id}">
     <div class="news-post-header">
       <div class="news-post-avi">${p.emoji}</div>
       <div class="news-post-meta">
@@ -4101,11 +4178,93 @@ function ownerNewsCard(p) {
         <div class="news-post-time">${p.time}</div>
       </div>
       <span class="news-post-tag ${tagClasses[p.tag]}">${tagLabels[p.tag]}</span>
+      <div class="row-menu-wrap" style="margin-left:auto">
+        <button class="row-menu-btn" onclick="toggleRowMenu(this,'news-dropdown-${p.id}')" title="Options">⋮</button>
+        <div class="row-menu-dropdown" id="news-dropdown-${p.id}">
+          <div class="row-menu-option" onclick="startEditNewsPost('${p.id}')">✏️ Edit Post</div>
+          <div class="row-menu-option delete" onclick="confirmDeleteNewsPost('${p.id}')">🗑️ Delete</div>
+        </div>
+      </div>
     </div>
-    <div class="news-post-body">${p.text}</div>
+    <div class="news-post-body" id="news-body-${p.id}">${p.text}</div>
   </div>`;
 }
 
+
+function startEditNewsPost(postId) {
+  document.querySelectorAll('.row-menu-dropdown.open').forEach(d => d.classList.remove('open'));
+  const post = ownerNewsPosts.find(p => String(p.id) === String(postId));
+  if (!post) return;
+  const postEl = document.getElementById('news-post-' + postId);
+  if (!postEl) return;
+  const tags = ['news','special','seasonal','alert'];
+  const tagLabels = { news:'📢 Update', special:'⭐ Special', seasonal:'🌿 Seasonal', alert:'⚠️ Notice' };
+  const body = postEl.querySelector('.news-post-body');
+  if (body) {
+    body.innerHTML = `
+      <div style="display:flex;flex-direction:column;gap:8px;margin-top:8px">
+        <textarea id="edit-news-text-${postId}" style="width:100%;min-height:80px;border:2px solid var(--green);border-radius:8px;padding:8px;font-family:'DM Sans',sans-serif;font-size:13px;resize:vertical;outline:none;box-sizing:border-box">${post.text}</textarea>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+          <select id="edit-news-tag-${postId}" style="border:2px solid var(--green);border-radius:6px;padding:5px 8px;font-size:12px;font-family:'DM Sans',sans-serif;outline:none">
+            ${tags.map(t => `<option value="${t}" ${t===post.tag?'selected':''}>${tagLabels[t]}</option>`).join('')}
+          </select>
+          <button onclick="saveEditNewsPost('${postId}')" style="background:var(--green);color:white;border:none;border-radius:6px;padding:6px 16px;font-size:12px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif">✓ Save</button>
+          <button onclick="renderOwnerNewsList()" style="background:none;border:1px solid var(--border);border-radius:6px;padding:6px 12px;font-size:12px;cursor:pointer;color:var(--text3)">Cancel</button>
+        </div>
+      </div>
+    `;
+    setTimeout(() => document.getElementById('edit-news-text-' + postId)?.focus(), 50);
+  }
+}
+
+async function saveEditNewsPost(postId) {
+  const text = document.getElementById('edit-news-text-' + postId)?.value.trim();
+  const tag = document.getElementById('edit-news-tag-' + postId)?.value;
+  if (!text) { showToast('⚠️ Post cannot be empty'); return; }
+  const post = ownerNewsPosts.find(p => String(p.id) === String(postId));
+  if (!post) return;
+  post.text = text;
+  post.tag = tag;
+  // Save to Supabase
+  try {
+    await sb.from('news_posts').update({ text, tag }).eq('id', postId);
+    // Update buyer-facing posts too
+    if (currentUser?.stand_id && newsPosts[currentUser.stand_id]) {
+      const bp = newsPosts[currentUser.stand_id].find(p => String(p.id) === String(postId));
+      if (bp) { bp.text = text; bp.tag = tag; }
+    }
+    showToast('✅ Post updated!');
+  } catch(e) { showToast('⚠️ Could not save — please try again'); }
+  renderOwnerNewsList();
+}
+
+function confirmDeleteNewsPost(postId) {
+  document.querySelectorAll('.row-menu-dropdown.open').forEach(d => d.classList.remove('open'));
+  const postEl = document.getElementById('news-post-' + postId);
+  if (!postEl) return;
+  const body = postEl.querySelector('.news-post-body');
+  if (body) {
+    body.innerHTML = `
+      <div style="display:flex;align-items:center;gap:10px;margin-top:8px;flex-wrap:wrap">
+        <span style="font-size:13px;color:var(--text2)">Delete this post?</span>
+        <button onclick="deleteNewsPost('${postId}')" style="background:#c0392b;color:white;border:none;border-radius:6px;padding:5px 14px;font-size:12px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif">Delete</button>
+        <button onclick="renderOwnerNewsList()" style="background:none;border:1px solid var(--border);border-radius:6px;padding:5px 10px;font-size:12px;cursor:pointer;color:var(--text3)">Cancel</button>
+      </div>
+    `;
+  }
+}
+
+async function deleteNewsPost(postId) {
+  try {
+    await sb.from('news_posts').delete().eq('id', postId);
+    ownerNewsPosts = ownerNewsPosts.filter(p => String(p.id) !== String(postId));
+    if (currentUser?.stand_id && newsPosts[currentUser.stand_id]) {
+      newsPosts[currentUser.stand_id] = newsPosts[currentUser.stand_id].filter(p => String(p.id) !== String(postId));
+    }
+    showToast('🗑️ Post deleted');
+    renderOwnerNewsList();
+  } catch(e) { showToast('⚠️ Could not delete — please try again'); }
+}
 // ===================== PROFILE OVERLAY =====================
 let currentProfileId = null;
 
@@ -6161,6 +6320,26 @@ function closeMyStandMenu(e) {
   }
 }
 
+
+// Close all row menus when clicking outside
+document.addEventListener('click', e => {
+  if (!e.target.closest('.row-menu-wrap')) {
+    document.querySelectorAll('.row-menu-dropdown.open').forEach(d => d.classList.remove('open'));
+    document.querySelectorAll('.row-menu-btn.open').forEach(b => b.classList.remove('open'));
+  }
+});
+
+function toggleRowMenu(btn, dropdownId) {
+  const dropdown = document.getElementById(dropdownId);
+  const isOpen = dropdown.classList.contains('open');
+  // Close all others first
+  document.querySelectorAll('.row-menu-dropdown.open').forEach(d => d.classList.remove('open'));
+  document.querySelectorAll('.row-menu-btn.open').forEach(b => b.classList.remove('open'));
+  if (!isOpen) {
+    dropdown.classList.add('open');
+    btn.classList.add('open');
+  }
+}
 // ===================== TOAST =====================
 function showToast(msg) {
   const t = document.getElementById('toast');
