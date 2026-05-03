@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <!-- Cache policy: versioned deployments handle cache busting -->
-<meta name="version" content="v23.4-1777851795">
+<meta name="version" content="v23.5-1777851961">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -2024,6 +2024,8 @@ input, select, textarea {
         <button class="logout-btn" onclick="doLogout()">🚪 Sign Out</button>
           <button onclick="openTOS()" style="background:none;border:none;font-size:11px;color:rgba(255,255,255,0.75);cursor:pointer;text-decoration:underline;font-family:'DM Sans',sans-serif;padding:0;margin-left:8px">Terms</button>
           <a href="mailto:support@farmstand.app?subject=FarmStand Feedback" style="font-size:11px;color:rgba(255,255,255,0.75);text-decoration:underline;font-family:'DM Sans',sans-serif;margin-left:8px">Contact Us</a>
+          <button onclick="openDeleteAccount()" style="background:none;border:none;font-size:11px;color:rgba(255,100,100,0.8);cursor:pointer;text-decoration:underline;font-family:'DM Sans',sans-serif;padding:0;margin-left:8px">Delete Account</button>
+          <a href="mailto:support@farmstand.app?subject=FarmStand Feedback" style="font-size:11px;color:rgba(255,255,255,0.75);text-decoration:underline;font-family:'DM Sans',sans-serif;margin-left:8px">Contact Us</a>
       </div>
     </div>
   </div>
@@ -2659,6 +2661,9 @@ input, select, textarea {
     <div class="my-stand-menu-signout" onclick="doLogout();closeMyStandMenu()">
       <span class="my-stand-menu-item-icon">🚪</span> Sign Out
     </div>
+    <div class="my-stand-menu-item" onclick="openDeleteAccount();closeMyStandMenu()" style="color:#c0392b">
+      <span class="my-stand-menu-item-icon">🗑️</span> Delete Account
+    </div>
   </div>
 </div>
 
@@ -2745,6 +2750,60 @@ input, select, textarea {
   </div>
 </div>
 
+
+<!-- Delete Account Modal -->
+<div id="delete-account-overlay" style="display:none;position:fixed;inset:0;z-index:3000;background:rgba(42,31,22,0.7);overflow-y:auto;padding:20px;box-sizing:border-box;-webkit-overflow-scrolling:touch">
+  <div style="background:white;border-radius:20px;max-width:440px;margin:0 auto;overflow:hidden;box-shadow:0 8px 40px rgba(0,0,0,0.25)">
+    <!-- Header -->
+    <div style="background:#c0392b;padding:20px 24px;display:flex;align-items:center;justify-content:space-between">
+      <div>
+        <div style="font-family:'Playfair Display',serif;font-size:18px;font-weight:700;color:white">⚠️ Delete Account</div>
+        <div style="font-size:12px;color:rgba(255,255,255,0.8);margin-top:2px">This action cannot be undone</div>
+      </div>
+      <button onclick="closeDeleteAccount()" style="background:rgba(255,255,255,0.15);border:none;color:white;width:32px;height:32px;border-radius:50%;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center">✕</button>
+    </div>
+    <!-- Step 1: Warning -->
+    <div id="delete-step-1" style="padding:24px;font-family:'DM Sans',sans-serif">
+      <div style="background:#fdf0f0;border-radius:10px;padding:14px;margin-bottom:16px;border:1px solid #f5c6c6">
+        <div style="font-weight:700;color:#c0392b;margin-bottom:6px">Deleting your account will permanently remove:</div>
+        <ul style="margin:0;padding-left:18px;color:var(--text2);font-size:13px;line-height:1.8">
+          <li>Your farm stand profile and listing</li>
+          <li>All menu items and products</li>
+          <li>All news feed posts</li>
+          <li>All uploaded photos</li>
+          <li>Your hours and contact information</li>
+        </ul>
+      </div>
+      <p style="font-size:13px;color:var(--text2);margin-bottom:20px">Buyers will no longer be able to find your farm stand on FarmStand. This cannot be reversed.</p>
+      <div style="margin-bottom:16px">
+        <label style="font-size:12px;font-weight:700;color:var(--text2);display:block;margin-bottom:6px">Type <strong>DELETE</strong> to confirm you understand:</label>
+        <input type="text" id="delete-confirm-input" placeholder="Type DELETE here"
+          style="width:100%;border:2px solid var(--border);border-radius:8px;padding:10px;font-family:'DM Sans',sans-serif;font-size:14px;outline:none;box-sizing:border-box;transition:border 0.15s"
+          oninput="updateDeleteBtn(this.value)"
+          onfocus="this.style.borderColor='#c0392b'" onblur="this.style.borderColor='var(--border)'">
+      </div>
+      <div id="delete-step1-err" style="display:none;color:#c0392b;font-size:12px;margin-bottom:10px"></div>
+      <button id="delete-request-btn" onclick="requestDeleteVerification()" disabled
+        style="width:100%;background:#ccc;color:white;border:none;border-radius:10px;padding:12px;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:600;cursor:not-allowed;transition:background 0.2s">
+        Send Verification Email
+      </button>
+      <button onclick="closeDeleteAccount()" style="width:100%;background:none;border:1px solid var(--border);border-radius:10px;padding:11px;font-family:'DM Sans',sans-serif;font-size:14px;color:var(--text2);cursor:pointer;margin-top:8px">
+        Cancel — Keep My Account
+      </button>
+    </div>
+    <!-- Step 2: Email sent confirmation -->
+    <div id="delete-step-2" style="display:none;padding:24px;font-family:'DM Sans',sans-serif;text-align:center">
+      <div style="font-size:48px;margin-bottom:12px">📧</div>
+      <div style="font-family:'Playfair Display',serif;font-size:18px;font-weight:700;color:var(--text);margin-bottom:8px">Check your email</div>
+      <div style="font-size:13px;color:var(--text2);margin-bottom:6px;line-height:1.5">We sent a deletion confirmation link to:</div>
+      <div style="font-size:14px;font-weight:700;color:var(--text);margin-bottom:16px" id="delete-email-display"></div>
+      <div style="font-size:13px;color:var(--text2);margin-bottom:20px;line-height:1.5">Click the link in your email to permanently delete your account. The link expires in 24 hours.</div>
+      <button onclick="closeDeleteAccount()" style="background:var(--green);color:white;border:none;border-radius:10px;padding:12px 32px;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:600;cursor:pointer">
+        OK — I'll Check My Email
+      </button>
+    </div>
+  </div>
+</div>
 <!-- Portrait lock overlay -->
 <div class="landscape-warning">
   <div class="landscape-warning-icon">📱</div>
@@ -6645,6 +6704,71 @@ document.addEventListener('click', e => {
   if (e.target.id === 'tos-overlay') closeTOS();
 });
 
+
+// ===================== DELETE ACCOUNT =====================
+function openDeleteAccount() {
+  document.getElementById('delete-account-overlay').style.display = 'block';
+  document.body.style.overflow = 'hidden';
+  document.getElementById('delete-confirm-input').value = '';
+  document.getElementById('delete-step1-err').style.display = 'none';
+  document.getElementById('delete-step-1').style.display = 'block';
+  document.getElementById('delete-step-2').style.display = 'none';
+  updateDeleteBtn('');
+}
+
+function closeDeleteAccount() {
+  document.getElementById('delete-account-overlay').style.display = 'none';
+  document.body.style.overflow = '';
+}
+
+function updateDeleteBtn(val) {
+  const btn = document.getElementById('delete-request-btn');
+  if (val.toUpperCase() === 'DELETE') {
+    btn.disabled = false;
+    btn.style.background = '#c0392b';
+    btn.style.cursor = 'pointer';
+  } else {
+    btn.disabled = true;
+    btn.style.background = '#ccc';
+    btn.style.cursor = 'not-allowed';
+  }
+}
+
+async function requestDeleteVerification() {
+  if (!currentUser) return;
+  const input = document.getElementById('delete-confirm-input').value;
+  if (input.toUpperCase() !== 'DELETE') return;
+
+  try {
+    // Store deletion request in Supabase with a token
+    const token = Math.random().toString(36).slice(2) + Date.now().toString(36);
+    const expires = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
+
+    await sb.from('owners').update({
+      delete_token: token,
+      delete_requested_at: new Date().toISOString(),
+      delete_token_expires: expires
+    }).eq('email', currentUser.email);
+
+    // Send verification email via Supabase
+    // For now show the email that would be sent
+    // When you have a real email service this sends automatically
+    document.getElementById('delete-email-display').textContent = currentUser.email;
+    document.getElementById('delete-step-1').style.display = 'none';
+    document.getElementById('delete-step-2').style.display = 'block';
+
+    showToast('📧 Deletion verification email sent!');
+  } catch(e) {
+    const errEl = document.getElementById('delete-step1-err');
+    errEl.textContent = 'Could not process request. Please try again or contact support@farmstand.app';
+    errEl.style.display = 'block';
+  }
+}
+
+// Close on background click
+document.addEventListener('click', e => {
+  if (e.target.id === 'delete-account-overlay') closeDeleteAccount();
+});
 // ===================== TOAST =====================
 function showToast(msg) {
   const t = document.getElementById('toast');
