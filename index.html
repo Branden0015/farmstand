@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <!-- Cache policy: versioned deployments handle cache busting -->
-<meta name="version" content="v23.2-1777851087">
+<meta name="version" content="v23.4-1777851795">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -2023,6 +2023,7 @@ input, select, textarea {
         <span id="plan-badge" style="display:none;font-size:10px;font-weight:700;padding:3px 8px;border-radius:10px;color:white;letter-spacing:0.04em"></span>
         <button class="logout-btn" onclick="doLogout()">🚪 Sign Out</button>
           <button onclick="openTOS()" style="background:none;border:none;font-size:11px;color:rgba(255,255,255,0.75);cursor:pointer;text-decoration:underline;font-family:'DM Sans',sans-serif;padding:0;margin-left:8px">Terms</button>
+          <a href="mailto:support@farmstand.app?subject=FarmStand Feedback" style="font-size:11px;color:rgba(255,255,255,0.75);text-decoration:underline;font-family:'DM Sans',sans-serif;margin-left:8px">Contact Us</a>
       </div>
     </div>
   </div>
@@ -2743,6 +2744,7 @@ input, select, textarea {
     </div>
   </div>
 </div>
+
 <!-- Portrait lock overlay -->
 <div class="landscape-warning">
   <div class="landscape-warning-icon">📱</div>
@@ -6642,6 +6644,7 @@ function closeTOS() {
 document.addEventListener('click', e => {
   if (e.target.id === 'tos-overlay') closeTOS();
 });
+
 // ===================== TOAST =====================
 function showToast(msg) {
   const t = document.getElementById('toast');
