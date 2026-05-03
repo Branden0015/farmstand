@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <!-- Cache policy: versioned deployments handle cache busting -->
-<meta name="version" content="v22.7-1777848258">
+<meta name="version" content="v22.8-1777849333">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -3402,15 +3402,19 @@ async function loadStandsFromDB(centerLat, centerLng, miles) {
       }
 
       if (stand) {
-        if (owner.farm) stand.name = owner.farm;
-        if (owner.description) stand.desc = owner.description;
-        if (owner.addr) stand.address = owner.addr;
-        if (owner.phone) stand.phone = owner.phone;
-        stand.lat = lat; stand.lng = lng;
-        if (owner.photo) stand.photo = owner.photo;
+        // DB always wins over hardcoded values
+        stand.name = owner.farm || stand.name;
+        stand.desc = owner.description || stand.desc;
+        stand.address = owner.addr || stand.address;
+        stand.phone = owner.phone || stand.phone;
+        stand.lat = lat;
+        stand.lng = lng;
+        // Always use DB photo — set to null if not in DB so emoji shows
+        stand.photo = owner.photo || null;
         if (owner.cats && owner.cats.length) stand.cats = owner.cats;
         if (owner.custom_items && owner.custom_items.length) stand.customItems = owner.custom_items;
         if (owner.emoji) stand.emoji = owner.emoji;
+        if (owner.hours_display) stand.hours = owner.hours_display;
       }
     });
 
@@ -3440,6 +3444,11 @@ async function loadStandsFromDB(centerLat, centerLng, miles) {
     }
 
     console.log('✅ Loaded', data.length, 'stands for area, total:', STANDS.length);
+    // Clear cached markers so they rebuild with fresh DB data
+    if (typeof mapMarkers !== 'undefined' && mainMap) {
+      Object.values(mapMarkers).forEach(m => { try { mainMap.removeLayer(m); } catch(e){} });
+      mapMarkers = {};
+    }
   } catch(e) {
     console.warn('Could not load stands from DB:', e);
   }
