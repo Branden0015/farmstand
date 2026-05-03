@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <!-- Cache policy: versioned deployments handle cache busting -->
-<meta name="version" content="v22.6-1777552194">
+<meta name="version" content="v22.7-1777848258">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -6282,21 +6282,35 @@ async function saveHours() {
       if (closeEl && !closeEl.disabled) ownerHours[day].close = closeEl.value.trim();
     });
 
-    // Save to Supabase
-    await sb.from('owners').update({
+    const hoursDisplay = getHoursString();
+
+    // Save to Supabase — use email as reliable identifier
+    const { error } = await sb.from('owners').update({
       hours: ownerHours,
-      hours_display: getHoursString()
-    }).eq('id', currentUser.id);
+      hours_display: hoursDisplay
+    }).eq('email', currentUser.email);
+
+    if (error) {
+      console.error('Hours save error:', error);
+      // If columns don't exist yet, show helpful message
+      if (error.message && error.message.includes('column')) {
+        showToast('⚠️ Please run the hours SQL in Supabase first — see setup instructions');
+      } else {
+        showToast('⚠️ Could not save hours: ' + error.message);
+      }
+      return;
+    }
 
     // Update local stand data
     if (currentUser.stand_id) {
       const stand = STANDS.find(s => s.id === currentUser.stand_id);
       if (stand) {
-        stand.hours = getHoursString();
+        stand.hours = hoursDisplay;
         stand.hoursDetail = ownerHours;
       }
     }
     currentUser.hours = ownerHours;
+    currentUser.hours_display = hoursDisplay;
 
     showToast('✅ Hours saved!');
   } catch(e) {
@@ -6308,27 +6322,35 @@ async function saveHours() {
 async function loadOwnerHours() {
   if (!currentUser) return;
   try {
-    const { data } = await sb.from('owners')
+    const { data, error } = await sb.from('owners')
       .select('hours, hours_display')
-      .eq('id', currentUser.id)
+      .eq('email', currentUser.email)
       .single();
+    if (error) {
+      console.warn('Load hours error:', error);
+      setDefaultHours();
+      return;
+    }
     if (data && data.hours) {
       ownerHours = data.hours;
     } else {
-      // Default — all days open
-      DAYS.forEach(day => {
-        ownerHours[day] = {
-          open: day === 'Sunday' ? '' : '08:00',
-          close: day === 'Sunday' ? '' : '17:00',
-          closed: day === 'Sunday'
-        };
-      });
+      setDefaultHours();
     }
     renderHoursPanel();
   } catch(e) {
-    DAYS.forEach(day => { ownerHours[day] = { open: '08:00', close: '17:00', closed: false }; });
+    setDefaultHours();
     renderHoursPanel();
   }
+}
+
+function setDefaultHours() {
+  DAYS.forEach(day => {
+    ownerHours[day] = {
+      open: day === 'Sunday' ? '' : '8:00 AM',
+      close: day === 'Sunday' ? '' : '5:00 PM',
+      closed: day === 'Sunday'
+    };
+  });
 }
 // ===================== RADIUS STAGING =====================
 let stagedRadius = 25;
