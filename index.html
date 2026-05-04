@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <!-- Cache policy: versioned deployments handle cache busting -->
-<meta name="version" content="v23.5-1777851961">
+<meta name="version" content="v23.7-1777852730">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -2024,8 +2024,6 @@ input, select, textarea {
         <button class="logout-btn" onclick="doLogout()">🚪 Sign Out</button>
           <button onclick="openTOS()" style="background:none;border:none;font-size:11px;color:rgba(255,255,255,0.75);cursor:pointer;text-decoration:underline;font-family:'DM Sans',sans-serif;padding:0;margin-left:8px">Terms</button>
           <a href="mailto:support@farmstand.app?subject=FarmStand Feedback" style="font-size:11px;color:rgba(255,255,255,0.75);text-decoration:underline;font-family:'DM Sans',sans-serif;margin-left:8px">Contact Us</a>
-          <button onclick="openDeleteAccount()" style="background:none;border:none;font-size:11px;color:rgba(255,100,100,0.8);cursor:pointer;text-decoration:underline;font-family:'DM Sans',sans-serif;padding:0;margin-left:8px">Delete Account</button>
-          <a href="mailto:support@farmstand.app?subject=FarmStand Feedback" style="font-size:11px;color:rgba(255,255,255,0.75);text-decoration:underline;font-family:'DM Sans',sans-serif;margin-left:8px">Contact Us</a>
       </div>
     </div>
   </div>
@@ -2053,6 +2051,11 @@ input, select, textarea {
             <span class="toggle-slider"></span>
           </label>
         </div>
+      </div>
+
+      <!-- Delete Account — subtle, bottom of nav -->
+      <div style="padding:12px 16px 4px;border-top:1px solid rgba(255,255,255,0.1);margin-top:8px">
+        <button onclick="openDeleteAccount()" style="background:none;border:none;font-size:11px;color:rgba(255,255,255,0.4);cursor:pointer;text-decoration:underline;font-family:'DM Sans',sans-serif;padding:0">Delete Account</button>
       </div>
     </div>
 
@@ -2661,8 +2664,8 @@ input, select, textarea {
     <div class="my-stand-menu-signout" onclick="doLogout();closeMyStandMenu()">
       <span class="my-stand-menu-item-icon">🚪</span> Sign Out
     </div>
-    <div class="my-stand-menu-item" onclick="openDeleteAccount();closeMyStandMenu()" style="color:#c0392b">
-      <span class="my-stand-menu-item-icon">🗑️</span> Delete Account
+    <div class="my-stand-menu-item" onclick="openDeleteAccount();closeMyStandMenu()" style="color:var(--text3)">
+      <span class="my-stand-menu-item-icon" style="opacity:0.5">🗑️</span> Delete Account
     </div>
   </div>
 </div>
