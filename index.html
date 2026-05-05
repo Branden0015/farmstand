@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <!-- Cache policy: versioned deployments handle cache busting -->
-<meta name="version" content="v24.0-1777946132">
+<meta name="version" content="v24.1-1777947672">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -3537,7 +3537,7 @@ function calcBoundingBox(lat, lng, miles) {
 async function loadStandsFromDB(centerLat, centerLng, miles) {
   try {
     let query = sb.from('owners')
-      .select('id, farm, description, addr, phone, lat, lng, photo, cats, custom_items, emoji, stand_id, hours_display')
+      .select('id, farm, description, addr, phone, lat, lng, photo, cats, custom_items, emoji, stand_id, hours_display, is_grow, is_pro')
       .not('lat', 'is', null)
       .not('lng', 'is', null);
 
@@ -3590,12 +3590,15 @@ async function loadStandsFromDB(centerLat, centerLng, miles) {
         stand.phone = owner.phone || stand.phone;
         stand.lat = lat;
         stand.lng = lng;
-        // Always use DB photo — set to null if not in DB so emoji shows
         stand.photo = owner.photo || null;
         if (owner.cats && owner.cats.length) stand.cats = owner.cats;
         if (owner.custom_items && owner.custom_items.length) stand.customItems = owner.custom_items;
         if (owner.emoji) stand.emoji = owner.emoji;
         if (owner.hours_display) stand.hours = owner.hours_display;
+        // Store owner ID and plan for analytics tracking
+        stand.ownerId = owner.id;
+        stand.isGrow = owner.is_grow || false;
+        stand.isPro = owner.is_pro || false;
       }
     });
 
@@ -3799,6 +3802,7 @@ function closeAllPopups() {
 function selectStand(id) {
   closeAllPopups();
   selectedId = id;
+  trackEvent(id, 'stand_click');
   const s = STANDS.find(x=>x.id===id);
   if (!s) return;
   renderAll();
@@ -3811,7 +3815,10 @@ function selectStand(id) {
 
 function getDir(id) {
   const s = STANDS.find(x=>x.id===id);
-  if (s) window.open(`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(s.address)}`, '_blank');
+  if (s) {
+    trackEvent(id, 'directions_click');
+    window.open(`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(s.address)}`, '_blank');
+  }
 }
 
 function setFilter(cat, el) {
@@ -4551,6 +4558,8 @@ async function openProfile(id) {
   const s = STANDS.find(x=>x.id===id);
   if (!s) return;
   currentProfileId = id;
+  // Track profile view
+  trackEvent(id, 'profile_view');
 
   // Show emoji first while loading
   const aviEl = document.getElementById('ph-avi');
@@ -5540,6 +5549,7 @@ function openProfileFromList(standId) {
   }, 100);
 }
 function switchToMapAndSelect(standId) {
+  trackEvent(standId, 'stand_click');
   mobileViewMode = 'list';
   toggleMobileView();
   setTimeout(() => {
@@ -6804,6 +6814,126 @@ async function requestDeleteVerification() {
 document.addEventListener('click', e => {
   if (e.target.id === 'delete-account-overlay') closeDeleteAccount();
 });
+
+// =====================================================
+// ANALYTICS TRACKING ENGINE
+// =====================================================
+
+// Get or create anonymous session ID — persists in localStorage
+function getSessionId() {
+  let sid = localStorage.getItem('fs_session_id');
+  if (!sid) {
+    sid = 'fs_' + Math.random().toString(36).slice(2) + Date.now().toString(36);
+    localStorage.setItem('fs_session_id', sid);
+  }
+  return sid;
+}
+
+// Check if we already tracked this event recently (deduplication)
+function shouldTrackEvent(standId, eventType) {
+  const key = `fs_evt_${standId}_${eventType}`;
+  const last = localStorage.getItem(key);
+  if (!last) return true;
+  const hoursSince = (Date.now() - parseInt(last)) / (1000 * 60 * 60);
+  // Profile views and clicks: once per 24 hours per stand
+  // Grocery adds: always track (genuine engagement)
+  if (eventType === 'grocery_add') return true;
+  return hoursSince >= 24;
+}
+
+// Mark event as tracked
+function markEventTracked(standId, eventType) {
+  const key = `fs_evt_${standId}_${eventType}`;
+  localStorage.setItem(key, Date.now().toString());
+}
+
+// Get owner_id for a stand from the STANDS array
+function getOwnerIdForStand(standId) {
+  // We need owner uuid — stored on stand object after DB load
+  const stand = STANDS.find(s => s.id === standId);
+  return stand ? (stand.ownerId || null) : null;
+}
+
+// Core track function — sends event to Supabase
+async function trackEvent(standId, eventType) {
+  try {
+    const stand = STANDS.find(s => s.id === standId);
+    if (!stand || !stand.ownerId) return; // Can't track without owner ID
+
+    // Only track analytics (non-saved events) for Grow/Pro owners
+    if (eventType !== 'saved' && eventType !== 'unsaved') {
+      if (!stand.isGrow && !stand.isPro) return;
+    }
+
+    // Deduplicate
+    if (!shouldTrackEvent(standId, eventType)) return;
+    markEventTracked(standId, eventType);
+
+    const sessionId = getSessionId();
+    await sb.from('analytics_events').insert({
+      owner_id: stand.ownerId,
+      stand_id: standId,
+      event_type: eventType,
+      session_id: sessionId
+    });
+  } catch(e) {
+    // Fail silently — never interrupt user experience for analytics
+    console.warn('Analytics track error:', e);
+  }
+}
+
+// =====================================================
+// SAVED STANDS — Supabase-backed anonymous tracking
+// =====================================================
+async function loadSavedStandsFromDB() {
+  try {
+    const sessionId = getSessionId();
+    const { data } = await sb.from('saved_stands')
+      .select('stand_id')
+      .eq('session_id', sessionId);
+    if (data && data.length) {
+      // Merge with localStorage for backwards compatibility
+      const dbSaved = data.map(r => r.stand_id);
+      dbSaved.forEach(id => {
+        if (!savedStands.includes(id)) savedStands.push(id);
+      });
+      // Update localStorage to match
+      localStorage.setItem('farmstand_saved', JSON.stringify(savedStands));
+    }
+  } catch(e) {
+    // Fall back to localStorage if DB fails
+    console.warn('Could not load saved stands from DB:', e);
+  }
+}
+
+async function saveStandToDB(standId) {
+  try {
+    const sessionId = getSessionId();
+    const stand = STANDS.find(s => s.id === standId);
+    await sb.from('saved_stands').upsert({
+      session_id: sessionId,
+      stand_id: standId,
+      owner_id: stand?.ownerId || null
+    }, { onConflict: 'session_id,stand_id' });
+    // Track the save event for analytics
+    await trackEvent(standId, 'saved');
+  } catch(e) {
+    console.warn('Could not save stand to DB:', e);
+  }
+}
+
+async function unsaveStandFromDB(standId) {
+  try {
+    const sessionId = getSessionId();
+    await sb.from('saved_stands')
+      .delete()
+      .eq('session_id', sessionId)
+      .eq('stand_id', standId);
+    await trackEvent(standId, 'unsaved');
+  } catch(e) {
+    console.warn('Could not unsave stand from DB:', e);
+  }
+}
 // ===================== TOAST =====================
 function showToast(msg) {
   const t = document.getElementById('toast');
