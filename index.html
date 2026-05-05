@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <!-- Cache policy: versioned deployments handle cache busting -->
-<meta name="version" content="v24.2-1777948931">
+<meta name="version" content="v24.3-1777950032">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -722,12 +722,7 @@ body { font-family: 'DM Sans', sans-serif; background: var(--cream); color: var(
 .spark-label { flex:1; text-align:center; font-size:9px; color:var(--text3); }
 
 /* Top searches */
-.search-term-row { display:flex; align-items:center; gap:10px; padding:8px 0; border-bottom:1px solid var(--border); }
-.search-term-row:last-child { border-bottom:none; }
-.search-term-name { flex:1; font-size:13px; color:var(--text); }
-.search-term-bar-wrap { width:80px; height:6px; background:var(--cream2); border-radius:3px; overflow:hidden; }
-.search-term-bar { height:100%; border-radius:3px; background:var(--orange2); }
-.search-term-count { font-size:12px; font-weight:600; color:var(--text2); min-width:28px; text-align:right; }
+/* Top Searches CSS removed — feature coming later */
 
 /* Insights */
 .insight-row { display:flex; gap:10px; align-items:flex-start; padding:10px 0; border-bottom:1px solid var(--border); }
@@ -2184,12 +2179,7 @@ input, select, textarea {
                   <div class="spark-label">Thu</div><div class="spark-label">Fri</div><div class="spark-label">Sat</div><div class="spark-label">Sun</div>
                 </div>
               </div>
-              <div class="analytics-card full">
-                <div class="pcard-title" style="margin-bottom:10px">🔍 Top Searches That Found You</div>
-                <div class="search-term-row"><span class="search-term-name">████████████████</span><div class="search-term-bar-wrap"><div class="search-term-bar" style="width:100%"></div></div><span class="search-term-count">34</span></div>
-                <div class="search-term-row"><span class="search-term-name">████████████</span><div class="search-term-bar-wrap"><div class="search-term-bar" style="width:82%"></div></div><span class="search-term-count">28</span></div>
-                <div class="search-term-row"><span class="search-term-name">██████████</span><div class="search-term-bar-wrap"><div class="search-term-bar" style="width:62%"></div></div><span class="search-term-count">21</span></div>
-              </div>
+
             </div>
           </div>
 
@@ -2236,20 +2226,6 @@ input, select, textarea {
               <div class="pcard-title" style="margin-bottom:6px">📅 Profile Views — Last 7 Days</div>
               <div class="spark-wrap" id="sparkline"></div>
               <div class="spark-labels" id="spark-labels"></div>
-            </div>
-            <div class="analytics-card full">
-              <div class="pcard-title" style="margin-bottom:10px">🔍 Top Searches That Found You</div>
-              <div class="search-term-row"><span class="search-term-name">🌽 Sweet corn near me</span><div class="search-term-bar-wrap"><div class="search-term-bar" style="width:100%"></div></div><span class="search-term-count">34</span></div>
-              <div class="search-term-row"><span class="search-term-name">🥚 Farm fresh eggs</span><div class="search-term-bar-wrap"><div class="search-term-bar" style="width:82%"></div></div><span class="search-term-count">28</span></div>
-              <div class="search-term-row"><span class="search-term-name">🥦 Local vegetables</span><div class="search-term-bar-wrap"><div class="search-term-bar" style="width:62%"></div></div><span class="search-term-count">21</span></div>
-              <div class="search-term-row"><span class="search-term-name">📍 Farm stand near Plymouth</span><div class="search-term-bar-wrap"><div class="search-term-bar" style="width:56%"></div></div><span class="search-term-count">19</span></div>
-              <div class="search-term-row"><span class="search-term-name">🍯 Buy honey locally</span><div class="search-term-bar-wrap"><div class="search-term-bar" style="width:38%"></div></div><span class="search-term-count">13</span></div>
-            </div>
-            <div class="analytics-card full">
-              <div class="pcard-title" style="margin-bottom:4px">💡 Insights</div>
-              <div class="insight-row"><div class="insight-icon">🌅</div><div class="insight-text"><strong>Peak traffic: Thursday & Friday 8–11AM.</strong> Post news updates Wednesday evening to catch buyers planning their weekend.</div></div>
-              <div class="insight-row"><div class="insight-icon">🔍</div><div class="insight-text"><strong>"Sweet corn" is your #1 search driver.</strong> Keep your menu updated with current availability — buyers are actively looking.</div></div>
-              <div class="insight-row"><div class="insight-icon">❤️</div><div class="insight-text"><strong>31 buyers have saved your stand.</strong> Post a news update to reach them — saved buyers visit at 3× the rate of first-timers.</div></div>
             </div>
           </div>
         </div>
