@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <!-- Cache policy: versioned deployments handle cache busting -->
-<meta name="version" content="v23.8-1777944211">
+<meta name="version" content="v23.9-1777945580">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -311,7 +311,7 @@ body { font-family: 'DM Sans', sans-serif; background: var(--cream); color: var(
 .dash-body { display: flex; flex: 1; overflow: hidden; min-height: 0; }
 
 /* Dash sidebar nav */
-.dash-nav { width: 220px; flex-shrink: 0; background: white; border-right: 1px solid var(--border); padding: 20px 12px; display: flex; flex-direction: column; gap: 4px; }
+.dash-nav { width: 220px; flex-shrink: 0; background: white; border-right: 1px solid var(--border); padding: 20px 12px; display: flex; flex-direction: column; gap: 4px; overflow-y: auto; }
 .dash-nav-title { font-size: 10px; font-weight: 600; color: var(--text3); text-transform: uppercase; letter-spacing: 0.08em; padding: 0 8px; margin-bottom: 4px; margin-top: 12px; }
 .dash-nav-title:first-child { margin-top: 0; }
 .dash-nav-item { display: flex; align-items: center; gap: 9px; padding: 9px 10px; border-radius: 9px; cursor: pointer; font-size: 13px; font-weight: 500; color: var(--text2); transition: all 0.15s; border: none; background: none; width: 100%; text-align: left; font-family: 'DM Sans', sans-serif; }
@@ -1681,6 +1681,9 @@ input, select, textarea {
       </div>
       <div class="divider">or</div>
       <button class="buyer-btn" onclick="goMap()">🗺 Browse as a Buyer — No Account Needed</button>
+      <div style="text-align:center;margin-top:12px">
+        <span onclick="openTOS()" style="font-size:11px;color:#999;cursor:pointer;text-decoration:underline;font-family:'DM Sans',sans-serif">Terms of Service</span>
+      </div>
     </div>
     
 
@@ -2052,10 +2055,10 @@ input, select, textarea {
       </div>
 
       <!-- Delete Account — subtle, bottom of nav -->
-      <div style="padding:12px 16px 8px;border-top:1px solid rgba(255,255,255,0.1);margin-top:8px;display:flex;flex-direction:column;gap:6px">
-        <button onclick="openTOS()" style="background:none;border:none;font-size:11px;color:rgba(255,255,255,0.5);cursor:pointer;text-decoration:underline;font-family:'DM Sans',sans-serif;padding:0;text-align:left">Terms of Service</button>
-        <a href="mailto:support@farmstand.app?subject=FarmStand Feedback" style="font-size:11px;color:rgba(255,255,255,0.5);text-decoration:underline;font-family:'DM Sans',sans-serif">Contact Us</a>
-        <button onclick="openDeleteAccount()" style="background:none;border:none;font-size:11px;color:rgba(255,255,255,0.35);cursor:pointer;text-decoration:underline;font-family:'DM Sans',sans-serif;padding:0;text-align:left">Delete Account</button>
+      <div style="padding:12px 8px 8px;border-top:1px solid var(--border);margin-top:8px;display:flex;flex-direction:column;gap:6px">
+        <button onclick="openTOS()" style="background:none;border:none;font-size:11px;color:var(--text3);cursor:pointer;text-decoration:underline;font-family:'DM Sans',sans-serif;padding:0;text-align:left">Terms of Service</button>
+        <a href="mailto:support@farmstand.app?subject=FarmStand Feedback" style="font-size:11px;color:var(--text3);text-decoration:underline;font-family:'DM Sans',sans-serif">Contact Us</a>
+        <button onclick="openDeleteAccount()" style="background:none;border:none;font-size:11px;color:var(--text3);cursor:pointer;text-decoration:underline;font-family:'DM Sans',sans-serif;padding:0;text-align:left">Delete Account</button>
       </div>
     </div>
 
