@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <!-- Cache policy: versioned deployments handle cache busting -->
-<meta name="version" content="v24.1-1777947672">
+<meta name="version" content="v24.2-1777948931">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -3152,6 +3152,8 @@ async function loginSuccess(user) {
   setTimeout(syncMenuItemsToStand, 200);
   // Load real news posts
   loadOwnerNewsPosts();
+  // Load real recent activity
+  loadRecentActivity();
   // Load hours
   loadOwnerHours();
 
@@ -3314,6 +3316,7 @@ function showPanel(name) {
   }
   if (name === 'featured') updateFeaturedPreview();
   if (name === 'hours') renderHoursPanel();
+  if (name === 'analytics' && currentUser?.isGrow) loadAnalyticsPanel();
   if (name === 'profile' && geocodeMap) setTimeout(() => geocodeMap.invalidateSize(), 100);
 }
 
@@ -5044,26 +5047,191 @@ function renderSparkline() {
   lblEl.innerHTML = days.map(d => `<div class="spark-label">${d}</div>`).join('');
 }
 
-function updateDashboardStats(isGrow) {
-  const stats = [
-    { valId:'stat-views-val', deltaId:'stat-views-delta', val:'247', delta:'↑ 18% this week' },
-    { valId:'stat-dir-val',   deltaId:'stat-dir-delta',   val:'83',  delta:'↑ 12% this week' },
-    { valId:'stat-saves-val', deltaId:'stat-saves-delta', val:'31',  delta:'↑ 5 new this week' },
-  ];
-  stats.forEach(s => {
-    const valEl = document.getElementById(s.valId);
-    const deltaEl = document.getElementById(s.deltaId);
-    if (valEl) {
-      valEl.style.filter = isGrow ? 'none' : 'blur(5px)';
-      valEl.style.userSelect = isGrow ? 'auto' : 'none';
-    }
-    if (deltaEl) {
-      deltaEl.style.color = isGrow ? 'var(--green2)' : 'var(--orange)';
-      deltaEl.textContent = isGrow ? s.delta : '🔒 Grow feature';
-    }
-  });
+async function updateDashboardStats(isGrow) {
   const teaserBar = document.getElementById('grow-teaser-bar');
   if (teaserBar) teaserBar.style.display = isGrow ? 'none' : 'flex';
+
+  if (!isGrow || !currentUser) {
+    // Free user — show locked state
+    ['stat-views-val','stat-dir-val','stat-saves-val'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) { el.style.filter = 'blur(5px)'; el.style.userSelect = 'none'; }
+    });
+    ['stat-views-delta','stat-dir-delta','stat-saves-delta'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) { el.style.color = 'var(--orange)'; el.textContent = '🔒 Grow feature'; }
+    });
+    return;
+  }
+
+  // Grow user — load real data from Supabase
+  try {
+    const now = new Date();
+    const weekAgo = new Date(now - 7 * 24 * 60 * 60 * 1000).toISOString();
+    const twoWeeksAgo = new Date(now - 14 * 24 * 60 * 60 * 1000).toISOString();
+
+    // Get this week's events
+    const { data: thisWeek } = await sb.from('analytics_events')
+      .select('event_type')
+      .eq('owner_id', currentUser.id)
+      .gte('created_at', weekAgo);
+
+    // Get last week's events for comparison
+    const { data: lastWeek } = await sb.from('analytics_events')
+      .select('event_type')
+      .eq('owner_id', currentUser.id)
+      .gte('created_at', twoWeeksAgo)
+      .lt('created_at', weekAgo);
+
+    // Get total saved count
+    const { data: savedData } = await sb.from('saved_stands')
+      .select('id')
+      .eq('owner_id', currentUser.id);
+
+    const countType = (arr, type) => (arr || []).filter(e => e.event_type === type).length;
+
+    const viewsNow = countType(thisWeek, 'profile_view');
+    const viewsPrev = countType(lastWeek, 'profile_view');
+    const dirsNow = countType(thisWeek, 'directions_click');
+    const dirsPrev = countType(lastWeek, 'directions_click');
+    const savesTotal = (savedData || []).length;
+    const savesNew = countType(thisWeek, 'saved');
+
+    const pct = (now, prev) => {
+      if (!prev) return now > 0 ? '🆕 New this week' : '—';
+      const diff = Math.round(((now - prev) / prev) * 100);
+      return diff >= 0 ? `↑ ${diff}% this week` : `↓ ${Math.abs(diff)}% this week`;
+    };
+
+    const stats = [
+      { valId:'stat-views-val', deltaId:'stat-views-delta', val: viewsNow, delta: pct(viewsNow, viewsPrev) },
+      { valId:'stat-dir-val',   deltaId:'stat-dir-delta',   val: dirsNow,  delta: pct(dirsNow, dirsPrev) },
+      { valId:'stat-saves-val', deltaId:'stat-saves-delta', val: savesTotal, delta: savesNew > 0 ? `↑ ${savesNew} new this week` : 'No new saves this week' },
+    ];
+
+    stats.forEach(s => {
+      const valEl = document.getElementById(s.valId);
+      const deltaEl = document.getElementById(s.deltaId);
+      if (valEl) { valEl.textContent = s.val; valEl.style.filter = 'none'; valEl.style.userSelect = 'auto'; }
+      if (deltaEl) { deltaEl.style.color = 'var(--green2)'; deltaEl.textContent = s.delta; }
+    });
+
+    // Load full analytics panel if on Grow plan
+    loadAnalyticsPanel();
+
+  } catch(e) {
+    console.warn('Dashboard stats error:', e);
+    // Show zeros rather than fake data
+    [['stat-views-val','0'],['stat-dir-val','0'],['stat-saves-val','0']].forEach(([id,v]) => {
+      const el = document.getElementById(id);
+      if (el) { el.textContent = v; el.style.filter = 'none'; }
+    });
+  }
+}
+
+async function loadAnalyticsPanel() {
+  if (!currentUser || !currentUser.isGrow) return;
+
+  const analyticsLocked = document.getElementById('analytics-locked-wrap');
+  const analyticsUnlocked = document.getElementById('analytics-unlocked');
+  if (analyticsLocked) analyticsLocked.style.display = 'none';
+  if (analyticsUnlocked) analyticsUnlocked.style.display = 'block';
+
+  try {
+    const now = new Date();
+    const weekAgo = new Date(now - 7 * 24 * 60 * 60 * 1000).toISOString();
+
+    // Get all events for this week
+    const { data: events } = await sb.from('analytics_events')
+      .select('event_type, created_at')
+      .eq('owner_id', currentUser.id)
+      .gte('created_at', weekAgo)
+      .order('created_at');
+
+    if (!events) return;
+
+    // Count totals
+    const countType = (type) => events.filter(e => e.event_type === type).length;
+    const views = countType('profile_view');
+    const dirs = countType('directions_click');
+    const clicks = countType('stand_click');
+    const groceryAdds = countType('grocery_add');
+
+    // Get saved count
+    const { data: savedData } = await sb.from('saved_stands')
+      .select('id').eq('owner_id', currentUser.id);
+    const saves = (savedData || []).length;
+
+    // Update stat cards
+    const maxVal = Math.max(views, dirs, clicks, saves, 1);
+    const updateCard = (icon, val, label, barPct) => {
+      return `<div class="analytics-card">
+        <div class="ac-top"><div class="ac-icon">${icon}</div></div>
+        <div class="ac-val">${val}</div>
+        <div class="ac-label">${label}</div>
+        <div class="ac-bar-wrap"><div class="ac-bar" style="width:${barPct}%"></div></div>
+      </div>`;
+    };
+
+    // Build sparkline — profile views per day for last 7 days
+    const days = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+    const viewsByDay = Array(7).fill(0);
+    const dayLabels = [];
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date(now - i * 24 * 60 * 60 * 1000);
+      dayLabels.push(days[d.getDay()]);
+    }
+    events.filter(e => e.event_type === 'profile_view').forEach(e => {
+      const d = new Date(e.created_at);
+      const daysAgo = Math.floor((now - d) / (24 * 60 * 60 * 1000));
+      if (daysAgo < 7) viewsByDay[6 - daysAgo]++;
+    });
+
+    const maxViews = Math.max(...viewsByDay, 1);
+    const sparkHTML = viewsByDay.map(v =>
+      `<div class="spark-bar" style="height:${Math.round((v/maxViews)*100)}%"></div>`
+    ).join('');
+    const labelsHTML = dayLabels.map(l =>
+      `<div class="spark-label">${l}</div>`
+    ).join('');
+
+    // Build insights based on real data
+    const peakIdx = viewsByDay.indexOf(Math.max(...viewsByDay));
+    const peakDay = dayLabels[peakIdx] || 'weekend';
+
+    const insights = [];
+    if (saves > 0) insights.push(`<div class="insight-row"><div class="insight-icon">❤️</div><div class="insight-text"><strong>${saves} buyers have saved your stand.</strong> Post a news update to reach them — saved buyers visit 3× more than first-timers.</div></div>`);
+    if (views > 0) insights.push(`<div class="insight-row"><div class="insight-icon">👁</div><div class="insight-text"><strong>${views} profile views this week.</strong> ${peakDay} was your busiest day — consider posting updates before then.</div></div>`);
+    if (dirs > 0) insights.push(`<div class="insight-row"><div class="insight-icon">🗺</div><div class="insight-text"><strong>${dirs} buyers got directions this week.</strong> That means real foot traffic coming to your stand.</div></div>`);
+    if (groceryAdds > 0) insights.push(`<div class="insight-row"><div class="insight-icon">🛒</div><div class="insight-text"><strong>${groceryAdds} items added to grocery lists.</strong> Buyers are planning trips to your stand.</div></div>`);
+    if (insights.length === 0) insights.push(`<div class="insight-row"><div class="insight-icon">📊</div><div class="insight-text"><strong>Analytics just started collecting.</strong> Check back in a few days as buyers discover your stand.</div></div>`);
+
+    // Update unlocked analytics panel
+    if (analyticsUnlocked) {
+      analyticsUnlocked.innerHTML = `
+        <div class="analytics-grid">
+          ${updateCard('👁', views, 'Profile Views', Math.round((views/maxVal)*100))}
+          ${updateCard('🗺', dirs, 'Directions Clicked', Math.round((dirs/maxVal)*100))}
+          ${updateCard('📍', clicks, 'Stand Clicks', Math.round((clicks/maxVal)*100))}
+          ${updateCard('❤️', saves, 'Saved by Buyers', Math.round((saves/maxVal)*100))}
+          <div class="analytics-card full">
+            <div class="pcard-title" style="margin-bottom:6px">📅 Profile Views — Last 7 Days</div>
+            <div class="spark-wrap">${sparkHTML}</div>
+            <div class="spark-labels">${labelsHTML}</div>
+          </div>
+          <div class="analytics-card full">
+            <div class="pcard-title" style="margin-bottom:4px">💡 Insights</div>
+            ${insights.join('')}
+          </div>
+        </div>
+      `;
+    }
+  } catch(e) {
+    console.warn('Analytics panel error:', e);
+    if (analyticsUnlocked) {
+      analyticsUnlocked.innerHTML = `<div style="text-align:center;padding:40px;color:var(--text3)">📊 Analytics data loading — check back shortly</div>`;
+    }
+  }
 }
 
 function showOwnerUpgrade() {
@@ -6551,6 +6719,75 @@ function setDefaultHours() {
       closed: day === 'Sunday'
     };
   });
+}
+
+async function loadRecentActivity() {
+  const el = document.getElementById('activity-list');
+  if (!el || !currentUser) return;
+
+  // Free users see blurred placeholder
+  if (!currentUser.isGrow) {
+    el.style.filter = 'blur(4px)';
+    el.style.userSelect = 'none';
+    el.style.pointerEvents = 'none';
+    el.innerHTML = `
+      <div class="activity-row"><div class="activity-dot" style="background:var(--green)"></div><div class="activity-text">Someone got directions to your stand</div><div class="activity-time">2 min ago</div></div>
+      <div class="activity-row"><div class="activity-dot" style="background:var(--orange)"></div><div class="activity-text">Your stand was saved by a new buyer</div><div class="activity-time">14 min ago</div></div>
+      <div class="activity-row"><div class="activity-dot" style="background:var(--green)"></div><div class="activity-text">Profile viewed 12 times today</div><div class="activity-time">1 hr ago</div></div>
+      <div class="activity-row"><div class="activity-dot" style="background:#f0b429"></div><div class="activity-text">Your stand appeared in 8 searches today</div><div class="activity-time">2 hr ago</div></div>
+      <div class="activity-row"><div class="activity-dot" style="background:var(--green)"></div><div class="activity-text">Someone clicked directions to your stand</div><div class="activity-time">3 hr ago</div></div>
+    `;
+    // Add upgrade prompt below
+    const section = document.getElementById('recent-activity-section');
+    if (section && !document.getElementById('activity-upgrade-prompt')) {
+      const prompt = document.createElement('div');
+      prompt.id = 'activity-upgrade-prompt';
+      prompt.style.cssText = 'text-align:center;padding:10px;margin-top:8px';
+      prompt.innerHTML = `<span style="font-size:12px;color:var(--orange)">🔒 Upgrade to Grow to see real activity</span>`;
+      section.appendChild(prompt);
+    }
+    return;
+  }
+
+  // Grow user — load real recent events
+  try {
+    el.style.filter = 'none';
+    el.style.userSelect = 'auto';
+    el.style.pointerEvents = 'auto';
+
+    const { data: events } = await sb.from('analytics_events')
+      .select('event_type, created_at')
+      .eq('owner_id', currentUser.id)
+      .order('created_at', { ascending: false })
+      .limit(10);
+
+    if (!events || !events.length) {
+      el.innerHTML = `<div style="text-align:center;padding:20px;color:var(--text3);font-size:13px">No activity yet — buyers will appear here as they discover your stand</div>`;
+      return;
+    }
+
+    const labels = {
+      profile_view: { text: 'Someone viewed your profile', color: 'var(--green)' },
+      directions_click: { text: 'Someone got directions to your stand', color: 'var(--green)' },
+      stand_click: { text: 'Someone clicked on your stand', color: '#4a90d9' },
+      grocery_add: { text: 'Someone added your item to their grocery list', color: '#f0b429' },
+      saved: { text: 'Your stand was saved by a buyer', color: 'var(--orange)' },
+      unsaved: { text: 'A buyer removed your stand from saved', color: 'var(--text3)' },
+    };
+
+    el.innerHTML = events.map(e => {
+      const label = labels[e.event_type] || { text: e.event_type, color: 'var(--text3)' };
+      const ago = timeAgo(e.created_at);
+      return `<div class="activity-row">
+        <div class="activity-dot" style="background:${label.color}"></div>
+        <div class="activity-text">${label.text}</div>
+        <div class="activity-time">${ago}</div>
+      </div>`;
+    }).join('');
+
+  } catch(e) {
+    el.innerHTML = `<div style="text-align:center;padding:20px;color:var(--text3);font-size:13px">Could not load activity</div>`;
+  }
 }
 // ===================== RADIUS STAGING =====================
 let stagedRadius = 25;
