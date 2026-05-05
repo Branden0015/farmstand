@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <!-- Cache policy: versioned deployments handle cache busting -->
-<meta name="version" content="v24.3-1777950032">
+<meta name="version" content="v24.4-1777950804">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -2074,19 +2074,19 @@ input, select, textarea {
           </div>
           <div class="stat-card" id="stat-views" style="cursor:pointer" onclick="showPanel('analytics')">
             <div class="stat-icon">👁</div>
-            <div class="stat-val" id="stat-views-val" style="filter:blur(5px);user-select:none">247</div>
+            <div class="stat-val" id="stat-views-val" style="filter:blur(5px);user-select:none">—</div>
             <div class="stat-label">Profile Views</div>
             <div class="stat-delta" id="stat-views-delta" style="color:var(--orange)">🔒 Grow feature</div>
           </div>
           <div class="stat-card" id="stat-dir" style="cursor:pointer" onclick="showPanel('analytics')">
             <div class="stat-icon">🗺</div>
-            <div class="stat-val" id="stat-dir-val" style="filter:blur(5px);user-select:none">83</div>
+            <div class="stat-val" id="stat-dir-val" style="filter:blur(5px);user-select:none">—</div>
             <div class="stat-label">Directions Clicked</div>
             <div class="stat-delta" id="stat-dir-delta" style="color:var(--orange)">🔒 Grow feature</div>
           </div>
           <div class="stat-card" id="stat-saves" style="cursor:pointer" onclick="showPanel('analytics')">
             <div class="stat-icon">❤️</div>
-            <div class="stat-val" id="stat-saves-val" style="filter:blur(5px);user-select:none">31</div>
+            <div class="stat-val" id="stat-saves-val" style="filter:blur(5px);user-select:none">—</div>
             <div class="stat-label">Saved by Buyers</div>
             <div class="stat-delta" id="stat-saves-delta" style="color:var(--orange)">🔒 Grow feature</div>
           </div>
@@ -2118,10 +2118,7 @@ input, select, textarea {
         <!-- Recent activity -->
         <div class="activity-card">
           <div class="card-header"><span class="card-header-title">Recent Activity</span></div>
-          <div class="activity-item"><div class="activity-dot" style="background:var(--green2)"></div><div class="activity-text">Someone got directions to your stand</div><div class="activity-time">2 min ago</div></div>
-          <div class="activity-item"><div class="activity-dot" style="background:var(--orange)"></div><div class="activity-text">Your stand was saved by a new buyer</div><div class="activity-time">14 min ago</div></div>
-          <div class="activity-item"><div class="activity-dot" style="background:var(--green2)"></div><div class="activity-text">Profile viewed 12 times today</div><div class="activity-time">1 hr ago</div></div>
-          <div class="activity-item"><div class="activity-dot" style="background:var(--yellow)"></div><div class="activity-text">Your stand appeared in 8 searches today</div><div class="activity-time">2 hr ago</div></div>
+          <div style="text-align:center;padding:16px;color:var(--text3);font-size:13px">Loading activity...</div>
           <div class="activity-item"><div class="activity-dot" style="background:var(--green2)"></div><div class="activity-text">Someone clicked directions to your stand</div><div class="activity-time">3 hr ago</div></div>
         </div>
       </div>
@@ -2141,25 +2138,25 @@ input, select, textarea {
             <div class="analytics-grid">
               <div class="analytics-card">
                 <div class="ac-top"><div class="ac-icon">👁</div><div class="ac-delta up">↑ 18%</div></div>
-                <div class="ac-val">247</div>
+                <div class="ac-val">—</div>
                 <div class="ac-label">Profile Views</div>
                 <div class="ac-bar-wrap"><div class="ac-bar" style="width:72%"></div></div>
               </div>
               <div class="analytics-card">
                 <div class="ac-top"><div class="ac-icon">🗺</div><div class="ac-delta up">↑ 12%</div></div>
-                <div class="ac-val">83</div>
+                <div class="ac-val">—</div>
                 <div class="ac-label">Directions Clicked</div>
                 <div class="ac-bar-wrap"><div class="ac-bar" style="width:48%"></div></div>
               </div>
               <div class="analytics-card">
                 <div class="ac-top"><div class="ac-icon">🔍</div><div class="ac-delta up">↑ 22%</div></div>
-                <div class="ac-val">142</div>
+                <div class="ac-val">—</div>
                 <div class="ac-label">Search Appearances</div>
                 <div class="ac-bar-wrap"><div class="ac-bar" style="width:58%"></div></div>
               </div>
               <div class="analytics-card">
                 <div class="ac-top"><div class="ac-icon">❤️</div><div class="ac-delta up">↑ 5</div></div>
-                <div class="ac-val">31</div>
+                <div class="ac-val">—</div>
                 <div class="ac-label">Saved by Buyers</div>
                 <div class="ac-bar-wrap"><div class="ac-bar" style="width:31%"></div></div>
               </div>
@@ -2199,14 +2196,14 @@ input, select, textarea {
         <div id="analytics-unlocked" style="display:none">
           <div class="analytics-grid">
             <div class="analytics-card">
-              <div class="ac-top"><div class="ac-icon">👁</div><div class="ac-delta up">↑ 18%</div></div>
-              <div class="ac-val">247</div>
+              <div class="ac-top"><div class="ac-icon">👁</div><div class="ac-delta up">—</div></div>
+              <div class="ac-val">—</div>
               <div class="ac-label">Profile Views</div>
-              <div class="ac-bar-wrap"><div class="ac-bar" style="width:72%"></div></div>
+              <div class="ac-bar-wrap"><div class="ac-bar" style="width:0%"></div></div>
             </div>
             <div class="analytics-card">
-              <div class="ac-top"><div class="ac-icon">🗺</div><div class="ac-delta up">↑ 12%</div></div>
-              <div class="ac-val">83</div>
+              <div class="ac-top"><div class="ac-icon">🗺</div><div class="ac-delta up">—</div></div>
+              <div class="ac-val">—</div>
               <div class="ac-label">Directions Clicked</div>
               <div class="ac-bar-wrap"><div class="ac-bar" style="width:48%"></div></div>
             </div>
@@ -6707,11 +6704,11 @@ async function loadRecentActivity() {
     el.style.userSelect = 'none';
     el.style.pointerEvents = 'none';
     el.innerHTML = `
-      <div class="activity-row"><div class="activity-dot" style="background:var(--green)"></div><div class="activity-text">Someone got directions to your stand</div><div class="activity-time">2 min ago</div></div>
-      <div class="activity-row"><div class="activity-dot" style="background:var(--orange)"></div><div class="activity-text">Your stand was saved by a new buyer</div><div class="activity-time">14 min ago</div></div>
-      <div class="activity-row"><div class="activity-dot" style="background:var(--green)"></div><div class="activity-text">Profile viewed 12 times today</div><div class="activity-time">1 hr ago</div></div>
-      <div class="activity-row"><div class="activity-dot" style="background:#f0b429"></div><div class="activity-text">Your stand appeared in 8 searches today</div><div class="activity-time">2 hr ago</div></div>
-      <div class="activity-row"><div class="activity-dot" style="background:var(--green)"></div><div class="activity-text">Someone clicked directions to your stand</div><div class="activity-time">3 hr ago</div></div>
+      <div class="activity-row"><div class="activity-dot" style="background:var(--green)"></div><div class="activity-text">Buyer activity will appear here</div><div class="activity-time">—</div></div>
+      <div class="activity-row"><div class="activity-dot" style="background:var(--orange)"></div><div class="activity-text">Buyer activity will appear here</div><div class="activity-time">—</div></div>
+      <div class="activity-row"><div class="activity-dot" style="background:var(--green)"></div><div class="activity-text">Buyer activity will appear here</div><div class="activity-time">—</div></div>
+      <div class="activity-row"><div class="activity-dot" style="background:#f0b429"></div><div class="activity-text">Buyer activity will appear here</div><div class="activity-time">—</div></div>
+      <div class="activity-row"><div class="activity-dot" style="background:var(--green)"></div><div class="activity-text">Buyer activity will appear here</div><div class="activity-time">—</div></div>
     `;
     // Add upgrade prompt below
     const section = document.getElementById('recent-activity-section');
@@ -7123,11 +7120,28 @@ async function saveStandToDB(standId) {
   try {
     const sessionId = getSessionId();
     const stand = STANDS.find(s => s.id === standId);
+    let ownerId = stand?.ownerId || null;
+
+    // If ownerId is missing, look it up from DB using stand_id
+    if (!ownerId && standId) {
+      try {
+        const { data: ownerData } = await sb.from('owners')
+          .select('id')
+          .eq('stand_id', standId)
+          .maybeSingle();
+        if (ownerData) {
+          ownerId = ownerData.id;
+          if (stand) stand.ownerId = ownerId; // Cache for future use
+        }
+      } catch(e) {}
+    }
+
     await sb.from('saved_stands').upsert({
       session_id: sessionId,
       stand_id: standId,
-      owner_id: stand?.ownerId || null
+      owner_id: ownerId
     }, { onConflict: 'session_id,stand_id' });
+
     // Track the save event for analytics
     await trackEvent(standId, 'saved');
   } catch(e) {
@@ -7142,7 +7156,9 @@ async function unsaveStandFromDB(standId) {
       .delete()
       .eq('session_id', sessionId)
       .eq('stand_id', standId);
-    await trackEvent(standId, 'unsaved');
+    // Only track unsave if stand has ownerId
+    const stand = STANDS.find(s => s.id === standId);
+    if (stand?.ownerId) await trackEvent(standId, 'unsaved');
   } catch(e) {
     console.warn('Could not unsave stand from DB:', e);
   }
