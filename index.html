@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <!-- Cache policy: versioned deployments handle cache busting -->
-<meta name="version" content="v23.7-1777943650">
+<meta name="version" content="v23.8-1777944211">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -2022,8 +2022,6 @@ input, select, textarea {
         <span class="user-name" id="user-name-display">Owner</span>
         <span id="plan-badge" style="display:none;font-size:10px;font-weight:700;padding:3px 8px;border-radius:10px;color:white;letter-spacing:0.04em"></span>
         <button class="logout-btn" onclick="doLogout()">🚪 Sign Out</button>
-        <button onclick="openTOS()" style="background:none;border:none;font-size:11px;color:rgba(255,255,255,0.6);cursor:pointer;text-decoration:underline;font-family:'DM Sans',sans-serif;padding:0;margin-left:6px">Terms</button>
-        <a href="mailto:support@farmstand.app?subject=FarmStand Feedback" style="font-size:11px;color:rgba(255,255,255,0.6);text-decoration:underline;font-family:'DM Sans',sans-serif;margin-left:6px">Contact Us</a>
       </div>
     </div>
   </div>
@@ -2054,8 +2052,10 @@ input, select, textarea {
       </div>
 
       <!-- Delete Account — subtle, bottom of nav -->
-      <div style="padding:12px 16px 4px;border-top:1px solid rgba(255,255,255,0.1);margin-top:8px">
-        <button onclick="openDeleteAccount()" style="background:none;border:none;font-size:11px;color:rgba(255,255,255,0.4);cursor:pointer;text-decoration:underline;font-family:'DM Sans',sans-serif;padding:0">Delete Account</button>
+      <div style="padding:12px 16px 8px;border-top:1px solid rgba(255,255,255,0.1);margin-top:8px;display:flex;flex-direction:column;gap:6px">
+        <button onclick="openTOS()" style="background:none;border:none;font-size:11px;color:rgba(255,255,255,0.5);cursor:pointer;text-decoration:underline;font-family:'DM Sans',sans-serif;padding:0;text-align:left">Terms of Service</button>
+        <a href="mailto:support@farmstand.app?subject=FarmStand Feedback" style="font-size:11px;color:rgba(255,255,255,0.5);text-decoration:underline;font-family:'DM Sans',sans-serif">Contact Us</a>
+        <button onclick="openDeleteAccount()" style="background:none;border:none;font-size:11px;color:rgba(255,255,255,0.35);cursor:pointer;text-decoration:underline;font-family:'DM Sans',sans-serif;padding:0;text-align:left">Delete Account</button>
       </div>
     </div>
 
@@ -2664,8 +2664,11 @@ input, select, textarea {
     <div class="my-stand-menu-signout" onclick="doLogout();closeMyStandMenu()">
       <span class="my-stand-menu-item-icon">🚪</span> Sign Out
     </div>
-    <div class="my-stand-menu-item" onclick="openDeleteAccount();closeMyStandMenu()" style="color:var(--text3)">
-      <span class="my-stand-menu-item-icon" style="opacity:0.5">🗑️</span> Delete Account
+    <!-- Subtle footer links -->
+    <div style="padding:10px 20px 6px;border-top:1px solid var(--border);display:flex;gap:16px;flex-wrap:wrap">
+      <span onclick="openTOS();closeMyStandMenu()" style="font-size:11px;color:var(--text3);cursor:pointer;text-decoration:underline;font-family:'DM Sans',sans-serif">Terms of Service</span>
+      <a href="mailto:support@farmstand.app?subject=FarmStand Feedback" style="font-size:11px;color:var(--text3);text-decoration:underline;font-family:'DM Sans',sans-serif">Contact Us</a>
+      <span onclick="openDeleteAccount();closeMyStandMenu()" style="font-size:11px;color:var(--text3);cursor:pointer;text-decoration:underline;font-family:'DM Sans',sans-serif">Delete Account</span>
     </div>
   </div>
 </div>
