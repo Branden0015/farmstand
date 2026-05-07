@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <!-- Cache policy: versioned deployments handle cache busting -->
-<meta name="version" content="v24.5-1778116007">
+<meta name="version" content="v24.6-1778117272">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -2315,13 +2315,13 @@ input, select, textarea {
           <div class="pcard">
             <div class="pcard-title">🛒 What You Sell</div>
             <div class="cat-grid">
-              <label class="cat-item" onclick="this.classList.toggle('on')"><input type="checkbox"><span>🥦</span> Vegetables & Fruits</label>
-              <label class="cat-item" onclick="this.classList.toggle('on')"><input type="checkbox"><span>🥩</span> Meat & Poultry</label>
-              <label class="cat-item" onclick="this.classList.toggle('on')"><input type="checkbox"><span>🥚</span> Eggs & Dairy</label>
-              <label class="cat-item" onclick="this.classList.toggle('on')"><input type="checkbox"><span>🍞</span> Baked Goods</label>
-              <label class="cat-item" onclick="this.classList.toggle('on')"><input type="checkbox"><span>🍯</span> Honey & Preserves</label>
-              <label class="cat-item" onclick="this.classList.toggle('on')"><input type="checkbox"><span>🌻</span> Flowers & Plants</label>
-              <label class="cat-item" onclick="this.classList.toggle('on')"><input type="checkbox"><span>⭐</span> Seasonal Specialties</label>
+              <div class="cat-item" data-cat="Vegetables &amp; Fruits" onclick="toggleCat(this)"><span>🥦</span> Vegetables &amp; Fruits</div>
+              <div class="cat-item" data-cat="Meat &amp; Poultry" onclick="toggleCat(this)"><span>🥩</span> Meat &amp; Poultry</div>
+              <div class="cat-item" data-cat="Eggs &amp; Dairy" onclick="toggleCat(this)"><span>🥚</span> Eggs &amp; Dairy</div>
+              <div class="cat-item" data-cat="Baked Goods" onclick="toggleCat(this)"><span>🍞</span> Baked Goods</div>
+              <div class="cat-item" data-cat="Honey &amp; Preserves" onclick="toggleCat(this)"><span>🍯</span> Honey &amp; Preserves</div>
+              <div class="cat-item" data-cat="Flowers &amp; Plants" onclick="toggleCat(this)"><span>🌻</span> Flowers &amp; Plants</div>
+              <div class="cat-item" data-cat="Seasonal Specialties" onclick="toggleCat(this)"><span>⭐</span> Seasonal Specialties</div>
             </div>
             <!-- Custom items -->
             <div class="custom-items-wrap">
@@ -3087,10 +3087,10 @@ async function loginSuccess(user) {
   document.getElementById('p-phone').value = user.phone || '';
   document.getElementById('p-desc').value = user.desc;
 
-  // Categories
-  document.querySelectorAll('.cat-item').forEach(el => {
-    const text = el.textContent.trim();
-    const on = (user.cats || []).some(c => text.includes(c.split(' ')[0]));
+  // Categories — use data-cat for exact matching
+  document.querySelectorAll('.cat-item[data-cat]').forEach(el => {
+    const cat = el.getAttribute('data-cat');
+    const on = (user.cats || []).includes(cat);
     el.classList.toggle('on', on);
   });
 
@@ -4158,7 +4158,7 @@ async function saveProfile() {
   currentUser.addr = document.getElementById('p-addr').value;
   currentUser.phone = document.getElementById('p-phone').value;
   currentUser.desc = document.getElementById('p-desc').value;
-  const selectedCats = [...document.querySelectorAll('.cat-item.on')].map(el => el.textContent.trim());
+  const selectedCats = [...document.querySelectorAll('.cat-item.on[data-cat]')].map(el => el.getAttribute('data-cat'));
 
   // Geocode address if it changed and we don't have pending coords
   let saveLat = pendingLat || currentUser.lat;
@@ -4209,6 +4209,7 @@ async function saveProfile() {
       stand.address = currentUser.addr;
       stand.lat = saveLat;
       stand.lng = saveLng;
+      stand.cats = selectedCats;
       stand.customItems = customItems;
       stand.products = [...stand.products.filter(p => !stand._customAdded), ...customItems];
       stand._customAdded = true;
@@ -7169,6 +7170,10 @@ async function unsaveStandFromDB(standId) {
   } catch(e) {
     console.warn('Could not unsave stand from DB:', e);
   }
+}
+
+function toggleCat(el) {
+  el.classList.toggle('on');
 }
 // ===================== TOAST =====================
 function showToast(msg) {
