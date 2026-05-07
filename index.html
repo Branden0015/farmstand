@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <!-- Cache policy: versioned deployments handle cache busting -->
-<meta name="version" content="v24.8-1778118450">
+<meta name="version" content="v24.9-1778119108">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -3316,116 +3316,18 @@ function toggleStatus() {
 
 // ===================== MAP =====================
 const STANDS = [
-  {
-    id:1, name:"DEMO - Sunshine Valley Farm", emoji:"🌽", dist:"0.8 mi",
-    address:"W6028 County Road C, Plymouth, WI 53073",
-    lat:43.7558, lng:-88.0012,
-    status:"open", hours:"Mon–Sat 8AM–6PM",
-    desc:"Family-run farm since 1978. We grow sweet corn, heirloom tomatoes, zucchini, and fresh-cut sunflowers. Everything picked fresh daily.",
-    products:["Vegetables","Flowers","Honey"],
-    cats:["Vegetables & Fruits","Flowers & Plants","Honey & Preserves"],
-    customItems:[], photo:null
-  },
-  {
-    id:2, name:"DEMO - Miller's Egg & Dairy", emoji:"🥚", dist:"1.4 mi",
-    address:"N6004 Hillcrest Dr, Plymouth, WI 53073",
-    lat:43.7650, lng:-87.9620,
-    status:"open", hours:"8AM–5PM Mon–Sat",
-    desc:"Pasture-raised eggs, artisan aged cheddars, and fresh farm butter. All animals on 80 acres of grass.",
-    products:["Eggs","Dairy","Cheese"],
-    cats:["Eggs & Dairy","Meat & Poultry"],
-    customItems:[], photo:null
-  },
-  {
-    id:3, name:"DEMO - Honeybee Hollow", emoji:"🍯", dist:"2.1 mi",
-    address:"W5496 Winooski Rd, Plymouth, WI 53073",
-    lat:43.7380, lng:-87.9540,
-    status:"closed", hours:"Opens Sat 9AM",
-    desc:"Three generations of beekeeping. Raw wildflower honey, beeswax candles, and homemade jams.",
-    products:["Honey","Jam","Candles"],
-    cats:["Honey & Preserves","Baked Goods"],
-    customItems:[], photo:null
-  },
-  {
-    id:4, name:"DEMO - Green Acres Bakery Stand", emoji:"🍞", dist:"3.0 mi",
-    address:"W7065 Silver Spring Ln, Plymouth, WI 53073",
-    lat:43.7820, lng:-87.9980,
-    status:"open", hours:"Fri–Sat 8AM–Noon",
-    desc:"Fresh-baked sourdough, cinnamon rolls, and seasonal pies every Friday and Saturday morning.",
-    products:["Bread","Pastries","Pies"],
-    cats:["Baked Goods","Honey & Preserves"],
-    customItems:[], photo:null
-  },
-  {
-    id:5, name:"DEMO - Heritage Harvest Farm", emoji:"🥩", dist:"3.8 mi",
-    address:"W6623 County Road Z, Plymouth, WI 53073",
-    lat:43.7920, lng:-87.9380,
-    status:"open", hours:"Mon–Sat 9AM–5PM",
-    desc:"Grass-fed beef, pastured pork, and free-range poultry. All animals raised humanely on 200 acres.",
-    products:["Beef","Pork","Chicken"],
-    cats:["Meat & Poultry","Eggs & Dairy"],
-    customItems:[], photo:null
-  },
-  {
-    id:6, name:"DEMO - Prairie Bloom Flowers", emoji:"🌻", dist:"4.1 mi",
-    address:"N8200 Lakeview Dr, Elkhart Lake, WI 53020",
-    lat:43.7240, lng:-87.9820,
-    status:"closed", hours:"Wed–Sun 10AM–5PM",
-    desc:"U-pick and pre-cut wildflower bouquets, sunflowers, zinnias, and dahlias.",
-    products:["Flowers","Bouquets","Lavender"],
-    cats:["Flowers & Plants","Seasonal/specialty items"],
-    customItems:[], photo:null
-  },
-  {
-    id:7, name:"DEMO - Green Mountain Farm Stand", emoji:"🍁", dist:"--",
-    address:"839 VT Route 12 S, Randolph, VT 05060",
-    lat:44.0537, lng:-72.6651,
-    status:"open", hours:"Tue–Sun 9AM–5PM",
-    desc:"Certified organic vegetables, pure Vermont maple syrup, fresh honey, and handmade jams. Family farmed for four generations.",
-    products:["Vegetables","Maple Syrup","Honey"],
-    cats:["Vegetables & Fruits","Honey & Preserves","Baked Goods"],
-    customItems:[], photo:null
-  },
-  {
-    id:8, name:"DEMO - Sweet Georgia Farm Stand", emoji:"🍑", dist:"--",
-    address:"1234 Peach Orchard Rd, Watkinsville, GA 30677",
-    lat:33.8651, lng:-83.4085,
-    status:"open", hours:"Tue–Sun 8AM–6PM",
-    desc:"Fresh Georgia peaches, sweet corn, field tomatoes, and pastured eggs. Pick your own strawberries in season.",
-    products:["Peaches","Corn","Eggs"],
-    cats:["Vegetables & Fruits","Eggs & Dairy","Seasonal/specialty items"],
-    customItems:[], photo:null
-  },
-  {
-    id:9, name:"DEMO - Prairie Wind Farm Stand", emoji:"🌽", dist:"--",
-    address:"2847 NE 126th Ave, Polk City, IA 50226",
-    lat:41.7753, lng:-93.7199,
-    status:"open", hours:"Mon–Sat 7AM–7PM",
-    desc:"Iowa sweet corn, heirloom tomatoes, free range eggs, and grass-fed beef. 200 acre family farm in the heart of Iowa.",
-    products:["Corn","Tomatoes","Beef"],
-    cats:["Vegetables & Fruits","Meat & Poultry","Eggs & Dairy"],
-    customItems:[], photo:null
-  },
-  {
-    id:10, name:"DEMO - Rocky Mountain Farm Stand", emoji:"🏔️", dist:"--",
-    address:"5431 W 52nd Ave, Arvada, CO 80002",
-    lat:39.8028, lng:-105.0875,
-    status:"open", hours:"Wed–Sun 9AM–5PM",
-    desc:"High altitude organic vegetables, Colorado wildflower honey, fresh herbs, and mountain lavender. Certified naturally grown.",
-    products:["Vegetables","Honey","Lavender"],
-    cats:["Vegetables & Fruits","Honey & Preserves","Flowers & Plants"],
-    customItems:[], photo:null
-  },
-  {
-    id:11, name:"DEMO - Willamette Valley Farm Stand", emoji:"🫐", dist:"--",
-    address:"7890 Wallace Rd NW, Salem, OR 97304",
-    lat:44.9429, lng:-123.0858,
-    status:"open", hours:"Thu–Sun 10AM–6PM",
-    desc:"Pacific Northwest berries, hazelnuts, marionberry jam, and organic greens. Regenerative farming in the beautiful Willamette Valley.",
-    products:["Berries","Hazelnuts","Greens"],
-    cats:["Vegetables & Fruits","Honey & Preserves","Baked Goods"],
-    customItems:[], photo:null
-  }
+  // Minimal fallback data — all real content loaded from Supabase via loadStandsFromDB()
+  { id:1, name:'DEMO - Sunshine Valley Farm', emoji:'🌽', lat:43.7558, lng:-88.0012, dist:'--', address:'', status:'open', hours:'', desc:'', products:[], cats:[], customItems:[] },
+  { id:2, name:'DEMO - Millers Egg & Dairy', emoji:'🥚', lat:43.7517, lng:-87.9768, dist:'--', address:'', status:'open', hours:'', desc:'', products:[], cats:[], customItems:[] },
+  { id:3, name:'DEMO - Honeybee Hollow', emoji:'🍯', lat:43.7621, lng:-87.9634, dist:'--', address:'', status:'closed', hours:'', desc:'', products:[], cats:[], customItems:[] },
+  { id:4, name:'DEMO - Green Acres Bakery Stand', emoji:'🍞', lat:43.7445, lng:-87.9889, dist:'--', address:'', status:'open', hours:'', desc:'', products:[], cats:[], customItems:[] },
+  { id:5, name:'DEMO - Heritage Harvest Farm', emoji:'🥩', lat:43.7312, lng:-88.0156, dist:'--', address:'', status:'open', hours:'', desc:'', products:[], cats:[], customItems:[] },
+  { id:6, name:'DEMO - Prairie Bloom Flowers', emoji:'🌻', lat:43.7489, lng:-87.9723, dist:'--', address:'', status:'closed', hours:'', desc:'', products:[], cats:[], customItems:[] },
+  { id:7, name:'DEMO - Green Mountain Farm Stand', emoji:'🥦', lat:43.7698, lng:-88.0034, dist:'--', address:'', status:'open', hours:'', desc:'', products:[], cats:[], customItems:[] },
+  { id:8, name:'DEMO - Sweet Georgia Farm Stand', emoji:'🍑', lat:43.7234, lng:-87.9912, dist:'--', address:'', status:'open', hours:'', desc:'', products:[], cats:[], customItems:[] },
+  { id:9, name:'DEMO - Prairie Wind Farm Stand', emoji:'🌽', lat:43.7756, lng:-87.9845, dist:'--', address:'', status:'open', hours:'', desc:'', products:[], cats:[], customItems:[] },
+  { id:10, name:'DEMO - Rocky Mountain Farm Stand', emoji:'🥕', lat:43.7389, lng:-88.0267, dist:'--', address:'', status:'open', hours:'', desc:'', products:[], cats:[], customItems:[] },
+  { id:11, name:'DEMO - Willamette Valley Farm Stand', emoji:'🍇', lat:43.7534, lng:-87.9567, dist:'--', address:'', status:'open', hours:'', desc:'', products:[], cats:[], customItems:[] },
 ];
 
 function initMap() {
@@ -4328,7 +4230,7 @@ async function postNews() {
   }
 }
 
-async function loadNewsForStand(standId, ownerLimit) {
+async function loadNewsForStand(standId, ownerLimit) { return; // News loads fresh in renderProfileNews
   try {
     const limit = ownerLimit || 25; // default to grow limit for display
     const { data } = await sb.from('news_posts')
@@ -4504,32 +4406,7 @@ async function deleteNewsPost(postId) {
 // ===================== PROFILE OVERLAY =====================
 let currentProfileId = null;
 
-const STAND_MENU = {
-  1: [
-    { cat:'Vegetables & Fruits', items:[{name:'Sweet Corn (per ear)',desc:'Fresh-picked daily',price:'$0.75',avail:true},{name:'Heirloom Tomatoes',desc:'6 varieties available',price:'$3.50/lb',avail:true},{name:'Zucchini',desc:'Yellow and green',price:'$1.50 ea',avail:true},{name:'Cucumbers',desc:'Garden fresh',price:'$1.00 ea',avail:false}]},
-    { cat:'Flowers & Plants', items:[{name:'Sunflower Bunch',desc:'5 stems',price:'$8.00',avail:true},{name:'Mixed Wildflower Bouquet',desc:'Seasonal selection',price:'$12.00',avail:true}]},
-    { cat:'Honey & Preserves', items:[{name:'Raw Wildflower Honey',desc:'8 oz jar',price:'$9.00',avail:true},{name:'Raspberry Jam',desc:'Homemade, 12 oz',price:'$7.00',avail:false}]},
-  ],
-  2: [
-    { cat:'Eggs & Dairy', items:[{name:'Dozen Eggs',desc:'Pasture-raised, brown',price:'$5.00',avail:true},{name:'Aged Cheddar',desc:'6-month, 1/2 lb',price:'$8.00',avail:true},{name:'Farm Butter',desc:'Salted, 1 lb',price:'$7.50',avail:true}]},
-    { cat:'Meat & Poultry', items:[{name:'Whole Chicken',desc:'Free-range, avg 4 lbs',price:'$18.00',avail:true},{name:'Chicken Breasts',desc:'Boneless, per lb',price:'$6.50/lb',avail:false}]},
-  ],
-  3: [
-    { cat:'Honey & Preserves', items:[{name:'Raw Wildflower Honey',desc:'Small 4 oz jar',price:'$6.00',avail:true},{name:'Raw Wildflower Honey',desc:'Large 16 oz jar',price:'$18.00',avail:true},{name:'Raspberry Jam',desc:'12 oz jar',price:'$7.00',avail:true},{name:'Strawberry Preserves',desc:'12 oz jar',price:'$7.00',avail:false}]},
-    { cat:'Baked Goods', items:[{name:'Honey Oat Bread',desc:'1 lb loaf',price:'$8.00',avail:true},{name:'Beeswax Candles',desc:'Set of 2',price:'$12.00',avail:true}]},
-  ],
-  4: [
-    { cat:'Baked Goods', items:[{name:'Sourdough Loaf',desc:'1.5 lb, traditional',price:'$8.00',avail:true},{name:'Cinnamon Rolls',desc:'Half dozen',price:'$10.00',avail:true},{name:'Apple Pie',desc:'9 inch, whole',price:'$16.00',avail:true},{name:'Blueberry Muffins',desc:'Per dozen',price:'$9.00',avail:false}]},
-    { cat:'Honey & Preserves', items:[{name:'Strawberry Preserves',desc:'Local berries, 12 oz',price:'$7.00',avail:true}]},
-  ],
-  5: [
-    { cat:'Meat & Poultry', items:[{name:'Ground Beef',desc:'Grass-fed, 1 lb',price:'$7.00',avail:true},{name:'Pork Chops',desc:'Bone-in, per lb',price:'$6.00/lb',avail:true},{name:'Whole Turkey',desc:'Free-range, avg 14 lbs',price:'$65.00',avail:true},{name:'Beef Roast',desc:'Chuck, 2–3 lbs',price:'$28.00',avail:false}]},
-    { cat:'Eggs & Dairy', items:[{name:'Farm Eggs',desc:'Dozen, free-range',price:'$5.50',avail:true}]},
-  ],
-  6: [
-    { cat:'Flowers & Plants', items:[{name:'Dahlia Bunch',desc:'5 stems, mixed colors',price:'$14.00',avail:true},{name:'Sunflower Bunch',desc:'5 stems',price:'$10.00',avail:true},{name:'Mixed Wildflower Bouquet',desc:'Seasonal selection',price:'$12.00',avail:true},{name:'U-Pick (per dozen)',desc:'Choose your own stems',price:'$8.00',avail:true},{name:'Dried Wreath',desc:'16 inch diameter',price:'$28.00',avail:false}]},
-  ],
-};
+const STAND_MENU = {}; // Menus loaded live from Supabase
 
 const STAND_PHOTOS = {
   1: ['🌽','🍅','🌻','🥒','🌽','🌿'],
@@ -4636,45 +4513,110 @@ function switchProfileTab(tab, btn) {
   if (tab === 'info') renderProfileInfo(id);
 }
 
-function renderProfileMenu(id) {
+async function renderProfileMenu(id) {
   const el = document.getElementById('pp-menu');
-  const cats = STAND_MENU[id] || [];
-  if (!cats.length) { el.innerHTML = '<div style="padding:20px;text-align:center;color:var(--text3);font-size:13px">No menu items listed yet</div>'; return; }
-  el.innerHTML = cats.map(cat => `
-    <div class="profile-menu-cat">${cat.cat}</div>
-    ${cat.items.map(item => `
+  if (!el) return;
+  el.innerHTML = '<div style="padding:20px;text-align:center;color:var(--text3);font-size:13px">Loading menu...</div>';
+
+  try {
+    // Find owner by stand_id
+    const { data: owner } = await sb.from('owners')
+      .select('id')
+      .eq('stand_id', id)
+      .maybeSingle();
+
+    if (!owner) {
+      el.innerHTML = '<div style="padding:20px;text-align:center;color:var(--text3);font-size:13px">No menu items listed yet</div>';
+      return;
+    }
+
+    // Fetch menu items from Supabase
+    const { data: items } = await sb.from('menu_items')
+      .select('name, price, cat, avail')
+      .eq('owner_id', owner.id)
+      .order('cat');
+
+    if (!items || !items.length) {
+      // Try owners.menu_items column as fallback
+      const { data: ownerData } = await sb.from('owners')
+        .select('menu_items')
+        .eq('id', owner.id)
+        .maybeSingle();
+
+      if (ownerData?.menu_items?.length) {
+        renderMenuItems(el, ownerData.menu_items);
+        return;
+      }
+      el.innerHTML = '<div style="padding:20px;text-align:center;color:var(--text3);font-size:13px">No menu items listed yet</div>';
+      return;
+    }
+
+    renderMenuItems(el, items);
+  } catch(e) {
+    console.warn('Menu load error:', e);
+    el.innerHTML = '<div style="padding:20px;text-align:center;color:var(--text3);font-size:13px">Could not load menu</div>';
+  }
+}
+
+function renderMenuItems(el, items) {
+  // Group by category
+  const grouped = {};
+  items.forEach(item => {
+    if (!grouped[item.cat]) grouped[item.cat] = [];
+    grouped[item.cat].push(item);
+  });
+
+  el.innerHTML = Object.entries(grouped).map(([cat, catItems]) => `
+    <div class="profile-menu-cat">${cat}</div>
+    ${catItems.map(item => `
       <div class="profile-menu-item">
         <div class="profile-menu-left">
           <div class="profile-menu-name">${item.name}</div>
-          ${item.desc ? `<div class="profile-menu-desc">${item.desc}</div>` : ''}
         </div>
         <div class="profile-menu-right">
-          <span class="profile-menu-price">${item.price}</span>
+          <span class="profile-menu-price">${item.price || ''}</span>
           <span class="profile-menu-stock ${item.avail?'stock-y':'stock-n'}">${item.avail?'In Stock':'Out'}</span>
         </div>
       </div>`).join('')}
   `).join('');
 }
 
-function renderProfileNews(id) {
+async function renderProfileNews(id) {
   const el = document.getElementById('pp-news');
-  const posts = newsPosts[id] || [];
-  if (!posts.length) { el.innerHTML = '<div style="padding:20px;text-align:center;color:var(--text3);font-size:13px">No updates posted yet</div>'; return; }
+  if (!el) return;
+  el.innerHTML = '<div style="padding:20px;text-align:center;color:var(--text3);font-size:13px">Loading updates...</div>';
+
   const tagLabels = { news:'📢 Update', special:'⭐ Special', seasonal:'🌿 Seasonal', alert:'⚠️ Notice' };
   const tagClasses = { news:'tag-news', special:'tag-special', seasonal:'tag-seasonal', alert:'tag-alert' };
   const s = STANDS.find(x=>x.id===id);
-  el.innerHTML = posts.map(p => `
-    <div class="news-post">
-      <div class="news-post-header">
-        <div class="news-post-avi">${s.emoji}</div>
-        <div class="news-post-meta">
-          <div class="news-post-author">${s.name}</div>
-          <div class="news-post-time">${p.time}</div>
+
+  try {
+    const { data: posts } = await sb.from('news_posts')
+      .select('tag, text, created_at')
+      .eq('stand_id', id)
+      .order('created_at', { ascending: false })
+      .limit(25);
+
+    if (!posts || !posts.length) {
+      el.innerHTML = '<div style="padding:20px;text-align:center;color:var(--text3);font-size:13px">No updates posted yet</div>';
+      return;
+    }
+
+    el.innerHTML = posts.map(p => `
+      <div class="news-post">
+        <div class="news-post-header">
+          <div class="news-post-avi">${s?.emoji || '🌾'}</div>
+          <div class="news-post-meta">
+            <div class="news-post-author">${s?.name || 'Farm Stand'}</div>
+            <div class="news-post-time">${timeAgo(p.created_at)}</div>
+          </div>
+          <span class="news-post-tag ${tagClasses[p.tag]||'tag-news'}">${tagLabels[p.tag]||'Update'}</span>
         </div>
-        <span class="news-post-tag ${tagClasses[p.tag]}">${tagLabels[p.tag]}</span>
-      </div>
-      <div class="news-post-body">${p.text}</div>
-    </div>`).join('');
+        <div class="news-post-body">${p.text}</div>
+      </div>`).join('');
+  } catch(e) {
+    el.innerHTML = '<div style="padding:20px;text-align:center;color:var(--text3);font-size:13px">Could not load updates</div>';
+  }
 }
 
 function renderProfilePhotos(id) {
