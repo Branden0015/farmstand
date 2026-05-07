@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <!-- Cache policy: versioned deployments handle cache busting -->
-<meta name="version" content="v24.6-1778117272">
+<meta name="version" content="v24.7-1778117957">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -373,7 +373,8 @@ body { font-family: 'DM Sans', sans-serif; background: var(--cream); color: var(
 
 .cat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; }
 .cat-item { display: flex; align-items: center; gap: 7px; padding: 7px 9px; border-radius: 8px; border: 1.5px solid var(--border); cursor: pointer; font-size: 12px; color: var(--text2); transition: all 0.15s; }
-.cat-item:hover, .cat-item.on { border-color: var(--green2); background: var(--green3); color: var(--green); font-weight: 500; }
+.cat-item:hover { border-color: var(--green2); background: var(--green3); color: var(--green); }
+.cat-item.on { border-color: var(--green2); background: var(--green3); color: var(--green); font-weight: 500; }
 .cat-item input { display: none; }
 
 /* ===== CUSTOM ITEMS ===== */
@@ -4566,7 +4567,7 @@ async function openProfile(id) {
   // Load fresh data from DB in background
   try {
     const { data: ownerData } = await sb.from('owners')
-      .select('id, photo, description, hours, hours_display')
+      .select('id, photo, description, hours, hours_display, cats, custom_items')
       .eq('stand_id', id)
       .maybeSingle();
 
@@ -4581,6 +4582,12 @@ async function openProfile(id) {
         s.hours = ownerData.hours_display;
         const addrEl = document.getElementById('ph-addr');
         if (addrEl) addrEl.textContent = '📍 ' + s.address + '  ·  ' + s.hours;
+      }
+      // Update cats from fresh DB data
+      if (ownerData.cats && ownerData.cats.length) {
+        s.cats = ownerData.cats;
+        const badgesEl = document.getElementById('ph-badges');
+        if (badgesEl) badgesEl.innerHTML = ownerData.cats.map(c=>`<span class="profile-hero-badge">${c}</span>`).join('');
       }
       // Load gallery photos fresh
       const { data: photos } = await sb.from('gallery_photos')
@@ -7173,7 +7180,13 @@ async function unsaveStandFromDB(standId) {
 }
 
 function toggleCat(el) {
-  el.classList.toggle('on');
+  // Small timeout prevents hover state from interfering on mobile
+  const isOn = el.classList.contains('on');
+  // Remove hover state first then toggle
+  el.blur();
+  setTimeout(() => {
+    el.classList.toggle('on', !isOn);
+  }, 10);
 }
 // ===================== TOAST =====================
 function showToast(msg) {
