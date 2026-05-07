@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <!-- Cache policy: versioned deployments handle cache busting -->
-<meta name="version" content="v24.7-1778117957">
+<meta name="version" content="v24.8-1778118450">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -372,10 +372,8 @@ body { font-family: 'DM Sans', sans-serif; background: var(--cream); color: var(
 .pform-textarea { resize: vertical; min-height: 80px; }
 
 .cat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; }
-.cat-item { display: flex; align-items: center; gap: 7px; padding: 7px 9px; border-radius: 8px; border: 1.5px solid var(--border); cursor: pointer; font-size: 12px; color: var(--text2); transition: all 0.15s; }
-.cat-item:hover { border-color: var(--green2); background: var(--green3); color: var(--green); }
-.cat-item.on { border-color: var(--green2); background: var(--green3); color: var(--green); font-weight: 500; }
-.cat-item input { display: none; }
+.cat-item { display: flex; align-items: center; gap: 7px; padding: 7px 9px; border-radius: 8px; border: 1.5px solid var(--border); cursor: pointer; font-size: 12px; color: var(--text2); user-select: none; -webkit-user-select: none; }
+.cat-item.on { border-color: var(--green); background: var(--green3); color: var(--green); font-weight: 600; }
 
 /* ===== CUSTOM ITEMS ===== */
 .custom-items-wrap { margin-top: 8px; }
@@ -3088,11 +3086,23 @@ async function loginSuccess(user) {
   document.getElementById('p-phone').value = user.phone || '';
   document.getElementById('p-desc').value = user.desc;
 
-  // Categories — use data-cat for exact matching
+  // Categories — use data-cat for exact matching, set inline styles too
   document.querySelectorAll('.cat-item[data-cat]').forEach(el => {
     const cat = el.getAttribute('data-cat');
     const on = (user.cats || []).includes(cat);
-    el.classList.toggle('on', on);
+    if (on) {
+      el.classList.add('on');
+      el.style.borderColor = 'var(--green)';
+      el.style.background = 'var(--green3)';
+      el.style.color = 'var(--green)';
+      el.style.fontWeight = '600';
+    } else {
+      el.classList.remove('on');
+      el.style.borderColor = '';
+      el.style.background = '';
+      el.style.color = '';
+      el.style.fontWeight = '';
+    }
   });
 
   // Profile photo
@@ -3692,7 +3702,7 @@ function buildPopupHTML(s) {
     </div>
     <div class="pop-body">
       <div class="pop-desc">${s.desc}</div>
-      <div class="pop-prods">${[...s.products.slice(0,3), ...(s.customItems||[]).slice(0,2)].map(p=>'<span class="pop-prod">'+p+'</span>').join('')}</div>
+      <div class="pop-prods">${[...(s.cats||[]).slice(0,3), ...(s.customItems||[]).slice(0,2)].map(p=>'<span class="pop-prod">'+p.split(' ')[0]+'</span>').join('')}</div>
       <div class="pop-acts">
         <button class="pbtn pbtn-dir" onclick="getDir(${s.id})">🗺 Directions</button>
         <button class="pbtn pbtn-stop${manualStops.has(s.id)?' added':''}" id="popup-stop-${s.id}" onclick="toggleStop(${s.id})">${manualStops.has(s.id)?'📍 Added':'📍 Add Stop'}</button>
@@ -4212,7 +4222,7 @@ async function saveProfile() {
       stand.lng = saveLng;
       stand.cats = selectedCats;
       stand.customItems = customItems;
-      stand.products = [...stand.products.filter(p => !stand._customAdded), ...customItems];
+      stand.products = [...selectedCats, ...customItems];
       stand._customAdded = true;
       if (menuItems.length) {
         const grouped = {};
@@ -4570,6 +4580,8 @@ async function openProfile(id) {
       .select('id, photo, description, hours, hours_display, cats, custom_items')
       .eq('stand_id', id)
       .maybeSingle();
+    // Also try matching by owner's stand_id if not found
+    // (handles cases where stand_id may not be set on new accounts)
 
     if (ownerData) {
       // Update profile photo with fresh DB version
@@ -4586,6 +4598,7 @@ async function openProfile(id) {
       // Update cats from fresh DB data
       if (ownerData.cats && ownerData.cats.length) {
         s.cats = ownerData.cats;
+        s.products = [...ownerData.cats, ...(ownerData.custom_items||[])];
         const badgesEl = document.getElementById('ph-badges');
         if (badgesEl) badgesEl.innerHTML = ownerData.cats.map(c=>`<span class="profile-hero-badge">${c}</span>`).join('');
       }
@@ -7180,13 +7193,19 @@ async function unsaveStandFromDB(standId) {
 }
 
 function toggleCat(el) {
-  // Small timeout prevents hover state from interfering on mobile
-  const isOn = el.classList.contains('on');
-  // Remove hover state first then toggle
-  el.blur();
-  setTimeout(() => {
-    el.classList.toggle('on', !isOn);
-  }, 10);
+  if (el.classList.contains('on')) {
+    el.classList.remove('on');
+    el.style.borderColor = '';
+    el.style.background = '';
+    el.style.color = '';
+    el.style.fontWeight = '';
+  } else {
+    el.classList.add('on');
+    el.style.borderColor = 'var(--green)';
+    el.style.background = 'var(--green3)';
+    el.style.color = 'var(--green)';
+    el.style.fontWeight = '600';
+  }
 }
 // ===================== TOAST =====================
 function showToast(msg) {
