@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <!-- Cache policy: versioned deployments handle cache busting -->
-<meta name="version" content="v24.4-1777950804">
+<meta name="version" content="v24.5-1778116007">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -2252,23 +2252,23 @@ input, select, textarea {
           <div style="display:flex;flex-direction:column;gap:10px">
             <div style="display:flex;gap:12px;align-items:flex-start">
               <span style="font-size:20px;flex-shrink:0">⭐</span>
-              <div><div style="font-size:14px;font-weight:600;color:var(--text);margin-bottom:1px">Featured map pin & badge</div><div style="font-size:12px;color:var(--text2)">Your stand stands out on the map and appears first in search results in your area</div></div>
+              <div><div style="font-size:14px;font-weight:600;color:var(--text);margin-bottom:1px">Featured map pin</div><div style="font-size:12px;color:var(--text2)">Your pin is 15% larger with a gold star badge, plus a Featured Profile banner in your popup — buyers notice you first</div></div>
             </div>
             <div style="display:flex;gap:12px;align-items:flex-start">
-              <span style="font-size:20px;flex-shrink:0">🔔</span>
-              <div><div style="font-size:14px;font-weight:600;color:var(--text);margin-bottom:1px">Notify saved buyers instantly</div><div style="font-size:12px;color:var(--text2)">When you post a news update, buyers who saved your stand get notified — bringing them back to your stand</div></div>
+              <span style="font-size:20px;flex-shrink:0">📸</span>
+              <div><div style="font-size:14px;font-weight:600;color:var(--text);margin-bottom:1px">More photos</div><div style="font-size:12px;color:var(--text2)">Upload up to 15 gallery photos vs 5 on the free plan — show buyers exactly what you have</div></div>
             </div>
             <div style="display:flex;gap:12px;align-items:flex-start">
-              <span style="font-size:20px;flex-shrink:0">🏷</span>
-              <div><div style="font-size:14px;font-weight:600;color:var(--text);margin-bottom:1px">Weekend specials & deal badges</div><div style="font-size:12px;color:var(--text2)">Post a limited-time offer that shows as a badge on your map pin — drives foot traffic on slow days</div></div>
+              <span style="font-size:20px;flex-shrink:0">📰</span>
+              <div><div style="font-size:14px;font-weight:600;color:var(--text);margin-bottom:1px">More news posts</div><div style="font-size:12px;color:var(--text2)">Post up to 25 updates vs 5 on the free plan — keep buyers informed about what's fresh and in season</div></div>
             </div>
             <div style="display:flex;gap:12px;align-items:flex-start">
               <span style="font-size:20px;flex-shrink:0">📊</span>
-              <div><div style="font-size:14px;font-weight:600;color:var(--text);margin-bottom:1px">Deep analytics & 90-day history</div><div style="font-size:12px;color:var(--text2)">Hourly traffic breakdown, buyer demographics, and a weekly email report delivered to your inbox</div></div>
+              <div><div style="font-size:14px;font-weight:600;color:var(--text);margin-bottom:1px">Full analytics dashboard</div><div style="font-size:12px;color:var(--text2)">See profile views, directions clicks, 7-day chart, buyer insights and recent activity — all real data</div></div>
             </div>
             <div style="display:flex;gap:12px;align-items:flex-start">
-              <span style="font-size:20px;flex-shrink:0">📅</span>
-              <div><div style="font-size:14px;font-weight:600;color:var(--text);margin-bottom:1px">Auto seasonal scheduling</div><div style="font-size:12px;color:var(--text2)">Set your stand to automatically open and close based on season — no manual updates needed</div></div>
+              <span style="font-size:20px;flex-shrink:0">🔔</span>
+              <div><div style="font-size:14px;font-weight:600;color:var(--text);margin-bottom:1px">Buyer notifications <span style="font-size:10px;background:var(--green3);color:var(--green);padding:2px 6px;border-radius:6px;font-weight:600;vertical-align:middle">Coming soon</span></div><div style="font-size:12px;color:var(--text2)">Notify buyers who saved your stand when you post an update — bringing them back to your stand</div></div>
             </div>
           </div>
         </div>
@@ -3614,16 +3614,22 @@ async function loadStandsFromDB(centerLat, centerLng, miles) {
   }
 }
 
-function createIcon(emoji, selected, photoUrl) {
+function createIcon(emoji, selected, photoUrl, isGrow) {
   const bg = selected ? '#c96a2a' : '#2d5a3d';
+  const growBg = isGrow ? '#f0b429' : bg;
+  const size = isGrow ? 46 : 40;
+  const imgSize = isGrow ? 39 : 34;
+  const fontSize = isGrow ? '21px' : '18px';
   const inner = photoUrl
-    ? `<img src="${photoUrl}" style="transform:rotate(45deg);width:34px;height:34px;object-fit:cover;border-radius:50%">`
-    : `<span style="transform:rotate(45deg);font-size:18px;line-height:1">${emoji}</span>`;
+    ? `<img src="${photoUrl}" style="transform:rotate(45deg);width:${imgSize}px;height:${imgSize}px;object-fit:cover;border-radius:50%">`
+    : `<span style="transform:rotate(45deg);font-size:${fontSize};line-height:1">${emoji}</span>`;
+  const starBadge = isGrow ? `<div style="position:absolute;bottom:-4px;right:-4px;background:#f0b429;border-radius:50%;width:16px;height:16px;display:flex;align-items:center;justify-content:center;font-size:10px;border:2px solid white;z-index:2">⭐</div>` : '';
   const label = photoUrl ? '' : `<div style="background:white;border-radius:4px;padding:2px 5px;font-size:10px;font-weight:600;color:#2a1f16;white-space:nowrap;margin-top:2px;box-shadow:0 1px 4px rgba(0,0,0,0.15);text-align:center;font-family:DM Sans,sans-serif;max-width:90px;overflow:hidden;text-overflow:ellipsis">${emoji}</div>`;
+  const iconSize = isGrow ? size + 6 : size;
   return L.divIcon({
     className: '',
-    html: `<div style="width:40px;height:40px;background:${bg};border:3px solid white;border-radius:50% 50% 50% 0;transform:rotate(-45deg);display:flex;align-items:center;justify-content:center;box-shadow:0 3px 12px rgba(0,0,0,0.3);cursor:pointer;overflow:hidden">${inner}</div>${label}`,
-    iconSize: [40, 58], iconAnchor: [20, 58], popupAnchor: [0, -60]
+    html: `<div style="position:relative;display:inline-block"><div style="width:${size}px;height:${size}px;background:${isGrow?'#2d5a3d':bg};border:${isGrow?'3.5':'3'}px solid ${isGrow?'#f0b429':'white'};border-radius:50% 50% 50% 0;transform:rotate(-45deg);display:flex;align-items:center;justify-content:center;box-shadow:0 3px 12px rgba(0,0,0,0.3);cursor:pointer;overflow:visible;position:relative">${inner}${starBadge}</div>${label}</div>`,
+    iconSize: [iconSize, iconSize + 18], iconAnchor: [iconSize/2, iconSize + 18], popupAnchor: [0, -(iconSize + 20)]
   });
 }
 
@@ -3678,7 +3684,8 @@ function buildPopupHTML(s) {
       <div class="pop-avi">${s.photo ? '<img src="' + s.photo + '" style="width:100%;height:100%;object-fit:cover;border-radius:8px">' : s.emoji}</div>
       <div style="flex:1">
         <div class="pop-name">${s.name}</div>
-        <div class="pop-meta">📍 ${s.dist} · ${s.status==='open'?'🟢 Open':'🔴 Closed'} · ${s.hours}</div>
+        ${(s.isGrow||s.isPro) ? `<div style="display:inline-flex;align-items:center;gap:4px;background:#fdf3d0;border-radius:6px;padding:2px 8px;margin-bottom:4px;font-size:11px;font-weight:700;color:#92600a;font-family:'DM Sans',sans-serif">⭐ FEATURED PROFILE</div>` : ''}
+    <div class="pop-meta">📍 ${s.dist} · ${s.status==='open'?'🟢 Open':'🔴 Closed'} · ${s.hours}</div>
         <div class="pop-head-hint">👆 Click to view full profile →</div>
       </div>
     </div>
@@ -3704,7 +3711,7 @@ const POPUP_OPTIONS = {
 
 function createMarker(s) {
   const marker = L.marker([s.lat, s.lng], {
-    icon: createIcon(s.emoji, selectedId===s.id, s.photo||null)
+    icon: createIcon(s.emoji, selectedId===s.id, s.photo||null, s.isGrow||s.isPro)
   }).addTo(mainMap);
   marker.bindPopup(buildPopupHTML(s), POPUP_OPTIONS);
   marker.on('click', () => {
