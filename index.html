@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <!-- Cache policy: versioned deployments handle cache busting -->
-<meta name="version" content="v24.9-1778119108">
+<meta name="version" content="v25.0-1778283778">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -3315,20 +3315,8 @@ function toggleStatus() {
 }
 
 // ===================== MAP =====================
-const STANDS = [
-  // Minimal fallback data — all real content loaded from Supabase via loadStandsFromDB()
-  { id:1, name:'DEMO - Sunshine Valley Farm', emoji:'🌽', lat:43.7558, lng:-88.0012, dist:'--', address:'', status:'open', hours:'', desc:'', products:[], cats:[], customItems:[] },
-  { id:2, name:'DEMO - Millers Egg & Dairy', emoji:'🥚', lat:43.7517, lng:-87.9768, dist:'--', address:'', status:'open', hours:'', desc:'', products:[], cats:[], customItems:[] },
-  { id:3, name:'DEMO - Honeybee Hollow', emoji:'🍯', lat:43.7621, lng:-87.9634, dist:'--', address:'', status:'closed', hours:'', desc:'', products:[], cats:[], customItems:[] },
-  { id:4, name:'DEMO - Green Acres Bakery Stand', emoji:'🍞', lat:43.7445, lng:-87.9889, dist:'--', address:'', status:'open', hours:'', desc:'', products:[], cats:[], customItems:[] },
-  { id:5, name:'DEMO - Heritage Harvest Farm', emoji:'🥩', lat:43.7312, lng:-88.0156, dist:'--', address:'', status:'open', hours:'', desc:'', products:[], cats:[], customItems:[] },
-  { id:6, name:'DEMO - Prairie Bloom Flowers', emoji:'🌻', lat:43.7489, lng:-87.9723, dist:'--', address:'', status:'closed', hours:'', desc:'', products:[], cats:[], customItems:[] },
-  { id:7, name:'DEMO - Green Mountain Farm Stand', emoji:'🥦', lat:43.7698, lng:-88.0034, dist:'--', address:'', status:'open', hours:'', desc:'', products:[], cats:[], customItems:[] },
-  { id:8, name:'DEMO - Sweet Georgia Farm Stand', emoji:'🍑', lat:43.7234, lng:-87.9912, dist:'--', address:'', status:'open', hours:'', desc:'', products:[], cats:[], customItems:[] },
-  { id:9, name:'DEMO - Prairie Wind Farm Stand', emoji:'🌽', lat:43.7756, lng:-87.9845, dist:'--', address:'', status:'open', hours:'', desc:'', products:[], cats:[], customItems:[] },
-  { id:10, name:'DEMO - Rocky Mountain Farm Stand', emoji:'🥕', lat:43.7389, lng:-88.0267, dist:'--', address:'', status:'open', hours:'', desc:'', products:[], cats:[], customItems:[] },
-  { id:11, name:'DEMO - Willamette Valley Farm Stand', emoji:'🍇', lat:43.7534, lng:-87.9567, dist:'--', address:'', status:'open', hours:'', desc:'', products:[], cats:[], customItems:[] },
-];
+const STANDS = [];
+// All stands loaded live from Supabase via loadStandsFromDB()
 
 function initMap() {
   mainMap = L.map('map', { zoomControl: true, closePopupOnClick: false }).setView([43.755, -87.980], 12);
