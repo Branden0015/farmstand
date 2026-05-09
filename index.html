@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <!-- Cache policy: versioned deployments handle cache busting -->
-<meta name="version" content="v26.1-1778329802">
+<meta name="version" content="v26.2-1778331676">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -4788,17 +4788,44 @@ function renderProfilePhotos(id) {
   }
 }
 
-function renderProfileInfo(id) {
+async function renderProfileInfo(id) {
   const el = document.getElementById('pp-info');
+  if (!el) return;
   const s = STANDS.find(x=>x.id===id);
-  const hours = STAND_HOURS_DISPLAY[id] || [];
-  el.innerHTML = `
-    <div class="info-row"><div class="info-icon">📍</div><div><div class="info-label">Address</div><div class="info-val">${s.address}</div></div></div>
-    <div class="info-row"><div class="info-icon">🕐</div><div style="flex:1"><div class="info-label">Hours</div>
-      <table class="hours-table">${hours.map(h=>`<tr><td>${h[0]}</td><td>${h[1]==='Closed'?'<span style="color:var(--text3)">Closed</span>':h[1]+' – '+h[2]}</td></tr>`).join('')}</table>
-    </div></div>
-    <div class="info-row"><div class="info-icon">🛒</div><div><div class="info-label">Categories</div><div class="info-val">${s.cats.join(', ')}</div></div></div>
-    <div class="info-row"><div class="info-icon">📞</div><div><div class="info-label">Contact</div><div class="info-val">(920) 555-0${100+id}</div></div></div>`;
+  el.innerHTML = '<div style="padding:20px;text-align:center;color:var(--text3);font-size:13px">Loading info...</div>';
+
+  try {
+    const { data: owner } = await sb.from('owners')
+      .select('hours, hours_display, phone, addr')
+      .eq('stand_id', id)
+      .maybeSingle();
+
+    const address = owner?.addr || s?.address || 'Address not listed';
+    const phone = owner?.phone || null;
+    const hours = owner?.hours || null;
+
+    // Build hours table from saved hours object
+    let hoursHTML = '<div style="color:var(--text3);font-size:12px">Hours not listed</div>';
+    if (hours) {
+      const days = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
+      hoursHTML = `<table class="hours-table">${days.map(day => {
+        const h = hours[day] || {};
+        if (h.closed || (!h.open && !h.close)) {
+          return `<tr><td>${day.slice(0,3)}</td><td style="color:var(--text3)">Closed</td></tr>`;
+        }
+        return `<tr><td>${day.slice(0,3)}</td><td>${h.open || ''} – ${h.close || ''}</td></tr>`;
+      }).join('')}</table>`;
+    }
+
+    el.innerHTML = `
+      <div class="info-row"><div class="info-icon">📍</div><div><div class="info-label">Address</div><div class="info-val">${address}</div></div></div>
+      <div class="info-row"><div class="info-icon">🕐</div><div style="flex:1"><div class="info-label">Hours</div>${hoursHTML}</div></div>
+      ${phone ? `<div class="info-row"><div class="info-icon">📞</div><div><div class="info-label">Contact</div><div class="info-val">${phone}</div></div></div>` : ''}
+      ${s?.cats?.length ? `<div class="info-row"><div class="info-icon">🛒</div><div><div class="info-label">Categories</div><div class="info-val">${s.cats.join(', ')}</div></div></div>` : ''}
+    `;
+  } catch(e) {
+    el.innerHTML = '<div style="padding:20px;text-align:center;color:var(--text3);font-size:13px">Could not load info</div>';
+  }
 }
 
 function updateProfileFavBtn() {
@@ -4809,17 +4836,8 @@ function updateProfileFavBtn() {
 
 // ===================== GROCERY LIST =====================
 
-// Item → stand matching database
-const ITEM_MATCH = {
-  'sweet corn':1, 'corn':1, 'heirloom tomatoes':1, 'tomatoes':1, 'zucchini':1, 'cucumbers':1,
-  'sunflowers':1, 'sunflower':1, 'flowers':6, 'bouquet':6, 'dahlia':6, 'dahlias':6,
-  'raw honey':3, 'honey':3, 'raspberry jam':3, 'jam':3, 'preserves':4,
-  'eggs':2, 'dozen eggs':2, 'cheddar':2, 'cheese':2, 'butter':2, 'farm butter':2,
-  'chicken':2, 'whole chicken':2, 'ground beef':5, 'beef':5, 'pork':5, 'pork chops':5,
-  'turkey':5, 'whole turkey':5, 'sourdough':4, 'sourdough bread':4, 'bread':4,
-  'cinnamon rolls':4, 'apple pie':4, 'pie':4, 'muffins':4,
-  'beeswax candles':3, 'candles':3, 'wreath':6, 'wreaths':6,
-};
+// Item → stand matching — populated dynamically from DB
+const ITEM_MATCH = {};
 
 let groceryList = [];
 let isPro = false;
