@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <!-- Cache policy: versioned deployments handle cache busting -->
-<meta name="version" content="v25.1-1778284534">
+<meta name="version" content="v25.2-1778287236">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -1693,11 +1693,17 @@ input, select, textarea {
       </div>
       <div class="form-group">
         <label class="form-label">Password</label>
-        <input class="form-input" id="su-pw" type="password" placeholder="Create a password (min 6 chars)">
+        <input class="form-input" id="su-pw" type="password" placeholder="Create a password" oninput="checkPwStrength(this.value)">
       </div>
       <div class="form-group">
         <label class="form-label">Confirm Password</label>
         <input class="form-input" id="su-pw2" type="password" placeholder="Type your password again">
+      <div id="pw-requirements" style="margin-top:6px;font-size:11px;color:var(--text3);line-height:1.6">
+        Password must be at least <strong>8 characters</strong> and include:
+        <div id="pw-check-length" style="color:var(--text3)">✗ At least 8 characters</div>
+        <div id="pw-check-upper" style="color:var(--text3)">✗ One uppercase letter</div>
+        <div id="pw-check-number" style="color:var(--text3)">✗ One number</div>
+      </div>
       </div>
       <div class="form-group">
         <label class="form-label">Farm Stand Name</label>
@@ -2040,6 +2046,7 @@ input, select, textarea {
       <button class="dash-nav-item" onclick="showPanel('menu')"><span class="dash-nav-icon">📋</span> Menu & Products</button>
       <button class="dash-nav-item" onclick="showPanel('hours')"><span class="dash-nav-icon">🕐</span> Hours</button>
       <button class="dash-nav-item" onclick="showPanel('photos')"><span class="dash-nav-icon">📸</span> Photos</button>
+      <button class="dash-nav-item" onclick="showPanel('account')"><span class="dash-nav-icon">🔐</span> Account Settings</button>
 
       <div class="status-toggle">
         <div class="status-toggle-label">Stand Status</div>
@@ -2450,6 +2457,58 @@ input, select, textarea {
           </div>
         </div>
         <div style="font-size:12px;color:var(--text3)">💡 Tip: Upload photos of your stand, seasonal products, and farm to attract more buyers. You can add multiple photos at once.</div>
+      </div>
+
+      <!-- Account Settings Panel -->
+      <div class="dash-panel" id="panel-account">
+        <div class="dash-panel-title">Account Settings</div>
+        <div class="dash-panel-sub">Manage your email and password</div>
+
+        <!-- Change Password -->
+        <div class="pcard full" style="margin-bottom:16px">
+          <div class="pcard-title" style="margin-bottom:12px">🔒 Change Password</div>
+          <div class="form-group">
+            <label class="form-label">Current Password</label>
+            <input class="pform-input" id="cp-current" type="password" placeholder="Your current password">
+          </div>
+          <div class="form-group" style="margin-top:10px">
+            <label class="form-label">New Password</label>
+            <input class="pform-input" id="cp-new" type="password" placeholder="New password" oninput="checkPwStrength2(this.value)">
+            <div id="pw-strength2" style="margin-top:8px;display:none">
+              <div id="pw2-req-length" style="font-size:11px;color:#c0392b;margin:2px 0">✗ At least 6 characters</div>
+              <div id="pw2-req-upper"  style="font-size:11px;color:#c0392b;margin:2px 0">✗ One uppercase letter (A-Z)</div>
+              <div id="pw2-req-lower"  style="font-size:11px;color:#c0392b;margin:2px 0">✗ One lowercase letter (a-z)</div>
+              <div id="pw2-req-digit"  style="font-size:11px;color:#c0392b;margin:2px 0">✗ One number (0-9)</div>
+            </div>
+          </div>
+          <div class="form-group" style="margin-top:10px">
+            <label class="form-label">Confirm New Password</label>
+            <input class="pform-input" id="cp-confirm" type="password" placeholder="Confirm new password">
+          </div>
+          <div id="cp-err" style="display:none;color:#c0392b;font-size:12px;margin:8px 0"></div>
+          <div id="cp-ok" style="display:none;color:var(--green);font-size:12px;margin:8px 0">✅ Password changed successfully!</div>
+          <div class="save-bar" style="margin-top:12px">
+            <button class="save-btn" onclick="changePassword()">Change Password</button>
+          </div>
+        </div>
+
+        <!-- Change Email -->
+        <div class="pcard full">
+          <div class="pcard-title" style="margin-bottom:12px">📧 Change Email</div>
+          <div class="form-group">
+            <label class="form-label">New Email Address</label>
+            <input class="pform-input" id="ce-email" type="email" placeholder="New email address">
+          </div>
+          <div class="form-group" style="margin-top:10px">
+            <label class="form-label">Current Password (to confirm)</label>
+            <input class="pform-input" id="ce-pw" type="password" placeholder="Your current password">
+          </div>
+          <div id="ce-err" style="display:none;color:#c0392b;font-size:12px;margin:8px 0"></div>
+          <div id="ce-ok" style="display:none;color:var(--green);font-size:12px;margin:8px 0">✅ Verification email sent to your new address!</div>
+          <div class="save-bar" style="margin-top:12px">
+            <button class="save-btn" onclick="changeEmail()">Change Email</button>
+          </div>
+        </div>
       </div>
 
     </div>
@@ -2991,7 +3050,6 @@ async function doSignup() {
   const name = document.getElementById('su-name').value.trim();
   const email = document.getElementById('su-email').value.trim().toLowerCase();
   const pw = document.getElementById('su-pw').value;
-  const pw2 = document.getElementById('su-pw2').value;
   const farm = document.getElementById('su-farm').value.trim();
   const errEl = document.getElementById('su-err');
   errEl.classList.remove('show');
@@ -3001,8 +3059,16 @@ async function doSignup() {
     errEl.textContent = 'Please fill in all fields.';
     errEl.classList.add('show'); return;
   }
-  if (pw.length < 6) {
-    errEl.textContent = 'Password must be at least 6 characters.';
+  if (pw.length < 8) {
+    errEl.textContent = 'Password must be at least 8 characters.';
+    errEl.classList.add('show'); return;
+  }
+  if (!/[A-Z]/.test(pw)) {
+    errEl.textContent = 'Password must include at least one uppercase letter.';
+    errEl.classList.add('show'); return;
+  }
+  if (!/[0-9]/.test(pw)) {
+    errEl.textContent = 'Password must include at least one number.';
     errEl.classList.add('show'); return;
   }
   if (pw !== pw2) {
@@ -7187,6 +7253,126 @@ function toggleCat(el) {
     el.style.background = 'var(--green3)';
     el.style.color = 'var(--green)';
     el.style.fontWeight = '600';
+  }
+}
+
+function checkPwStrength(pw) {
+  const hasLength = pw.length >= 8;
+  const hasUpper = /[A-Z]/.test(pw);
+  const hasNumber = /[0-9]/.test(pw);
+  const setCheck = (id, passed) => {
+    const el = document.getElementById(id);
+    if (el) { el.style.color = passed ? 'var(--green)' : 'var(--text3)'; el.textContent = (passed ? '✓ ' : '✗ ') + el.textContent.slice(2); }
+  };
+  setCheck('pw-check-length', hasLength);
+  setCheck('pw-check-upper', hasUpper);
+  setCheck('pw-check-number', hasNumber);
+}
+
+function checkPwStrength(pw) {
+  const wrap = document.getElementById('pw-strength');
+  if (wrap) wrap.style.display = pw.length > 0 ? 'block' : 'none';
+  const checks = [
+    ['pw-req-length', pw.length >= 6,    '✓ At least 6 characters',      '✗ At least 6 characters'],
+    ['pw-req-upper',  /[A-Z]/.test(pw),  '✓ One uppercase letter (A-Z)', '✗ One uppercase letter (A-Z)'],
+    ['pw-req-lower',  /[a-z]/.test(pw),  '✓ One lowercase letter (a-z)', '✗ One lowercase letter (a-z)'],
+    ['pw-req-digit',  /[0-9]/.test(pw),  '✓ One number (0-9)',           '✗ One number (0-9)'],
+  ];
+  checks.forEach(([id, pass, passText, failText]) => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.textContent = pass ? passText : failText;
+    el.style.color = pass ? 'var(--green)' : '#c0392b';
+  });
+}
+
+function pwMeetsRequirements(pw) {
+  return pw.length >= 6 && /[A-Z]/.test(pw) && /[a-z]/.test(pw) && /[0-9]/.test(pw);
+}
+
+// ===================== ACCOUNT SETTINGS =====================
+function checkPwStrength2(pw) {
+  const wrap = document.getElementById('pw-strength2');
+  if (wrap) wrap.style.display = pw.length > 0 ? 'block' : 'none';
+  const checks = [
+    ['pw2-req-length', pw.length >= 6,    '✓ At least 6 characters',      '✗ At least 6 characters'],
+    ['pw2-req-upper',  /[A-Z]/.test(pw),  '✓ One uppercase letter (A-Z)', '✗ One uppercase letter (A-Z)'],
+    ['pw2-req-lower',  /[a-z]/.test(pw),  '✓ One lowercase letter (a-z)', '✗ One lowercase letter (a-z)'],
+    ['pw2-req-digit',  /[0-9]/.test(pw),  '✓ One number (0-9)',           '✗ One number (0-9)'],
+  ];
+  checks.forEach(([id, pass, passText, failText]) => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.textContent = pass ? passText : failText;
+    el.style.color = pass ? 'var(--green)' : '#c0392b';
+  });
+}
+
+async function changePassword() {
+  const current = document.getElementById('cp-current')?.value;
+  const newPw = document.getElementById('cp-new')?.value;
+  const confirm = document.getElementById('cp-confirm')?.value;
+  const errEl = document.getElementById('cp-err');
+  const okEl = document.getElementById('cp-ok');
+  errEl.style.display = 'none'; okEl.style.display = 'none';
+
+  if (!current || !newPw || !confirm) {
+    errEl.textContent = 'Please fill in all fields.'; errEl.style.display = 'block'; return;
+  }
+  if (current !== currentUser.password_hash) {
+    errEl.textContent = 'Current password is incorrect.'; errEl.style.display = 'block'; return;
+  }
+  if (!pwMeetsRequirements(newPw)) {
+    errEl.textContent = 'New password does not meet requirements.'; errEl.style.display = 'block'; return;
+  }
+  if (newPw !== confirm) {
+    errEl.textContent = 'New passwords do not match.'; errEl.style.display = 'block'; return;
+  }
+
+  try {
+    // Update in owners table
+    await sb.from('owners').update({ password_hash: newPw }).eq('email', currentUser.email);
+    // Update in Supabase Auth
+    await sb.auth.updateUser({ password: newPw });
+    currentUser.password_hash = newPw;
+    document.getElementById('cp-current').value = '';
+    document.getElementById('cp-new').value = '';
+    document.getElementById('cp-confirm').value = '';
+    document.getElementById('pw-strength2').style.display = 'none';
+    okEl.style.display = 'block';
+  } catch(e) {
+    errEl.textContent = 'Could not change password — please try again.'; errEl.style.display = 'block';
+  }
+}
+
+async function changeEmail() {
+  const newEmail = document.getElementById('ce-email')?.value.trim().toLowerCase();
+  const pw = document.getElementById('ce-pw')?.value;
+  const errEl = document.getElementById('ce-err');
+  const okEl = document.getElementById('ce-ok');
+  errEl.style.display = 'none'; okEl.style.display = 'none';
+
+  if (!newEmail || !pw) {
+    errEl.textContent = 'Please fill in all fields.'; errEl.style.display = 'block'; return;
+  }
+  if (pw !== currentUser.password_hash) {
+    errEl.textContent = 'Password is incorrect.'; errEl.style.display = 'block'; return;
+  }
+  if (!newEmail.includes('@')) {
+    errEl.textContent = 'Please enter a valid email address.'; errEl.style.display = 'block'; return;
+  }
+
+  try {
+    // Update Supabase Auth email (sends verification to new email)
+    await sb.auth.updateUser({ email: newEmail });
+    // Update owners table
+    await sb.from('owners').update({ email: newEmail }).eq('email', currentUser.email);
+    currentUser.email = newEmail;
+    okEl.style.display = 'block';
+    document.getElementById('ce-email').value = '';
+    document.getElementById('ce-pw').value = '';
+  } catch(e) {
+    errEl.textContent = 'Could not change email — please try again.'; errEl.style.display = 'block';
   }
 }
 // ===================== TOAST =====================
