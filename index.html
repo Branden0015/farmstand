@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <!-- Cache policy: versioned deployments handle cache busting -->
-<meta name="version" content="v26.7-1778366175">
+<meta name="version" content="v26.8-1778367069">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -3571,7 +3571,7 @@ function calcBoundingBox(lat, lng, miles) {
 async function loadStandsFromDB(centerLat, centerLng, miles) {
   try {
     let query = sb.from('owners')
-      .select('id, farm, description, addr, phone, lat, lng, photo, cats, custom_items, emoji, stand_id, hours_display, is_grow, is_pro')
+      .select('id, farm, description, addr, phone, lat, lng, photo, cats, custom_items, emoji, stand_id, hours_display, hours, is_grow, is_pro')
       .not('lat', 'is', null)
       .not('lng', 'is', null);
 
@@ -3629,6 +3629,7 @@ async function loadStandsFromDB(centerLat, centerLng, miles) {
         if (owner.custom_items && owner.custom_items.length) stand.customItems = owner.custom_items;
         if (owner.emoji) stand.emoji = owner.emoji;
         if (owner.hours_display) stand.hours = owner.hours_display;
+        if (owner.hours) stand.hoursDetail = owner.hours;
         // Store owner ID and plan for analytics tracking
         stand.ownerId = owner.id;
         stand.isGrow = owner.is_grow || false;
@@ -3743,7 +3744,13 @@ function buildPopupHTML(s) {
       <div style="flex:1">
         <div class="pop-name">${s.name}</div>
         ${(s.isGrow||s.isPro) ? `<div style="display:inline-flex;align-items:center;gap:4px;background:#fdf3d0;border-radius:6px;padding:2px 8px;margin-bottom:4px;font-size:11px;font-weight:700;color:#92600a;font-family:'DM Sans',sans-serif">⭐ FEATURED PROFILE</div>` : ''}
-    <div class="pop-meta">📍 ${s.dist} · ${s.status==='open'?'🟢 Open':'🔴 Closed'} · ${s.hours}</div>
+    <div class="pop-meta">📍 ${s.dist} · ${(()=>{
+      if (s.hoursDetail) {
+        const st = getStandStatus(s.hoursDetail);
+        return st.label;
+      }
+      return s.status==='open' ? '🟢 Open' : '🔴 Closed';
+    })()}</div>
         <div class="pop-head-hint">👆 Click to view full profile →</div>
       </div>
     </div>
@@ -4588,7 +4595,10 @@ async function openProfile(id) {
     }
   }
   document.getElementById('ph-name').textContent = s.name;
-  document.getElementById('ph-addr').textContent = '📍 ' + s.address + '  ·  ' + s.hours;
+  // Show real-time open/closed status
+  const statusInfo = s.hoursDetail ? getStandStatus(s.hoursDetail) : null;
+  const statusText = statusInfo ? statusInfo.short : (s.hours || '');
+  document.getElementById('ph-addr').textContent = '📍 ' + s.address + (statusText ? '  ·  ' + statusText : '');
   document.getElementById('ph-badges').innerHTML = s.cats.map(c=>`<span class="profile-hero-badge">${c}</span>`).join('');
 
   switchProfileTab('menu', document.querySelector('.profile-tab'));
@@ -4624,11 +4634,18 @@ async function openProfile(id) {
         s.photo = ownerData.photo;
         aviEl.innerHTML = `<img src="${ownerData.photo}" style="width:100%;height:100%;object-fit:cover;border-radius:50%" onerror="this.parentElement.textContent='${s.emoji}'">`;
       }
-      // Update hours display
+      // Update hours display and real-time status
+      if (ownerData.hours) {
+        s.hoursDetail = ownerData.hours;
+      }
       if (ownerData.hours_display) {
         s.hours = ownerData.hours_display;
+      }
+      if (s.hoursDetail || ownerData.hours_display) {
+        const statusInfo = s.hoursDetail ? getStandStatus(s.hoursDetail) : null;
+        const statusText = statusInfo ? statusInfo.short : s.hours;
         const addrEl = document.getElementById('ph-addr');
-        if (addrEl) addrEl.textContent = '📍 ' + s.address + '  ·  ' + s.hours;
+        if (addrEl) addrEl.textContent = '📍 ' + s.address + (statusText ? '  ·  ' + statusText : '');
       }
       // Update cats from fresh DB data
       if (ownerData.cats && ownerData.cats.length) {
@@ -6968,6 +6985,83 @@ async function loadRecentActivity() {
   } catch(e) {
     el.innerHTML = `<div style="text-align:center;padding:20px;color:var(--text3);font-size:13px">Could not load activity</div>`;
   }
+}
+
+// ===================== REAL-TIME STAND STATUS =====================
+function parseTimeToMinutes(timeStr) {
+  if (!timeStr) return null;
+  timeStr = timeStr.trim().toUpperCase();
+  // Handle formats: "5:00 AM", "05:00", "5AM", "17:00", "5:00PM"
+  const match = timeStr.match(/^(\d{1,2})(?::(\d{2}))?\s*(AM|PM)?$/);
+  if (!match) return null;
+  let hours = parseInt(match[1]);
+  const mins = parseInt(match[2] || '0');
+  const period = match[3];
+  if (period === 'PM' && hours !== 12) hours += 12;
+  if (period === 'AM' && hours === 12) hours = 0;
+  return hours * 60 + mins;
+}
+
+function formatTime(timeStr) {
+  if (!timeStr) return '';
+  const mins = parseTimeToMinutes(timeStr);
+  if (mins === null) return timeStr;
+  const h = Math.floor(mins / 60);
+  const m = mins % 60;
+  const period = h >= 12 ? 'PM' : 'AM';
+  const displayH = h > 12 ? h - 12 : (h === 0 ? 12 : h);
+  return m === 0 ? `${displayH}${period}` : `${displayH}:${m.toString().padStart(2,'0')}${period}`;
+}
+
+const DAY_NAMES = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+
+function getStandStatus(hoursObj) {
+  if (!hoursObj) return { isOpen: null, label: 'Hours not set', short: '' };
+
+  const now = new Date();
+  const currentDay = DAY_NAMES[now.getDay()];
+  const currentMins = now.getHours() * 60 + now.getMinutes();
+
+  const todayHours = hoursObj[currentDay];
+  const isClosed = !todayHours || todayHours.closed || (!todayHours.open && !todayHours.close);
+
+  if (!isClosed) {
+    const openMins = parseTimeToMinutes(todayHours.open);
+    const closeMins = parseTimeToMinutes(todayHours.close);
+    if (openMins !== null && closeMins !== null) {
+      if (currentMins >= openMins && currentMins < closeMins) {
+        // Currently open
+        return {
+          isOpen: true,
+          label: `🟢 Open · Closes ${formatTime(todayHours.close)}`,
+          short: `Open · Closes ${formatTime(todayHours.close)}`
+        };
+      } else if (currentMins < openMins) {
+        // Opens later today
+        return {
+          isOpen: false,
+          label: `🔴 Closed · Opens today ${formatTime(todayHours.open)}`,
+          short: `Closed · Opens ${formatTime(todayHours.open)}`
+        };
+      }
+    }
+  }
+
+  // Find next open day
+  for (let i = 1; i <= 7; i++) {
+    const nextDay = DAY_NAMES[(now.getDay() + i) % 7];
+    const nextHours = hoursObj[nextDay];
+    if (nextHours && !nextHours.closed && nextHours.open) {
+      const dayLabel = i === 1 ? 'tomorrow' : nextDay.slice(0, 3);
+      return {
+        isOpen: false,
+        label: `🔴 Closed · Opens ${dayLabel} ${formatTime(nextHours.open)}`,
+        short: `Closed · Opens ${dayLabel} ${formatTime(nextHours.open)}`
+      };
+    }
+  }
+
+  return { isOpen: false, label: '🔴 Closed', short: 'Closed' };
 }
 // ===================== RADIUS STAGING =====================
 let stagedRadius = 25;
