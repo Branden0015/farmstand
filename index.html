@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <!-- Cache policy: versioned deployments handle cache busting -->
-<meta name="version" content="v26.8-1778367069">
+<meta name="version" content="v27.0-1778369549">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -1518,6 +1518,7 @@ input, select, textarea {
   margin-bottom:12px;
 }
 @keyframes spin { to { transform:rotate(360deg); } }
+@keyframes slideUp { from { transform:translateY(100%); } to { transform:translateY(0); } }
 .map-loading-text {
   font-family:'DM Sans',sans-serif;
   font-size:14px; font-weight:600;
@@ -1637,6 +1638,13 @@ input, select, textarea {
   font-size: 11px;
 }
 </style>
+  <!-- PWA Setup -->
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#2d5a3d">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="FarmStand">
+  <link rel="apple-touch-icon" href="icon-192.png">
 </head>
 <body>
 
@@ -2582,8 +2590,8 @@ input, select, textarea {
 <div class="install-banner" id="install-banner">
   <div class="install-banner-icon">🌿</div>
   <div class="install-banner-text">
-    <div class="install-banner-title">Add FarmStand to your home screen</div>
-    <div class="install-banner-sub">Tap Share → "Add to Home Screen" for app-like access</div>
+    <div class="install-banner-title">📲 Get the FarmStand App — It's Free!</div>
+    <div class="install-banner-sub">Install for faster access, works like a real app</div>
   </div>
   <button class="install-banner-btn" id="install-btn" onclick="doInstall()">Install</button>
   <button class="install-banner-close" onclick="dismissInstall()">✕</button>
@@ -2875,6 +2883,42 @@ input, select, textarea {
         OK — I'll Check My Email
       </button>
     </div>
+  </div>
+</div>
+
+<!-- iOS Install Instructions Modal -->
+<div id="ios-install-modal" style="display:none;position:fixed;inset:0;z-index:9500;background:rgba(0,0,0,0.6);align-items:flex-end;justify-content:center">
+  <div style="background:white;border-radius:20px 20px 0 0;padding:24px 20px 40px;width:100%;max-width:480px;position:relative;animation:slideUp 0.3s ease">
+    <button onclick="closeIOSModal()" style="position:absolute;top:14px;right:16px;background:var(--cream2);border:none;width:30px;height:30px;border-radius:50%;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--text2)">✕</button>
+    <div style="text-align:center;margin-bottom:20px">
+      <div style="font-size:40px;margin-bottom:8px">📲</div>
+      <div style="font-family:'Playfair Display',serif;font-size:20px;font-weight:700;color:var(--green);margin-bottom:6px">Get the FarmStand App</div>
+      <div style="font-size:13px;color:var(--text2);line-height:1.5">Install FarmStand on your home screen for faster access — works just like a real app, completely free!</div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:14px">
+      <div style="display:flex;align-items:center;gap:14px;padding:14px;background:var(--cream);border-radius:12px">
+        <div style="font-size:28px;flex-shrink:0">1️⃣</div>
+        <div>
+          <div style="font-weight:600;font-size:14px;color:var(--text);margin-bottom:2px">Tap the Share button</div>
+          <div style="font-size:12px;color:var(--text2)">The Share button looks like a box with an arrow pointing up — it's in your browser toolbar at the bottom of the screen</div>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:14px;padding:14px;background:var(--cream);border-radius:12px">
+        <div style="font-size:28px;flex-shrink:0">2️⃣</div>
+        <div>
+          <div style="font-weight:600;font-size:14px;color:var(--text);margin-bottom:2px">Tap "Add to Home Screen"</div>
+          <div style="font-size:12px;color:var(--text2)">Scroll down in the Share menu until you see "Add to Home Screen" and tap it</div>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:14px;padding:14px;background:var(--cream);border-radius:12px">
+        <div style="font-size:28px;flex-shrink:0">3️⃣</div>
+        <div>
+          <div style="font-weight:600;font-size:14px;color:var(--text);margin-bottom:2px">Tap "Add"</div>
+          <div style="font-size:12px;color:var(--text2)">FarmStand will appear on your home screen just like any other app!</div>
+        </div>
+      </div>
+    </div>
+    <button onclick="closeIOSModal()" style="width:100%;margin-top:20px;background:var(--green);color:white;border:none;border-radius:12px;padding:14px;font-family:'DM Sans',sans-serif;font-size:15px;font-weight:600;cursor:pointer">Got it!</button>
   </div>
 </div>
 <!-- Portrait lock overlay -->
@@ -5439,12 +5483,23 @@ function doInstall() {
       dismissInstall();
     });
   } else {
-    // iOS fallback
-    showToast('📱 Tap Share → "Add to Home Screen" to install!');
-    dismissInstall();
+    // iOS — show step by step instructions modal
+    showIOSInstallModal();
   }
 }
 
+
+function showIOSInstallModal() {
+  const modal = document.getElementById('ios-install-modal');
+  if (modal) { modal.style.display = 'flex'; document.body.style.overflow = 'hidden'; }
+  dismissInstall();
+}
+
+function closeIOSModal() {
+  const modal = document.getElementById('ios-install-modal');
+  if (modal) { modal.style.display = 'none'; document.body.style.overflow = ''; }
+  localStorage.setItem('fs_install_dismissed', '1');
+}
 function dismissInstall() {
   document.getElementById('install-banner').classList.remove('show');
   localStorage.setItem('fs_install_dismissed', '1');
@@ -7596,6 +7651,38 @@ function showToast(msg) {
   t._timer = setTimeout(() => t.classList.remove('show'), 3000);
 }
 
+
+// Register Service Worker for PWA
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/farmstand/sw.js')
+      .then(reg => console.log('SW registered'))
+      .catch(err => console.log('SW registration failed:', err));
+  });
+}
+
+// PWA Install prompt
+let deferredPrompt;
+const installBanner = document.getElementById('install-banner');
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault();
+  deferredPrompt = e;
+  if (installBanner) installBanner.style.display = 'flex';
+});
+
+function installPWA() {
+  if (!deferredPrompt) return;
+  deferredPrompt.prompt();
+  deferredPrompt.userChoice.then(result => {
+    deferredPrompt = null;
+    if (installBanner) installBanner.style.display = 'none';
+  });
+}
+
+window.addEventListener('appinstalled', () => {
+  if (installBanner) installBanner.style.display = 'none';
+  deferredPrompt = null;
+});
 // Init menu list
 renderMenuList();
 renderCustomItems();
