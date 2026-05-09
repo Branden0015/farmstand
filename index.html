@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <!-- Cache policy: versioned deployments handle cache busting -->
-<meta name="version" content="v26.2-1778331676">
+<meta name="version" content="v26.3-1778362320">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -6225,20 +6225,48 @@ function loadCustomItemsForUser() {
   renderCustomItems();
 }
 
+
+// ===================== IMAGE COMPRESSION =====================
+function compressImage(file, maxWidthPx, qualityVal) {
+  return new Promise((resolve) => {
+    const maxWidth = maxWidthPx || 1200;
+    const quality = qualityVal || 0.82;
+    const reader = new FileReader();
+    reader.onload = e => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        let width = img.width;
+        let height = img.height;
+        // Scale down if wider than maxWidth
+        if (width > maxWidth) {
+          height = Math.round(height * maxWidth / width);
+          width = maxWidth;
+        }
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, width, height);
+        canvas.toBlob(blob => resolve(blob), 'image/jpeg', quality);
+      };
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  });
+}
 // ===================== PHOTO UPLOADS =====================
 let galleryPhotos = []; // array of base64 data URLs
 
 async function handlePhotoUpload(event) {
   const file = event.target.files[0];
   if (!file) return;
-  if (file.size > 5 * 1024 * 1024) { showToast('⚠️ Photo must be under 5MB'); return; }
   if (!currentUser) return;
-  showToast('📸 Uploading photo...');
+  showToast('📸 Processing photo...');
   try {
-    // Upload to Supabase Storage
-    const ext = file.name.split('.').pop() || 'jpg';
-    const path = `profile/${currentUser.id}.${ext}`;
-    const { error: upErr } = await sb.storage.from('photos').upload(path, file, { upsert: true, contentType: file.type });
+    // Compress image before upload — always resize to max 1200px, ~82% quality
+    const compressed = await compressImage(file, 1200, 0.82);
+    const path = `profile/${currentUser.id}.jpg`;
+    const { error: upErr } = await sb.storage.from('photos').upload(path, compressed, { upsert: true, contentType: 'image/jpeg' });
     if (upErr) throw upErr;
     // Get public URL
     const { data: urlData } = sb.storage.from('photos').getPublicUrl(path);
@@ -6340,12 +6368,11 @@ async function handleGalleryUpload(event) {
   showToast(`📸 Uploading ${filesToUpload.length} photo${filesToUpload.length>1?'s':''}...`);
   let uploaded = 0;
   for (const file of filesToUpload) {
-    if (file.size > 5 * 1024 * 1024) { showToast('⚠️ Photos must be under 5MB'); continue; }
     try {
-      // Upload to Supabase Storage
-      const ext = file.name.split('.').pop() || 'jpg';
-      const path = `gallery/${currentUser.id}/${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
-      const { error: upErr } = await sb.storage.from('photos').upload(path, file, { contentType: file.type });
+      // Compress image before upload
+      const compressed = await compressImage(file, 1200, 0.82);
+      const path = `gallery/${currentUser.id}/${Date.now()}_${Math.random().toString(36).slice(2)}.jpg`;
+      const { error: upErr } = await sb.storage.from('photos').upload(path, compressed, { contentType: 'image/jpeg' });
       if (upErr) throw upErr;
       const { data: urlData } = sb.storage.from('photos').getPublicUrl(path);
       const photoUrl = urlData.publicUrl;
