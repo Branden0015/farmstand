@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <!-- Cache policy: versioned deployments handle cache busting -->
-<meta name="version" content="v25.9-1778328506">
+<meta name="version" content="v26.0-1778329253">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -3035,18 +3035,52 @@ async function doLogin() {
 
   showLoadingBtn('login-btn', 'Signing in...');
   try {
+    // First check if account exists
     const { data, error } = await sb.from('owners').select('*').eq('email', email).eq('password_hash', pw).single();
     if (error || !data) {
       errEl.textContent = 'Incorrect email or password. Please try again.';
       errEl.classList.add('show');
-    } else {
-      await loginSuccess(data);
+      resetBtn('login-btn', 'Sign In to My Farm Stand');
+      return;
     }
+
+    // Check if email is verified via Supabase Auth
+    if (!data.email_verified) {
+      // Try to verify via Supabase Auth session
+      const { data: authData } = await sb.auth.signInWithPassword({ email, password: pw });
+      if (authData?.user?.email_confirmed_at) {
+        // Email is confirmed in Auth — update our owners table
+        await sb.from('owners').update({ email_verified: true }).eq('email', email);
+        data.email_verified = true;
+      } else {
+        // Not verified yet
+        errEl.innerHTML = 'Please verify your email before signing in. <span style="color:var(--green);cursor:pointer;text-decoration:underline" onclick="resendVerification(\'' + email + '\')">Resend verification email</span>';
+        errEl.classList.add('show');
+        resetBtn('login-btn', 'Sign In to My Farm Stand');
+        return;
+      }
+    }
+
+    await loginSuccess(data);
   } catch(e) {
     errEl.textContent = 'Connection error — please try again.';
     errEl.classList.add('show');
   }
   resetBtn('login-btn', 'Sign In to My Farm Stand');
+}
+
+// Check on page load if user just returned from email verification link
+async function checkEmailVerificationOnLoad() {
+  try {
+    const { data: { session } } = await sb.auth.getSession();
+    if (session?.user?.email_confirmed_at && session?.user?.email) {
+      // Update owners table to mark as verified
+      await sb.from('owners')
+        .update({ email_verified: true })
+        .eq('email', session.user.email)
+        .eq('email_verified', false);
+    }
+  } catch(e) {}
 }
 
 async function doSignup() {
@@ -7376,6 +7410,10 @@ function showToast(msg) {
 renderMenuList();
 renderCustomItems();
 renderOwnerNewsList();
+
+// Check if returning from email verification link
+checkEmailVerificationOnLoad();
+showLanding();
 </script>
 </body>
 </html>
