@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <!-- Cache policy: versioned deployments handle cache busting -->
-<meta name="version" content="v25.6-1778289276">
+<meta name="version" content="v25.7-1778289587">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -3169,6 +3169,8 @@ let mainMap, mapInited = false;
 let standOpen = true;
 
 function switchLandingTab(tab) {
+  // Make sure landing screen is visible first
+  showLanding();
   document.querySelectorAll('.landing-tab').forEach((t,i) => t.classList.toggle('active', (i===0&&tab==='login')||(i===1&&tab==='signup')));
   document.getElementById('panel-login').classList.toggle('active', tab==='login');
   document.getElementById('panel-signup').classList.toggle('active', tab==='signup');
