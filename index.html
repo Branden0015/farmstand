@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <!-- Cache policy: versioned deployments handle cache busting -->
-<meta name="version" content="v25.7-1778289587">
+<meta name="version" content="v25.8-1778327850">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -3053,6 +3053,7 @@ async function doSignup() {
   const name = document.getElementById('su-name').value.trim();
   const email = document.getElementById('su-email').value.trim().toLowerCase();
   const pw = document.getElementById('su-pw').value;
+  const pw2 = document.getElementById('su-pw2')?.value || '';
   const farm = document.getElementById('su-farm').value.trim();
   const errEl = document.getElementById('su-err');
   errEl.classList.remove('show');
@@ -3062,16 +3063,8 @@ async function doSignup() {
     errEl.textContent = 'Please fill in all fields.';
     errEl.classList.add('show'); return;
   }
-  if (pw.length < 8) {
-    errEl.textContent = 'Password must be at least 8 characters.';
-    errEl.classList.add('show'); return;
-  }
-  if (!/[A-Z]/.test(pw)) {
-    errEl.textContent = 'Password must include at least one uppercase letter.';
-    errEl.classList.add('show'); return;
-  }
-  if (!/[0-9]/.test(pw)) {
-    errEl.textContent = 'Password must include at least one number.';
+  if (!pwMeetsRequirements(pw)) {
+    errEl.textContent = 'Password does not meet the requirements shown above.';
     errEl.classList.add('show'); return;
   }
   if (pw !== pw2) {
