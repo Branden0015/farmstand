@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <!-- Cache policy: versioned deployments handle cache busting -->
-<meta name="version" content="v26.3-1778362320">
+<meta name="version" content="v26.4-1778363029">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -3136,11 +3136,15 @@ async function doSignup() {
       throw authError;
     }
 
+    // Generate unique stand_id
+    const { data: maxData } = await sb.from('owners').select('stand_id').order('stand_id', { ascending: false }).limit(1).single();
+    const newStandId = ((maxData?.stand_id) || 999) + 1;
+
     // Create owner record in DB (pending email verification)
     const { data, error } = await sb.from('owners').insert({
       email, password_hash: pw, name, farm, initials,
       is_grow: false, is_pro: false, plan_label: 'Free Plan',
-      email_verified: false
+      email_verified: false, stand_id: newStandId
     }).select().single();
 
     if (error) throw error;
@@ -4594,12 +4598,25 @@ async function openProfile(id) {
 
   // Load fresh data from DB in background
   try {
-    const { data: ownerData } = await sb.from('owners')
+    // Try by stand_id first
+    let ownerData = null;
+    const { data: ownerByStand } = await sb.from('owners')
       .select('id, photo, description, hours, hours_display, cats, custom_items')
       .eq('stand_id', id)
       .maybeSingle();
-    // Also try matching by owner's stand_id if not found
-    // (handles cases where stand_id may not be set on new accounts)
+    ownerData = ownerByStand;
+
+    // Fall back to ownerId stored on stand object
+    if (!ownerData) {
+      const stand = STANDS.find(s => s.id === id);
+      if (stand?.ownerId) {
+        const { data: ownerById } = await sb.from('owners')
+          .select('id, photo, description, hours, hours_display, cats, custom_items')
+          .eq('id', stand.ownerId)
+          .maybeSingle();
+        ownerData = ownerById;
+      }
+    }
 
     if (ownerData) {
       // Update profile photo with fresh DB version
@@ -4661,10 +4678,24 @@ async function renderProfileMenu(id) {
 
   try {
     // Find owner by stand_id
-    const { data: owner } = await sb.from('owners')
-      .select('id')
+    let owner = null;
+    const { data: ownerByStand } = await sb.from('owners')
+      .select('id, menu_items')
       .eq('stand_id', id)
       .maybeSingle();
+    owner = ownerByStand;
+
+    // Also check by stand object's ownerId if stand_id query failed
+    if (!owner) {
+      const stand = STANDS.find(s => s.id === id);
+      if (stand?.ownerId) {
+        const { data: ownerById } = await sb.from('owners')
+          .select('id, menu_items')
+          .eq('id', stand.ownerId)
+          .maybeSingle();
+        owner = ownerById;
+      }
+    }
 
     if (!owner) {
       el.innerHTML = '<div style="padding:20px;text-align:center;color:var(--text3);font-size:13px">No menu items listed yet</div>';
@@ -4732,11 +4763,27 @@ async function renderProfileNews(id) {
   const s = STANDS.find(x=>x.id===id);
 
   try {
-    const { data: posts } = await sb.from('news_posts')
+    // Try by stand_id first, then by owner_id
+    let posts = null;
+    const { data: postsByStand } = await sb.from('news_posts')
       .select('tag, text, created_at')
       .eq('stand_id', id)
       .order('created_at', { ascending: false })
       .limit(25);
+    posts = postsByStand;
+
+    // Fall back to owner_id if no posts found by stand_id
+    if (!posts || !posts.length) {
+      const stand = STANDS.find(s => s.id === id);
+      if (stand?.ownerId) {
+        const { data: postsByOwner } = await sb.from('news_posts')
+          .select('tag, text, created_at')
+          .eq('owner_id', stand.ownerId)
+          .order('created_at', { ascending: false })
+          .limit(25);
+        posts = postsByOwner;
+      }
+    }
 
     if (!posts || !posts.length) {
       el.innerHTML = '<div style="padding:20px;text-align:center;color:var(--text3);font-size:13px">No updates posted yet</div>';
@@ -4795,10 +4842,24 @@ async function renderProfileInfo(id) {
   el.innerHTML = '<div style="padding:20px;text-align:center;color:var(--text3);font-size:13px">Loading info...</div>';
 
   try {
-    const { data: owner } = await sb.from('owners')
+    // Try by stand_id first, then by ownerId
+    let owner = null;
+    const { data: ownerByStand } = await sb.from('owners')
       .select('hours, hours_display, phone, addr')
       .eq('stand_id', id)
       .maybeSingle();
+    owner = ownerByStand;
+
+    if (!owner) {
+      const stand = STANDS.find(s => s.id === id);
+      if (stand?.ownerId) {
+        const { data: ownerById } = await sb.from('owners')
+          .select('hours, hours_display, phone, addr')
+          .eq('id', stand.ownerId)
+          .maybeSingle();
+        owner = ownerById;
+      }
+    }
 
     const address = owner?.addr || s?.address || 'Address not listed';
     const phone = owner?.phone || null;
