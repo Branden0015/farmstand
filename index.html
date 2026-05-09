@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <!-- Cache policy: versioned deployments handle cache busting -->
-<meta name="version" content="v25.0-1778283778">
+<meta name="version" content="v25.1-1778284534">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -1696,6 +1696,10 @@ input, select, textarea {
         <input class="form-input" id="su-pw" type="password" placeholder="Create a password (min 6 chars)">
       </div>
       <div class="form-group">
+        <label class="form-label">Confirm Password</label>
+        <input class="form-input" id="su-pw2" type="password" placeholder="Type your password again">
+      </div>
+      <div class="form-group">
         <label class="form-label">Farm Stand Name</label>
         <input class="form-input" id="su-farm" type="text" placeholder="e.g. Sunny Acres Farm Stand">
       </div>
@@ -2987,37 +2991,85 @@ async function doSignup() {
   const name = document.getElementById('su-name').value.trim();
   const email = document.getElementById('su-email').value.trim().toLowerCase();
   const pw = document.getElementById('su-pw').value;
+  const pw2 = document.getElementById('su-pw2').value;
   const farm = document.getElementById('su-farm').value.trim();
   const errEl = document.getElementById('su-err');
   errEl.classList.remove('show');
 
-  if (!name || !email || !pw || !farm || pw.length < 6) {
-    errEl.textContent = pw.length < 6 && pw ? 'Password must be at least 6 characters.' : 'Please fill in all fields.';
+  // Validate all fields
+  if (!name || !email || !pw || !pw2 || !farm) {
+    errEl.textContent = 'Please fill in all fields.';
     errEl.classList.add('show'); return;
+  }
+  if (pw.length < 6) {
+    errEl.textContent = 'Password must be at least 6 characters.';
+    errEl.classList.add('show'); return;
+  }
+  if (pw !== pw2) {
+    errEl.textContent = 'Passwords do not match — please try again.';
+    errEl.classList.add('show');
+    document.getElementById('su-pw2').value = '';
+    document.getElementById('su-pw2').focus();
+    return;
   }
 
   showLoadingBtn('signup-btn', 'Creating account...');
   const initials = name.split(' ').map(n=>n[0]).join('').slice(0,2).toUpperCase();
+
   try {
     // Check if email already exists
-    const { data: existing } = await sb.from('owners').select('id').eq('email', email).single();
+    const { data: existing } = await sb.from('owners').select('id').eq('email', email).maybeSingle();
     if (existing) {
       errEl.textContent = 'An account with that email already exists.';
       errEl.classList.add('show');
       resetBtn('signup-btn', 'Create My Farm Stand Account');
       return;
     }
+
+    // Send email verification via Supabase Auth
+    const { error: authError } = await sb.auth.signUp({
+      email,
+      password: pw,
+      options: {
+        emailRedirectTo: 'https://branden0015.github.io/farmstand',
+        data: { name, farm }
+      }
+    });
+
+    if (authError && !authError.message.includes('already registered')) {
+      throw authError;
+    }
+
+    // Create owner record in DB (pending email verification)
     const { data, error } = await sb.from('owners').insert({
       email, password_hash: pw, name, farm, initials,
-      is_grow: false, is_pro: false, plan_label: 'Free Plan'
+      is_grow: false, is_pro: false, plan_label: 'Free Plan',
+      email_verified: false
     }).select().single();
+
     if (error) throw error;
-    await loginSuccess(data);
+
+    // Show verification message instead of logging in
+    const signupPanel = document.getElementById('panel-signup');
+    if (signupPanel) {
+      signupPanel.innerHTML = `
+        <div style="text-align:center;padding:20px 0">
+          <div style="font-size:48px;margin-bottom:12px">📧</div>
+          <div style="font-family:'Playfair Display',serif;font-size:20px;font-weight:700;color:var(--green);margin-bottom:8px">Check your email!</div>
+          <div style="font-size:13px;color:var(--text2);margin-bottom:6px;line-height:1.6">We sent a confirmation link to:</div>
+          <div style="font-size:14px;font-weight:700;color:var(--text);margin-bottom:16px">${email}</div>
+          <div style="font-size:13px;color:var(--text2);margin-bottom:20px;line-height:1.6">Click the link in your email to verify your account, then come back and sign in.</div>
+          <button class="form-btn" onclick="switchTab('signin')">← Back to Sign In</button>
+        </div>
+      `;
+    }
+
   } catch(e) {
+    console.warn('Signup error:', e);
     errEl.textContent = 'Error creating account — please try again.';
     errEl.classList.add('show');
+    resetBtn('signup-btn', 'Create My Farm Stand Account');
   }
-  resetBtn('signup-btn', 'Create My Farm Stand Account');
 }
 
 function showLoadingBtn(id, text) {
