@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <!-- Cache policy: versioned deployments handle cache busting -->
-<meta name="version" content="v25.3-1778288089">
+<meta name="version" content="v25.4-1778288297">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -1700,9 +1700,12 @@ input, select, textarea {
         <input class="form-input" id="su-pw2" type="password" placeholder="Type your password again">
       <div id="pw-requirements" style="margin-top:6px;font-size:11px;color:var(--text3);line-height:1.6">
         Password must be at least <strong>8 characters</strong> and include:
-        <div id="pw-check-length" style="color:var(--text3)">✗ At least 8 characters</div>
-        <div id="pw-check-upper" style="color:var(--text3)">✗ One uppercase letter</div>
-        <div id="pw-check-number" style="color:var(--text3)">✗ One number</div>
+        <div id="pw-strength" style="margin-top:8px;display:none">
+          <div id="pw-req-length" style="font-size:11px;color:#c0392b;margin:2px 0">✗ At least 6 characters</div>
+          <div id="pw-req-upper"  style="font-size:11px;color:#c0392b;margin:2px 0">✗ One uppercase letter (A-Z)</div>
+          <div id="pw-req-lower"  style="font-size:11px;color:#c0392b;margin:2px 0">✗ One lowercase letter (a-z)</div>
+          <div id="pw-req-digit"  style="font-size:11px;color:#c0392b;margin:2px 0">✗ One number (0-9)</div>
+        </div>
       </div>
       </div>
       <div class="form-group">
