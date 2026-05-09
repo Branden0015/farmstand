@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <!-- Cache policy: versioned deployments handle cache busting -->
-<meta name="version" content="v25.4-1778288297">
+<meta name="version" content="v25.6-1778289276">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -908,7 +908,7 @@ body { font-family: 'DM Sans', sans-serif; background: var(--cream); color: var(
   .mobile-nav { display:block; }
   .header { height:52px; padding:0 14px; }
   .logo { font-size:18px; }
-  .logo-badge { display:none; }
+  .logo-badge { display:inline; font-size:8px; }
   .header-nav { gap:4px; }
   .nav-btn { font-size:12px; padding:5px 10px; display:none; }
 
@@ -1648,7 +1648,7 @@ input, select, textarea {
   </div>
   <div class="landing-card">
     <div class="landing-logo">
-      <div class="landing-logo-text">🌿 FarmStand</div>
+      <div class="landing-logo-text">🌿 FarmStand <span class="logo-badge">BETA</span></div>
     </div>
     <div class="landing-tagline">Connect with local farm stands.<br>Fresh food, straight from the source.</div>
 
@@ -3128,9 +3128,12 @@ async function doSignup() {
           <div style="font-size:13px;color:var(--text2);margin-bottom:6px;line-height:1.6">We sent a confirmation link to:</div>
           <div style="font-size:14px;font-weight:700;color:var(--text);margin-bottom:16px">${email}</div>
           <div style="font-size:13px;color:var(--text2);margin-bottom:20px;line-height:1.6">Click the link in your email to verify your account, then come back and sign in.</div>
-          <button class="form-btn" onclick="switchTab('signin')">← Back to Sign In</button>
+          <button class="form-btn" onclick="switchLandingTab('login')">← Back to Sign In</button>
+          <div style="font-size:11px;color:var(--text3);margin-top:10px">Redirecting to sign in in 5 seconds...</div>
         </div>
       `;
+      // Auto redirect to sign in after 5 seconds
+      setTimeout(() => switchLandingTab('login'), 5000);
     }
 
   } catch(e) {
