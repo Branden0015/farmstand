@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <!-- Cache policy: versioned deployments handle cache busting -->
-<meta name="version" content="v28.1-1778385836">
+<meta name="version" content="v28.2-1778426283">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -356,9 +356,11 @@ body { font-family: 'DM Sans', sans-serif; background: var(--green); color: var(
 .card-header-title { font-family: 'Playfair Display', serif; font-size: 15px; font-weight: 600; color: var(--text); }
 .activity-item { display: flex; align-items: center; gap: 11px; padding: 12px 16px; border-bottom: 1px solid var(--border); }
 .activity-item:last-child { border-bottom: none; }
-.activity-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
-.activity-text { font-size: 13px; color: var(--text2); flex: 1; }
-.activity-time { font-size: 11px; color: var(--text3); }
+.activity-row { display:flex; gap:10px; align-items:flex-start; padding:10px 0; border-bottom:1px solid var(--border); }
+.activity-row:last-child { border-bottom:none; }
+.activity-dot { font-size:20px; flex-shrink:0; width:28px; text-align:center; }
+.activity-text { flex:1; font-size:13px; color:var(--text2); line-height:1.5; }
+.activity-time { font-size:11px; color:var(--text3); white-space:nowrap; }
 
 /* Profile form */
 .profile-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
@@ -7024,11 +7026,11 @@ async function loadRecentActivity() {
     el.style.userSelect = 'none';
     el.style.pointerEvents = 'none';
     el.innerHTML = `
-      <div class="activity-row"><div class="activity-dot" style="background:var(--green)"></div><div class="activity-text">Buyer activity will appear here</div><div class="activity-time">—</div></div>
-      <div class="activity-row"><div class="activity-dot" style="background:var(--orange)"></div><div class="activity-text">Buyer activity will appear here</div><div class="activity-time">—</div></div>
-      <div class="activity-row"><div class="activity-dot" style="background:var(--green)"></div><div class="activity-text">Buyer activity will appear here</div><div class="activity-time">—</div></div>
-      <div class="activity-row"><div class="activity-dot" style="background:#f0b429"></div><div class="activity-text">Buyer activity will appear here</div><div class="activity-time">—</div></div>
-      <div class="activity-row"><div class="activity-dot" style="background:var(--green)"></div><div class="activity-text">Buyer activity will appear here</div><div class="activity-time">—</div></div>
+      <div class="activity-row"><div class="activity-dot">👁</div><div class="activity-text"><strong>Profile viewed</strong> — someone checked out your stand</div><div class="activity-time">2m ago</div></div>
+      <div class="activity-row"><div class="activity-dot">❤️</div><div class="activity-text"><strong>Stand saved</strong> — a buyer bookmarked your farm stand</div><div class="activity-time">14m ago</div></div>
+      <div class="activity-row"><div class="activity-dot">🗺</div><div class="activity-text"><strong>Directions clicked</strong> — a buyer is heading your way</div><div class="activity-time">1h ago</div></div>
+      <div class="activity-row"><div class="activity-dot">🛒</div><div class="activity-text"><strong>Added to grocery list</strong> — a buyer is planning a visit</div><div class="activity-time">2h ago</div></div>
+      <div class="activity-row"><div class="activity-dot">📍</div><div class="activity-text"><strong>Stand clicked</strong> — someone found you on the map</div><div class="activity-time">3h ago</div></div>
     `;
     // Add upgrade prompt below
     const section = document.getElementById('recent-activity-section');
@@ -7060,19 +7062,19 @@ async function loadRecentActivity() {
     }
 
     const labels = {
-      profile_view: { text: 'Someone viewed your profile', color: 'var(--green)' },
-      directions_click: { text: 'Someone got directions to your stand', color: 'var(--green)' },
-      stand_click: { text: 'Someone clicked on your stand', color: '#4a90d9' },
-      grocery_add: { text: 'Someone added your item to their grocery list', color: '#f0b429' },
-      saved: { text: 'Your stand was saved by a buyer', color: 'var(--orange)' },
-      unsaved: { text: 'A buyer removed your stand from saved', color: 'var(--text3)' },
+      profile_view: { icon: '👁', text: '<strong>Profile viewed</strong> — someone checked out your stand' },
+      directions_click: { icon: '🗺', text: '<strong>Directions clicked</strong> — a buyer is heading your way' },
+      stand_click: { icon: '📍', text: '<strong>Stand clicked</strong> — someone found you on the map' },
+      grocery_add: { icon: '🛒', text: '<strong>Added to grocery list</strong> — a buyer is planning a visit' },
+      saved: { icon: '❤️', text: '<strong>Stand saved</strong> — a buyer bookmarked your farm stand' },
+      unsaved: { icon: '💔', text: '<strong>Stand unsaved</strong> — a buyer removed your stand' },
     };
 
     el.innerHTML = events.map(e => {
       const label = labels[e.event_type] || { text: e.event_type, color: 'var(--text3)' };
       const ago = timeAgo(e.created_at);
       return `<div class="activity-row">
-        <div class="activity-dot" style="background:${label.color}"></div>
+        <div class="activity-dot">${label.icon || '📌'}</div>
         <div class="activity-text">${label.text}</div>
         <div class="activity-time">${ago}</div>
       </div>`;

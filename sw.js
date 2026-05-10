@@ -1,5 +1,5 @@
 // FarmStand Service Worker
-const CACHE_NAME = 'farmstand-v9';
+const CACHE_NAME = 'farmstand-v10';
 
 // Files to cache for offline use
 const STATIC_ASSETS = [
