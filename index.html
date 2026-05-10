@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <!-- Cache policy: versioned deployments handle cache busting -->
-<meta name="version" content="v27.1-1778379984">
+<meta name="version" content="v27.2-1778381019">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -3339,6 +3339,8 @@ async function loginSuccess(user) {
   loadOwnerNewsPosts();
   // Load real recent activity
   loadRecentActivity();
+  // Load menu items into grocery search index
+  loadMenuItemsIntoSearch();
   // Load hours
   loadOwnerHours();
 
@@ -3677,6 +3679,28 @@ async function loadStandsFromDB(centerLat, centerLng, miles) {
         stand.isPro = owner.is_pro || false;
       }
     });
+
+    // Populate ITEM_MATCH from all loaded stands' menu items
+    if (data.length) {
+      try {
+        const ownerIds = data.map(o => o.id);
+        const { data: allMenuItems } = await sb.from('menu_items')
+          .select('name, owner_id')
+          .in('owner_id', ownerIds);
+        if (allMenuItems) {
+          allMenuItems.forEach(item => {
+            // Find which stand this owner belongs to
+            const owner = data.find(o => o.id === item.owner_id);
+            if (!owner?.stand_id) return;
+            const key = item.name.toLowerCase();
+            ITEM_MATCH[key] = owner.stand_id;
+            key.split(' ').forEach(w => {
+              if (w.length > 2 && !ITEM_MATCH[w]) ITEM_MATCH[w] = owner.stand_id;
+            });
+          });
+        }
+      } catch(e) {}
+    }
 
     // Load gallery photos
     if (data.length) {
@@ -6324,19 +6348,19 @@ function renderCustomItems() {
 
 function addCustomItemToSearch(item) {
   // Add to ITEM_MATCH so grocery list can find it
-  if (currentUser && currentUser.standId) {
-    ITEM_MATCH[item.toLowerCase()] = currentUser.standId;
+  if (currentUser && currentUser.stand_id) {
+    ITEM_MATCH[item.toLowerCase()] = currentUser.stand_id;
     // Also add common variations
     const words = item.toLowerCase().split(' ');
-    words.forEach(w => { if (w.length > 3) ITEM_MATCH[w] = currentUser.standId; });
+    words.forEach(w => { if (w.length > 3) ITEM_MATCH[w] = currentUser.stand_id; });
   }
 }
 
 function loadCustomItemsForUser() {
   customItems = currentUser.customItems || [];
   // Push into the live stand immediately on login
-  if (currentUser.standId) {
-    const stand = STANDS.find(s => s.id === currentUser.standId);
+  if (currentUser.stand_id) {
+    const stand = STANDS.find(s => s.id === currentUser.stand_id);
     if (stand && customItems.length) {
       stand.customItems = customItems;
     }
@@ -6452,8 +6476,8 @@ function removePhoto() {
     userAvEl.textContent = currentUser ? currentUser.initials : '?';
   }
   // Remove from stand map pin
-  if (currentUser && currentUser.standId) {
-    const stand = STANDS.find(s => s.id === currentUser.standId);
+  if (currentUser && currentUser.stand_id) {
+    const stand = STANDS.find(s => s.id === currentUser.stand_id);
     if (stand) { stand.photo = null; if (mainMap) { Object.values(mapMarkers).forEach(m => mainMap.removeLayer(m)); mapMarkers = {}; renderMarkers(getFiltered()); } }
   }
   autoSaveProfile();
@@ -7637,6 +7661,34 @@ async function changeEmail() {
     document.getElementById('ce-pw').value = '';
   } catch(e) {
     errEl.textContent = 'Could not change email — please try again.'; errEl.style.display = 'block';
+  }
+}
+
+async function loadMenuItemsIntoSearch() {
+  if (!currentUser || !currentUser.stand_id) return;
+  try {
+    const { data: items } = await sb.from('menu_items')
+      .select('name')
+      .eq('owner_id', currentUser.id);
+    if (!items) return;
+    items.forEach(item => {
+      const key = item.name.toLowerCase();
+      ITEM_MATCH[key] = currentUser.stand_id;
+      // Also index individual words for partial matching
+      key.split(' ').forEach(w => {
+        if (w.length > 2) ITEM_MATCH[w] = currentUser.stand_id;
+      });
+    });
+    // Also load from STANDS array cats for all stands
+    STANDS.forEach(stand => {
+      if (!stand.cats) return;
+      stand.cats.forEach(cat => {
+        const key = cat.toLowerCase().split(' ')[0];
+        if (!ITEM_MATCH[key]) ITEM_MATCH[key] = stand.id;
+      });
+    });
+  } catch(e) {
+    console.warn('Could not load menu items for search:', e);
   }
 }
 // ===================== TOAST =====================
