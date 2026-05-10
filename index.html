@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <!-- Cache policy: versioned deployments handle cache busting -->
-<meta name="version" content="v28.3-1778427068">
+<meta name="version" content="v28.4-1778427999">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -7535,27 +7535,33 @@ async function saveStandToDB(standId) {
     const stand = STANDS.find(s => s.id === standId);
     let ownerId = stand?.ownerId || null;
 
+    console.log('saveStandToDB called:', { standId, ownerId, stand });
+
     // If ownerId is missing, look it up from DB using stand_id
     if (!ownerId && standId) {
       try {
-        const { data: ownerData } = await sb.from('owners')
+        const { data: ownerData, error: ownerErr } = await sb.from('owners')
           .select('id')
           .eq('stand_id', standId)
           .maybeSingle();
+        console.log('Owner lookup result:', { ownerData, ownerErr });
         if (ownerData) {
           ownerId = ownerData.id;
-          if (stand) stand.ownerId = ownerId; // Cache for future use
+          if (stand) stand.ownerId = ownerId;
         }
-      } catch(e) {}
+      } catch(e) { console.log('Owner lookup error:', e); }
     }
 
-    await sb.from('saved_stands').upsert({
+    console.log('Upserting with:', { session_id: sessionId, stand_id: standId, owner_id: ownerId });
+
+    const { data: upsertData, error: upsertErr } = await sb.from('saved_stands').upsert({
       session_id: sessionId,
       stand_id: standId,
       owner_id: ownerId
     }, { onConflict: 'session_id,stand_id' });
 
-    // Track the save event for analytics
+    console.log('Upsert result:', { upsertData, upsertErr });
+
     await trackEvent(standId, 'saved');
   } catch(e) {
     console.warn('Could not save stand to DB:', e);
