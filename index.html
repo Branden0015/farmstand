@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <!-- Cache policy: versioned deployments handle cache busting -->
-<meta name="version" content="v28.4-1778427999">
+<meta name="version" content="v28.5-1778428223">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -3985,9 +3985,11 @@ function toggleFav(id) {
   if (favorites.has(id)) {
     favorites.delete(id);
     showToast('Removed from saved stands');
+    unsaveStandFromDB(id);
   } else {
     favorites.add(id);
     showToast('❤️ Saved! Find it in your Saved tab');
+    saveStandToDB(id);
   }
   saveFavs();
   updateFavBadge();
