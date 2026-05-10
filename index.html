@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <!-- Cache policy: versioned deployments handle cache busting -->
-<meta name="version" content="v27.3-1778381545">
+<meta name="version" content="v27.4-1778382165">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -56,14 +56,14 @@ body { font-family: 'DM Sans', sans-serif; background: var(--cream); color: var(
   justify-content: center;
   position: fixed; inset: 0; overflow-y: auto; z-index: 2000;
   display: none;
-  padding: 40px 20px;
+  padding: max(40px, env(safe-area-inset-top)) 20px 40px;
   -webkit-overflow-scrolling: touch;
   box-sizing: border-box;
   align-items: flex-start;
 }
 #screen-landing.active {
   display: block;
-  padding: 40px 20px;
+  padding: max(40px, env(safe-area-inset-top)) 20px 40px;
 }
 
 .landing-bg {
@@ -219,7 +219,8 @@ body { font-family: 'DM Sans', sans-serif; background: var(--cream); color: var(
 .header {
   background: var(--green);
   padding: 0 20px;
-  height: 56px;
+  padding-top: env(safe-area-inset-top);
+  height: calc(56px + env(safe-area-inset-top));
   display: flex;
   align-items: center;
   justify-content: space-between;
