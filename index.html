@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <!-- Cache policy: versioned deployments handle cache busting -->
-<meta name="version" content="v28.2-1778426283">
+<meta name="version" content="v28.3-1778427068">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -7467,27 +7467,41 @@ function getOwnerIdForStand(standId) {
 async function trackEvent(standId, eventType) {
   try {
     const stand = STANDS.find(s => s.id === standId);
-    if (!stand || !stand.ownerId) return; // Can't track without owner ID
+    if (!stand || !stand.ownerId) return;
 
-    // Only track analytics (non-saved events) for Grow/Pro owners
-    if (eventType !== 'saved' && eventType !== 'unsaved') {
-      if (!stand.isGrow && !stand.isPro) return;
-    }
+    // Only track events for Grow/Pro owners — saves Supabase storage
+    if (!stand.isGrow && !stand.isPro) return;
 
-    // Deduplicate
+    // Deduplicate within session
     if (!shouldTrackEvent(standId, eventType)) return;
     markEventTracked(standId, eventType);
 
     const sessionId = getSessionId();
+
+    // Insert new event
     await sb.from('analytics_events').insert({
       owner_id: stand.ownerId,
       stand_id: standId,
       event_type: eventType,
       session_id: sessionId
     });
+
+    // Keep only the 10 most recent events — delete anything older
+    // This runs async and doesn't block the user experience
+    const { data: allEvents } = await sb.from('analytics_events')
+      .select('id, created_at')
+      .eq('owner_id', stand.ownerId)
+      .order('created_at', { ascending: false });
+
+    if (allEvents && allEvents.length > 10) {
+      const toDelete = allEvents.slice(10).map(e => e.id);
+      await sb.from('analytics_events')
+        .delete()
+        .in('id', toDelete);
+    }
+
   } catch(e) {
     // Fail silently — never interrupt user experience for analytics
-    console.warn('Analytics track error:', e);
   }
 }
 
