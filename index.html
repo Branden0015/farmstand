@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <!-- Cache policy: versioned deployments handle cache busting -->
-<meta name="version" content="v27.6-1778383207">
+<meta name="version" content="v27.9-1778384994">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -42,7 +42,7 @@
 }
 * { box-sizing: border-box; margin: 0; padding: 0; }
 html { height: 100%; height: -webkit-fill-available; }
-body { font-family: 'DM Sans', sans-serif; background: var(--cream); color: var(--text); height: 100vh; height: 100dvh; overflow: hidden; display: flex; flex-direction: column; }
+body { font-family: 'DM Sans', sans-serif; background: var(--green); color: var(--text); height: 100vh; height: 100dvh; overflow: hidden; display: flex; flex-direction: column; padding-top: env(safe-area-inset-top); box-sizing: border-box; }
 
 /* ===================== SCREENS ===================== */
 .screen { display: none; flex-direction: column; flex: 1; overflow: hidden; min-height: 0; }
@@ -56,14 +56,14 @@ body { font-family: 'DM Sans', sans-serif; background: var(--cream); color: var(
   justify-content: center;
   position: fixed; inset: 0; overflow-y: auto; z-index: 2000;
   display: none;
-  padding: max(40px, env(safe-area-inset-top)) 20px 40px;
+  padding: 40px 20px;
   -webkit-overflow-scrolling: touch;
   box-sizing: border-box;
   align-items: flex-start;
 }
 #screen-landing.active {
   display: block;
-  padding: max(40px, env(safe-area-inset-top)) 20px 40px;
+  padding: 40px 20px;
 }
 
 .landing-bg {
@@ -219,8 +219,7 @@ body { font-family: 'DM Sans', sans-serif; background: var(--cream); color: var(
 .header {
   background: var(--green);
   padding: 0 20px;
-  padding-top: env(safe-area-inset-top);
-  height: calc(56px + env(safe-area-inset-top));
+  height: 56px;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -1645,7 +1644,10 @@ input, select, textarea {
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="FarmStand">
-  <link rel="apple-touch-icon" href="icon-192.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png">
+  <link rel="shortcut icon" href="favicon.ico">
 </head>
 <body>
 
