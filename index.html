@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <!-- Cache policy: versioned deployments handle cache busting -->
-<meta name="version" content="v27.0-1778369549">
+<meta name="version" content="v27.1-1778379984">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -3630,11 +3630,8 @@ async function loadStandsFromDB(centerLat, centerLng, miles) {
     const { data, error } = await query;
     if (error || !data) return;
 
-    // Reset STANDS to hardcoded defaults then merge DB data
-    // Remove any previously dynamically added stands (id >= 1000)
-    for (let i = STANDS.length - 1; i >= 0; i--) {
-      if (STANDS[i].id >= 1000) STANDS.splice(i, 1);
-    }
+    // Clear all previously loaded DB stands before reloading
+    STANDS.length = 0;
 
     data.forEach(owner => {
       if (!owner.lat || !owner.lng) return;
@@ -3642,11 +3639,11 @@ async function loadStandsFromDB(centerLat, centerLng, miles) {
       const lng = parseFloat(owner.lng);
       let stand = owner.stand_id ? STANDS.find(s => s.id === owner.stand_id) : null;
 
-      if (!stand && owner.farm) {
-        const exists = STANDS.find(s => s.name === owner.farm);
+      if (!stand && owner.farm && owner.stand_id) {
+        const exists = STANDS.find(s => s.id === owner.stand_id);
         if (!exists) {
           stand = {
-            id: 1000 + STANDS.length,
+            id: owner.stand_id,
             name: owner.farm || 'Farm Stand',
             emoji: owner.emoji || '🌾',
             dist: '--', address: owner.addr || '',
@@ -3692,7 +3689,7 @@ async function loadStandsFromDB(centerLat, centerLng, miles) {
         if (allPhotos) {
           const ownerToStand = {};
           data.forEach(owner => {
-            const stand = STANDS.find(s => s.name === owner.farm || s.id === owner.stand_id);
+            const stand = STANDS.find(s => s.id === owner.stand_id);
             if (stand) ownerToStand[owner.id] = stand;
           });
           allPhotos.forEach(p => {
