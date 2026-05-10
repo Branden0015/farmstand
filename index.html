@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <!-- Cache policy: versioned deployments handle cache busting -->
-<meta name="version" content="v28.0-1778385394">
+<meta name="version" content="v28.1-1778385836">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -862,16 +862,18 @@ body { font-family: 'DM Sans', sans-serif; background: var(--green); color: var(
   color:white;
 }
 .mobile-stops-panel-close {
-  background:rgba(255,255,255,0.15);
+  background:rgba(255,255,255,0.2);
   border:none;
   color:white;
-  width:28px; height:28px;
+  width:36px; height:36px;
   border-radius:50%;
   cursor:pointer;
-  font-size:16px;
+  font-size:18px;
   display:flex;
   align-items:center;
   justify-content:center;
+  flex-shrink:0;
+  -webkit-tap-highlight-color:transparent;
 }
 .mobile-stops-body { flex:1; overflow-y:auto; padding:12px; background:var(--cream); }
 
@@ -1008,9 +1010,9 @@ body { font-family: 'DM Sans', sans-serif; background: var(--green); color: var(
 .stops-drawer-tab { background:var(--green); color:white; writing-mode:vertical-rl; padding:14px 8px; border-radius:10px 0 0 10px; font-family:'DM Sans',sans-serif; font-size:11px; font-weight:700; cursor:pointer; letter-spacing:0.05em; display:flex; align-items:center; gap:6px; box-shadow:-2px 0 12px rgba(0,0,0,0.15); border:none; text-transform:uppercase; transition:background 0.15s; }
 .stops-drawer-tab:hover { background:var(--green2); }
 .stops-badge { background:var(--orange); color:white; font-size:10px; font-weight:700; width:16px; height:16px; border-radius:50%; display:flex; align-items:center; justify-content:center; writing-mode:horizontal-tb; }
-.stops-drawer-panel { position:fixed; right:0; top:0; bottom:0; width:280px; max-width:85vw; background:white; z-index:600; box-shadow:-4px 0 24px rgba(0,0,0,0.2); transform:translateX(100%); transition:transform 0.3s cubic-bezier(0.4,0,0.2,1); display:flex; flex-direction:column; padding-bottom:env(safe-area-inset-bottom); }
+.stops-drawer-panel { position:fixed; right:0; top:0; bottom:0; width:280px; max-width:85vw; background:white; z-index:600; box-shadow:-4px 0 24px rgba(0,0,0,0.2); transform:translateX(100%); transition:transform 0.3s cubic-bezier(0.4,0,0.2,1); display:flex; flex-direction:column; padding-top:env(safe-area-inset-top); padding-bottom:env(safe-area-inset-bottom); }
 .stops-drawer-panel.open { transform:translateX(0); }
-.stops-drawer-header { background:var(--green); padding:52px 16px 14px; color:white; display:flex; align-items:center; justify-content:space-between; flex-shrink:0; }
+.stops-drawer-header { background:var(--green); padding:16px 16px 14px; color:white; display:flex; align-items:center; justify-content:space-between; flex-shrink:0; }
 .stops-drawer-title { font-family:'Playfair Display',serif; font-size:18px; font-weight:700; }
 .stops-drawer-close { background:rgba(255,255,255,0.2); border:none; color:white; width:30px; height:30px; border-radius:50%; font-size:16px; cursor:pointer; display:flex; align-items:center; justify-content:center; }
 .stops-drawer-body { flex:1; overflow-y:auto; padding:12px; }
@@ -1993,6 +1995,9 @@ input, select, textarea {
     </div>
   </div>
 </div>
+
+<!-- Mobile stops backdrop -->
+<div id="mobile-stops-backdrop" onclick="toggleMobileStops()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.3);z-index:455"></div>
 
 <!-- Hidden placeholder for legacy JS references -->
 <div id="mobile-panel" style="display:none!important"></div>
@@ -6015,8 +6020,19 @@ function initMobileUI() {
 
 function toggleMobileStops() {
   const panel = document.getElementById('mobile-stops-panel');
-  panel.classList.toggle('open');
-  if (panel.classList.contains('open')) renderMobileStopsPanel();
+  const tab = document.getElementById('mobile-stops-tab');
+  const backdrop = document.getElementById('mobile-stops-backdrop');
+  const isOpen = panel.classList.contains('open');
+  
+  panel.classList.toggle('open', !isOpen);
+  
+  // Hide tab handle when panel is open so it doesn't block close button
+  if (tab) tab.style.visibility = isOpen ? 'visible' : 'hidden';
+  
+  // Show/hide backdrop
+  if (backdrop) backdrop.style.display = isOpen ? 'none' : 'block';
+  
+  if (!isOpen) renderMobileStopsPanel();
 }
 
 function renderMobileStopsPanel() {
