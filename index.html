@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <!-- Cache policy: versioned deployments handle cache busting -->
-<meta name="version" content="v27.9-1778384994">
+<meta name="version" content="v28.0-1778385394">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -834,7 +834,7 @@ body { font-family: 'DM Sans', sans-serif; background: var(--green); color: var(
 }
 .mobile-stops-panel {
   position:fixed;
-  right:0; top:52px; bottom:58px;
+  right:0; top:calc(56px + env(safe-area-inset-top)); bottom:calc(58px + env(safe-area-inset-bottom));
   width:85%;
   max-width:320px;
   background:white;
