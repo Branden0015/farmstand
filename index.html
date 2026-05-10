@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <!-- Cache policy: versioned deployments handle cache busting -->
-<meta name="version" content="v27.2-1778381019">
+<meta name="version" content="v27.3-1778381545">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -2137,10 +2137,11 @@ input, select, textarea {
         </div>
 
         <!-- Recent activity -->
-        <div class="activity-card">
+        <div class="activity-card" id="recent-activity-section">
           <div class="card-header"><span class="card-header-title">Recent Activity</span></div>
-          <div style="text-align:center;padding:16px;color:var(--text3);font-size:13px">Loading activity...</div>
-          <div class="activity-item"><div class="activity-dot" style="background:var(--green2)"></div><div class="activity-text">Someone clicked directions to your stand</div><div class="activity-time">3 hr ago</div></div>
+          <div id="activity-list">
+            <div style="text-align:center;padding:16px;color:var(--text3);font-size:13px">Loading activity...</div>
+          </div>
         </div>
       </div>
 
