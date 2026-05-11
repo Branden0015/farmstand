@@ -1,24 +1,22 @@
-// FarmStand Service Worker
-const CACHE_NAME = 'farmstand-v15';
+const CACHE_NAME = 'farmstand-v16';
 
-// Files to cache for offline use
 const STATIC_ASSETS = [
   '/farmstand/',
   '/farmstand/index.html',
   '/farmstand/manifest.json',
+  'https://farmstand.live/',
+  'https://farmstand.live/index.html',
 ];
 
-// Install — cache static assets
 self.addEventListener('install', event => {
   event.waitUntil(
     caches.open(CACHE_NAME).then(cache => {
-      return cache.addAll(STATIC_ASSETS);
+      return cache.addAll(['/farmstand/', '/farmstand/index.html']).catch(() => {});
     })
   );
   self.skipWaiting();
 });
 
-// Activate — clean up old caches
 self.addEventListener('activate', event => {
   event.waitUntil(
     caches.keys().then(keys =>
@@ -31,9 +29,7 @@ self.addEventListener('activate', event => {
   self.clients.claim();
 });
 
-// Fetch — network first, fall back to cache
 self.addEventListener('fetch', event => {
-  // Skip non-GET requests and Supabase API calls
   if (event.request.method !== 'GET') return;
   if (event.request.url.includes('supabase.co')) return;
   if (event.request.url.includes('unpkg.com')) return;
@@ -42,7 +38,6 @@ self.addEventListener('fetch', event => {
   event.respondWith(
     fetch(event.request)
       .then(response => {
-        // Cache successful responses
         if (response && response.status === 200) {
           const responseClone = response.clone();
           caches.open(CACHE_NAME).then(cache => {
@@ -52,7 +47,6 @@ self.addEventListener('fetch', event => {
         return response;
       })
       .catch(() => {
-        // Network failed — try cache
         return caches.match(event.request);
       })
   );

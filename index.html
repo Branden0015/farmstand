@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <!-- Cache policy: versioned deployments handle cache busting -->
-<meta name="version" content="v28.7-1778450055">
+<meta name="version" content="v28.8-1778457579">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -2980,7 +2980,7 @@ async function sendPasswordReset() {
 
   try {
     const { error } = await sb.auth.resetPasswordForEmail(email, {
-      redirectTo: 'https://branden0015.github.io/farmstand'
+      redirectTo: 'https://farmstand.live'
     });
     if (error) throw error;
     // Show success message
@@ -3182,7 +3182,7 @@ async function doSignup() {
       email,
       password: pw,
       options: {
-        emailRedirectTo: 'https://branden0015.github.io/farmstand',
+        emailRedirectTo: 'https://farmstand.live',
         data: { name, farm }
       }
     });
