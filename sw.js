@@ -1,4 +1,4 @@
-const CACHE_NAME = 'farmstand-v16';
+const CACHE_NAME = 'farmstand-v17';
 
 const STATIC_ASSETS = [
   '/farmstand/',

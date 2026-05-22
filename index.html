@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <!-- Cache policy: versioned deployments handle cache busting -->
-<meta name="version" content="v28.8-1778457579">
+<meta name="version" content="v29.0-1779489508">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -12,21 +12,21 @@
 <meta name="theme-color" content="#2d5a3d">
 <meta name="description" content="Find local farm stands near you. Fresh food, straight from the source.">
 <title>FarmStand — Find Local Farm Stands Near You</title>
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,600;0,9..144,700;1,9..144,400&family=Outfit:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,700;1,400&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"/>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 :root {
-  --cream: #faf6ef;
-  --cream2: #f2ead8;
-  --green: #2d5a3d;
-  --green2: #4a8c61;
-  --green3: #d4ead9;
-  --green4: #eaf5ec;
-  --orange: #c96a2a;
-  --orange2: #f0a05a;
-  --orange3: #fdebd8;
+  --cream: #fdf8f0;
+  --cream2: #f0e6d3;
+  --green: #1e4a2e;
+  --green2: #3a7a52;
+  --green3: #c8e6d0;
+  --green4: #e8f5ec;
+  --orange: #b85c20;
+  --orange2: #e8924a;
+  --orange3: #fce8d5;
   --red: #b83c2a;
   --red2: #fdecea;
   --yellow: #f5c842;
@@ -42,7 +42,7 @@
 }
 * { box-sizing: border-box; margin: 0; padding: 0; }
 html { height: 100%; height: -webkit-fill-available; }
-body { font-family: 'DM Sans', sans-serif; background: var(--cream); color: var(--text); height: 100vh; height: 100dvh; overflow: hidden; display: flex; flex-direction: column; box-sizing: border-box; }
+body { font-family: 'Outfit', sans-serif; background: var(--cream); color: var(--text); height: 100vh; height: 100dvh; overflow: hidden; display: flex; flex-direction: column; box-sizing: border-box; }
 
 /* ===================== SCREENS ===================== */
 .screen { display: none; flex-direction: column; flex: 1; overflow: hidden; min-height: 0; }
@@ -97,10 +97,11 @@ body { font-family: 'DM Sans', sans-serif; background: var(--cream); color: var(
 }
 
 .landing-logo-text {
-  font-family: 'Playfair Display', serif;
-  font-size: 36px;
-  font-weight: 700;
+  font-family: 'Fraunces', serif;
+  font-size: 38px;
+  font-weight: 600;
   color: var(--green);
+  letter-spacing: -0.02em;
 }
 
 .landing-tagline {
@@ -108,7 +109,10 @@ body { font-family: 'DM Sans', sans-serif; background: var(--cream); color: var(
   font-size: 14px;
   color: var(--text2);
   margin-bottom: 32px;
-  line-height: 1.5;
+  line-height: 1.6;
+  font-style: italic;
+  font-family: 'Fraunces', serif;
+  font-weight: 300;
 }
 
 .landing-tabs {
@@ -217,7 +221,7 @@ body { font-family: 'DM Sans', sans-serif; background: var(--cream); color: var(
 
 /* ===================== HEADER ===================== */
 .header {
-  background: var(--green);
+  background: linear-gradient(135deg, #1a3d26 0%, #2d5a3d 60%, #1e4a2e 100%);
   padding: 0 20px;
   height: 56px;
   display: flex;
@@ -225,12 +229,13 @@ body { font-family: 'DM Sans', sans-serif; background: var(--cream); color: var(
   justify-content: space-between;
   flex-shrink: 0;
   z-index: 1000;
-  box-shadow: 0 2px 12px rgba(0,0,0,0.2);
+  box-shadow: 0 2px 20px rgba(30,74,46,0.35);
+  border-bottom: 1px solid rgba(255,255,255,0.08);
 }
 .logo {
-  font-family: 'Playfair Display', serif;
-  font-size: 20px;
-  font-weight: 700;
+  font-family: 'Fraunces', serif;
+  font-size: 21px;
+  font-weight: 600;
   color: var(--cream);
   display: flex;
   align-items: center;
@@ -286,25 +291,29 @@ body { font-family: 'DM Sans', sans-serif; background: var(--cream); color: var(
 .leaflet-popup-content-wrapper { border-radius: 14px !important; box-shadow: var(--shadow) !important; padding: 0 !important; overflow: hidden; border: 1px solid var(--border); }
 .leaflet-popup-content { margin: 0 !important; width: 290px !important; }
 .leaflet-popup-tip-container { display: none; }
-.pop-head { background: var(--green); padding: 13px 13px 9px; display: flex; gap: 9px; align-items: center; cursor: pointer; transition: background 0.15s; }
+.pop-head { background: linear-gradient(135deg, #1a3d26 0%, #2d5a3d 100%); padding: 14px 14px 12px; display: flex; gap: 11px; align-items: center; cursor: pointer; transition: all 0.2s; }
 .pop-head:hover { background: var(--green2); }
-.pop-head-hint { font-size: 10px; color: rgba(255,255,255,0.6); margin-top: 3px; display: flex; align-items: center; gap: 3px; }
+.pop-head-hint { font-size: 10px; color: rgba(255,255,255,0.65); margin-top: 2px; display: flex; align-items: center; gap: 3px; font-family: "Outfit", sans-serif; letter-spacing: 0.02em; }
 .pop-avi { width: 44px; height: 44px; border-radius: 9px; background: rgba(255,255,255,0.15); font-size: 26px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; border: 2px solid rgba(255,255,255,0.25); overflow: hidden; }
-.pop-name { font-family: 'Playfair Display', serif; font-size: 15px; font-weight: 700; color: white; line-height: 1.2; }
-.pop-meta { font-size: 11px; color: rgba(255,255,255,0.7); margin-top: 1px; }
-.pop-body { padding: 11px 13px; }
-.pop-desc { font-size: 12px; color: var(--text2); line-height: 1.5; margin-bottom: 8px; }
+.pop-name { font-family: 'Fraunces', serif; font-size: 17px; font-weight: 600; color: white; line-height: 1.2; letter-spacing: -0.02em; }
+.pop-meta { font-size: 11px; color: rgba(255,255,255,0.75); margin-top: 2px; font-family: "Outfit", sans-serif; font-weight: 400; letter-spacing: 0.01em; }
+.pop-body { 
+  padding: 14px 16px; 
+  background: #fdf8f0;
+  border-radius: 0 0 16px 16px;
+}
+.pop-desc { font-size: 12px; color: var(--text2); line-height: 1.6; margin-bottom: 10px; font-style: italic; font-family: "Fraunces", serif; opacity: 0.9; }
 .pop-prods { display: flex; gap: 4px; flex-wrap: wrap; margin-bottom: 9px; }
 .pop-prod { font-size: 11px; padding: 2px 7px; background: var(--orange3); color: var(--orange); border-radius: 9px; font-weight: 500; }
 .pop-acts { display: flex; gap: 5px; }
-.pbtn { flex: 1; padding: 7px; border-radius: 7px; font-size: 12px; font-weight: 500; cursor: pointer; font-family: 'DM Sans', sans-serif; border: none; transition: all 0.15s; text-align: center; }
-.pbtn-dir { background: var(--green); color: white; }
-.pbtn-dir:hover { background: var(--green2); }
-.pbtn-fav { background: var(--orange3); color: var(--orange); border: 1px solid var(--orange2); }
-.pbtn-fav:hover { background: var(--orange2); color: white; }
-.pbtn-stop { background: var(--green3); color: var(--green); border: 1px solid var(--green2); }
-.pbtn-stop:hover { background: var(--green2); color: white; }
-.pbtn-stop.added { background: var(--green); color: white; border-color: var(--green); }
+.pbtn { flex: 1; padding: 8px 4px; border-radius: 0; font-size: 11px; font-weight: 600; cursor: pointer; font-family: 'Outfit', sans-serif; border: none; transition: all 0.2s; text-align: center; letter-spacing: 0.02em; }
+.pbtn-dir { background: linear-gradient(135deg, #1e4a2e, #2d5a3d); color: white; box-shadow: 0 3px 10px rgba(30,74,46,0.3); }
+.pbtn-dir:hover { transform: translateY(-1px); box-shadow: 0 5px 14px rgba(30,74,46,0.35); }
+.pbtn-fav { background: linear-gradient(135deg, #f0a05a, #c96a2a); color: white; box-shadow: 0 3px 10px rgba(201,106,42,0.28); border: none; }
+.pbtn-fav:hover { transform: translateY(-1px); }
+.pbtn-stop { background: linear-gradient(135deg, #4a8c61, #2d5a3d); color: white; border: none; box-shadow: 0 3px 10px rgba(45,90,61,0.25); }
+.pbtn-stop:hover { transform: translateY(-1px); }
+.pbtn-stop.added { background: linear-gradient(135deg, #1e4a2e, #163d24); }
 
 /* ===================== DASHBOARD ===================== */
 #screen-dashboard { flex-direction: column; overflow: hidden; position: fixed; inset: 0; z-index: 500; }
@@ -430,7 +439,7 @@ body { font-family: 'DM Sans', sans-serif; background: var(--cream); color: var(
 .sidebar-tabs { display: flex; border-bottom: 1px solid var(--border); background: var(--white); flex-shrink: 0; }
 .sidebar-tab { flex: 1; padding: 10px; border: none; background: none; font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 500; color: var(--text2); cursor: pointer; border-bottom: 2px solid transparent; transition: all 0.15s; display: flex; align-items: center; justify-content: center; gap: 5px; }
 .sidebar-tab:hover { color: var(--green); background: var(--cream); }
-.sidebar-tab.active { color: var(--green); border-bottom-color: var(--green); font-weight: 600; }
+.sidebar-tab.active { color: var(--green); border-bottom-color: var(--green); font-weight: 700; }
 .sidebar-tab .tab-badge { background: var(--orange); color: white; font-size: 10px; font-weight: 700; padding: 1px 5px; border-radius: 8px; min-width: 16px; text-align: center; }
 
 .fav-btn { background: none; border: none; font-size: 18px; cursor: pointer; padding: 2px 4px; line-height: 1; transition: transform 0.2s; flex-shrink: 0; align-self: flex-start; margin-top: 2px; }
@@ -464,7 +473,7 @@ body { font-family: 'DM Sans', sans-serif; background: var(--cream); color: var(
 .profile-sheet {
   width: 100%; max-width: 680px; margin: 0 auto;
   background: var(--cream);
-  border-radius: 20px 20px 0 0;
+  border-radius: 0;
   height: 92vh;
   display: flex; flex-direction: column;
   transform: translateY(100%);
@@ -475,52 +484,131 @@ body { font-family: 'DM Sans', sans-serif; background: var(--cream); color: var(
 
 /* Hero header — always fixed at top, never scrolls */
 .profile-hero {
-  background: var(--green);
-  padding: 20px 20px 0;
+  position: relative;
+  flex-shrink: 0;
+  overflow: hidden;
+  background: linear-gradient(160deg, #1a3d26 0%, #2d5a3d 100%);
+}
+
+/* Full width banner image */
+.profile-hero-banner {
+  width: 100%;
+  height: 220px;
+  object-fit: cover;
+  display: block;
+  transition: opacity 0.4s ease;
+}
+.profile-hero-banner-placeholder {
+  width: 100%;
+  height: 220px;
+  background: linear-gradient(160deg, #1a3d26 0%, #2d5a3d 60%, #3a7a52 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 72px;
+}
+
+/* Gradient overlay on banner */
+.profile-hero-overlay {
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: 180px;
+  background: linear-gradient(to top, rgba(15,40,24,0.95) 0%, rgba(15,40,24,0.6) 40%, transparent 100%);
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Info sits on top of overlay */
+.profile-hero-info {
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  padding: 14px 18px 10px;
+  z-index: 2;
+}
+
+.profile-hero-close {
+  position: absolute; top: 12px; right: 12px;
+  background: rgba(0,0,0,0.45); border: none; color: white;
+  width: 34px; height: 34px; border-radius: 50%; cursor: pointer;
+  font-size: 16px; display: flex; align-items: center; justify-content: center;
+  transition: background 0.15s; backdrop-filter: blur(6px);
+  z-index: 20;
+}
+.profile-hero-close:hover { background: rgba(0,0,0,0.55); }
+
+/* Thumbnail strip */
+.profile-thumb-strip {
+  display: none;
+  gap: 6px;
+  padding: 8px 14px 8px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  background: #1a3d26;
   flex-shrink: 0;
 }
-.profile-hero-close {
-  position: absolute; top: 14px; right: 14px;
-  background: rgba(255,255,255,0.15); border: none; color: white;
-  width: 32px; height: 32px; border-radius: 50%; cursor: pointer;
-  font-size: 16px; display: flex; align-items: center; justify-content: center;
-  transition: background 0.15s;
+.profile-thumb-strip.has-photos {
+  display: flex;
 }
-.profile-hero-close:hover { background: rgba(255,255,255,0.28); }
-
-.profile-hero-top { display: flex; gap: 14px; align-items: flex-start; margin-bottom: 16px; }
-.profile-hero-avi {
-  width: 72px; height: 72px; border-radius: 14px;
+.profile-thumb-strip::-webkit-scrollbar { display: none; }
+.profile-thumb {
+  width: 44px; height: 44px; border-radius: 8px;
+  overflow: hidden; flex-shrink: 0; cursor: pointer;
+  border: 2px solid transparent;
+  transition: all 0.2s;
+  opacity: 0.75;
+}
+.profile-thumb:hover, .profile-thumb.active {
+  border-color: white;
+  opacity: 1;
+  transform: scale(1.05);
+}
+.profile-thumb img {
+  width: 100%; height: 100%; object-fit: cover;
+}
+.profile-thumb-placeholder {
+  width: 100%; height: 100%;
   background: rgba(255,255,255,0.15);
-  font-size: 40px; display: flex; align-items: center; justify-content: center;
-  border: 3px solid rgba(255,255,255,0.3); flex-shrink: 0;
-  overflow: hidden;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 20px;
 }
-.profile-hero-name { font-family: 'Playfair Display', serif; font-size: 22px; font-weight: 700; color: white; line-height: 1.2; margin-bottom: 4px; }
-.profile-hero-addr { font-size: 12px; color: rgba(255,255,255,0.72); margin-bottom: 6px; }
-.profile-hero-badges { display: flex; gap: 6px; flex-wrap: wrap; }
-.profile-hero-badge { background: rgba(255,255,255,0.15); border-radius: 10px; padding: 3px 9px; font-size: 11px; font-weight: 500; color: rgba(255,255,255,0.9); }
+
+.profile-hero-top { display: flex; gap: 10px; align-items: flex-end; margin-bottom: 8px; }
+.profile-hero-avi {
+  width: 0px; height: 0px; display: none;
+}
+.profile-hero-name { font-family: 'Fraunces', serif; font-size: 24px; font-weight: 600; color: white; line-height: 1.1; margin-bottom: 4px; letter-spacing: -0.02em; text-shadow: 0 1px 4px rgba(0,0,0,0.3); }
+.profile-hero-addr { font-size: 11px; color: rgba(255,255,255,0.82); margin-bottom: 6px; font-family: "Outfit", sans-serif; letter-spacing: 0.01em; }
+.profile-hero-badges { display: flex; gap: 5px; flex-wrap: wrap; }
+.profile-hero-badge { background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.25); border-radius: 20px; padding: 3px 9px; font-size: 10px; font-weight: 500; color: rgba(255,255,255,0.95); letter-spacing: 0.03em; backdrop-filter: blur(4px); }
 
 .profile-tabs-bar {
-  display: flex; background: rgba(0,0,0,0.15);
-  border-radius: 0; overflow-x: auto;
+  display: flex;
+  background: white;
+  border-bottom: 1px solid var(--cream2);
+  overflow-x: hidden;
+  flex-shrink: 0;
+  width: 100%;
+  box-shadow: 0 1px 0 var(--cream2);
 }
 .profile-tab {
-  flex: 1; min-width: 80px; padding: 11px 8px;
+  flex: 1; min-width: 0; padding: 11px 4px;
   border: none; background: none;
-  font-family: 'DM Sans', sans-serif; font-size: 12px; font-weight: 600;
-  color: rgba(255,255,255,0.65); cursor: pointer;
-  border-bottom: 2px solid transparent;
-  transition: all 0.15s; white-space: nowrap;
+  font-family: 'Outfit', sans-serif; font-size: 10px; font-weight: 600;
+  color: var(--text3); cursor: pointer;
+  border-bottom: 3px solid transparent;
+  transition: all 0.2s; white-space: nowrap;
+  letter-spacing: 0.05em; text-transform: uppercase;
+  margin-bottom: -2px;
+  display: flex; flex-direction: row; align-items: center; justify-content: center; gap: 5px;
   display: flex; align-items: center; justify-content: center; gap: 4px;
 }
-.profile-tab:hover { color: rgba(255,255,255,0.9); }
-.profile-tab.active { color: white; border-bottom-color: var(--orange2); background: rgba(255,255,255,0.08); }
+.profile-tab:hover { color: var(--green2); }
+.profile-tab.active { color: var(--green); border-bottom-color: var(--green); font-weight: 700; }
 
 /* Body — this is the ONLY thing that scrolls */
 .profile-body { flex: 1; overflow-y: auto; overflow-x: hidden; -webkit-overflow-scrolling: touch; min-height: 0; }
 .profile-panel { display: none; padding: 18px; }
-.profile-panel.active { display: block; }
+.profile-panel.active { display: block !important; }
 
 /* Menu items in profile */
 .profile-menu-cat { font-size: 11px; font-weight: 700; color: var(--text3); text-transform: uppercase; letter-spacing: 0.07em; margin: 14px 0 6px; padding-bottom: 4px; border-bottom: 1px solid var(--border); }
@@ -575,18 +663,20 @@ body { font-family: 'DM Sans', sans-serif; background: var(--cream); color: var(
 
 /* Profile action buttons bar */
 .profile-action-bar {
-  display: flex; gap: 8px; padding: 12px 18px;
-  background: white; border-top: 1px solid var(--border); flex-shrink: 0;
+  display: flex; gap: 10px; padding: 12px 18px;
+  background: white; border-top: 1px solid var(--cream2); flex-shrink: 0;
 }
 .pab-btn {
-  flex: 1; padding: 11px; border-radius: 9px; border: none;
-  font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 600;
-  cursor: pointer; transition: all 0.15s; display: flex; align-items: center; justify-content: center; gap: 5px;
+  flex: 1; padding: 10px 8px; border-radius: 0; border: none;
+  font-family: 'Outfit', sans-serif; font-size: 13px; font-weight: 600;
+  cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 6px;
+  letter-spacing: 0.02em;
 }
-.pab-dir { background: var(--green); color: white; }
-.pab-dir:hover { background: var(--green2); }
-.pab-fav { background: var(--orange3); color: var(--orange); border: 1.5px solid var(--orange2); }
-.pab-fav:hover { background: var(--orange2); color: white; }
+.pab-dir { background: linear-gradient(135deg, #1e4a2e, #2d5a3d); color: white; box-shadow: 0 4px 14px rgba(30,74,46,0.3); flex: 1.2; border-radius: 0; }
+.pab-dir:hover { transform: translateY(-1px); box-shadow: 0 6px 18px rgba(30,74,46,0.35); }
+.pab-fav { border-radius: 0; background: linear-gradient(135deg, #f0a05a, #c96a2a); color: white; box-shadow: 0 4px 14px rgba(201,106,42,0.28); border: none; }
+.pab-fav:hover { transform: translateY(-1px); box-shadow: 0 6px 18px rgba(201,106,42,0.35); }
+.pab-fav.saved { background: linear-gradient(135deg, #c96a2a, #a85520); }
 
 /* Owner news post composer in dashboard */
 .composer { background: white; border-radius: 12px; border: 1px solid var(--border); padding: 14px; margin-bottom: 16px; box-shadow: var(--shadow-sm); }
@@ -965,7 +1055,8 @@ body { font-family: 'DM Sans', sans-serif; background: var(--cream); color: var(
     padding-top: 10px;
   }
   .profile-hero-top { margin-bottom: 8px; }
-  .profile-hero-name { font-size: 17px; }
+  .profile-hero-name { font-size: 18px; }
+  .profile-hero-avi { width: 76px !important; height: 76px !important; }
   .profile-body {
     flex: 1;
     overflow-y: auto;
@@ -1641,6 +1732,99 @@ input, select, textarea {
   color: var(--text3);
   font-size: 11px;
 }
+
+/* ===== WARMTH ENHANCEMENTS ===== */
+.header::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.02'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+  pointer-events: none;
+  z-index: 0;
+}
+.header > * { position: relative; z-index: 1; }
+
+/* Profile hero warmth */
+.profile-hero {
+  position: relative;
+}
+.profile-hero::before {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 60px;
+  background: linear-gradient(to top, rgba(0,0,0,0.15), transparent);
+  pointer-events: none;
+}
+
+/* Warmer popup container */
+.leaflet-popup-content-wrapper {
+  border-radius: 0 !important;
+  overflow: hidden !important;
+  box-shadow: 0 12px 40px rgba(20,40,25,0.2) !important;
+  border: none !important;
+  padding: 0 !important;
+}
+.leaflet-popup-content {
+  margin: 0 !important;
+  width: 240px !important;
+}
+.leaflet-popup-tip-container { display: none !important; }
+
+/* Warmer profile tabs */
+.profile-tabs {
+  background: white;
+  border-bottom: 1px solid var(--cream2);
+}
+
+/* Info row icons warmer */
+.info-icon { font-size: 20px; }
+
+/* Hours table warmer */
+.hours-table td:first-child { 
+  font-family: 'Fraunces', serif; 
+  font-weight: 600;
+  color: var(--text);
+}
+.hours-table td:last-child {
+  font-family: 'Outfit', sans-serif;
+  color: var(--text2);
+}
+
+/* Stat cards warmer */
+.stat-card {
+  border-radius: 0 !important;
+  box-shadow: 0 2px 12px rgba(30,74,46,0.08) !important;
+}
+.stat-val {
+  font-family: 'Fraunces', serif !important;
+  letter-spacing: -0.03em !important;
+}
+
+/* News posts warmer */
+.news-post-author { font-family: 'Fraunces', serif !important; }
+.news-post-body { font-family: 'Outfit', sans-serif !important; line-height: 1.6 !important; }
+
+/* Sidebar stand cards */
+.stand-name { font-family: 'Fraunces', serif !important; font-weight: 600 !important; }
+
+/* Profile menu items warmer */
+.profile-menu-name { font-family: 'Outfit', sans-serif !important; font-weight: 500 !important; }
+.profile-menu-cat { font-family: 'Fraunces', serif !important; font-style: italic !important; letter-spacing: 0 !important; font-size: 13px !important; color: var(--orange) !important; border-bottom-color: var(--cream2) !important; }
+
+/* Section titles */
+.section-title { font-family: 'Fraunces', serif !important; font-size: 17px !important; letter-spacing: -0.01em !important; }
+
+/* Save and directions buttons */
+.pab-fav { border-radius: 14px !important; }
+.pab-dir { border-radius: 14px !important; background: linear-gradient(135deg, #1e4a2e, #2d5a3d) !important; box-shadow: 0 4px 16px rgba(30,74,46,0.3) !important; }
+
+
+/* Hide all scrollbars globally */
+* { scrollbar-width: none; -ms-overflow-style: none; }
+*::-webkit-scrollbar { display: none; }
 </style>
   <!-- PWA Setup -->
   <meta name="theme-color" content="#2d5a3d">
@@ -2542,20 +2726,40 @@ input, select, textarea {
   <div class="profile-sheet" id="profile-sheet">
     <div class="profile-hero" id="profile-hero">
       <button class="profile-hero-close" onclick="closeProfileDirect()">✕</button>
-      <div class="profile-hero-top">
-        <div class="profile-hero-avi" id="ph-avi"></div>
-        <div>
-          <div class="profile-hero-name" id="ph-name"></div>
-          <div class="profile-hero-addr" id="ph-addr"></div>
-          <div class="profile-hero-badges" id="ph-badges"></div>
-        </div>
+      <!-- Full width banner image or placeholder -->
+      <div id="ph-banner-wrap">
+        <div class="profile-hero-banner-placeholder" id="ph-banner-placeholder">🌾</div>
       </div>
-      <div class="profile-tabs-bar">
-        <button class="profile-tab active" onclick="switchProfileTab('menu',this)">📋 Menu</button>
-        <button class="profile-tab" onclick="switchProfileTab('news',this)">🗞 News</button>
-        <button class="profile-tab" onclick="switchProfileTab('photos',this)">📸 Photos</button>
-        <button class="profile-tab" onclick="switchProfileTab('info',this)">ℹ️ Info</button>
+      <!-- Gradient overlay -->
+      <div class="profile-hero-overlay"></div>
+      <!-- Info overlaid on photo -->
+      <div class="profile-hero-info">
+        <div class="profile-hero-name" id="ph-name"></div>
+        <div class="profile-hero-addr" id="ph-addr"></div>
+        <div class="profile-hero-badges" id="ph-badges"></div>
       </div>
+      <div id="ph-avi" style="display:none"></div>
+      <!-- Thumbnail strip (populated dynamically) -->
+      <div class="profile-thumb-strip" id="ph-thumb-strip"></div>
+    </div>
+
+    <div class="profile-tabs-bar">
+      <button class="profile-tab active" onclick="switchProfileTab('menu',this)">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+        Menu
+      </button>
+      <button class="profile-tab" onclick="switchProfileTab('news',this)">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 22h16a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v16a2 2 0 0 1-2 2zm0 0a2 2 0 0 1-2-2v-9c0-1.1.9-2 2-2h2"/><path d="M18 14h-8"/><path d="M15 18h-5"/><path d="M10 6h8v4h-8V6z"/></svg>
+        News
+      </button>
+      <button class="profile-tab" onclick="switchProfileTab('photos',this)">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+        Photos
+      </button>
+      <button class="profile-tab" onclick="switchProfileTab('info',this)">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+        Info
+      </button>
     </div>
 
     <div class="profile-body" id="profile-body">
@@ -3819,7 +4023,7 @@ function buildPopupHTML(s) {
       <div class="pop-avi">${s.photo ? '<img src="' + s.photo + '" style="width:100%;height:100%;object-fit:cover;border-radius:8px">' : s.emoji}</div>
       <div style="flex:1">
         <div class="pop-name">${s.name}</div>
-        ${(s.isGrow||s.isPro) ? `<div style="display:inline-flex;align-items:center;gap:4px;background:#fdf3d0;border-radius:6px;padding:2px 8px;margin-bottom:4px;font-size:11px;font-weight:700;color:#92600a;font-family:'DM Sans',sans-serif">⭐ FEATURED PROFILE</div>` : ''}
+        ${(s.isGrow||s.isPro) ? `<div style="display:inline-flex;align-items:center;gap:4px;background:linear-gradient(135deg,#f0b429,#e8924a);border-radius:20px;padding:4px 12px;margin-bottom:6px;font-size:10px;font-weight:700;color:white;letter-spacing:0.08em;box-shadow:0 2px 8px rgba(240,180,41,0.4);font-family:'DM Sans',sans-serif">⭐ FEATURED PROFILE</div>` : ''}
     <div class="pop-meta">📍 ${s.dist} · ${(()=>{
       if (s.hoursDetail) {
         const st = getStandStatus(s.hoursDetail);
@@ -4732,6 +4936,8 @@ async function openProfile(id) {
         const badgesEl = document.getElementById('ph-badges');
         if (badgesEl) badgesEl.innerHTML = ownerData.cats.map(c=>`<span class="profile-hero-badge">${c}</span>`).join('');
       }
+      // Reload thumbnails now that we have owner data
+      loadProfileThumbs(s, ownerData);
       // Load gallery photos fresh
       const { data: photos } = await sb.from('gallery_photos')
         .select('photo_url, sort_order')
@@ -4751,6 +4957,10 @@ function closeProfile(e) {
 function closeProfileDirect() {
   document.getElementById('profile-overlay').classList.remove('open');
   document.body.style.overflow = '';
+  // Reset banner and thumbnails
+  profileDefaultPhoto = null;
+  const strip = document.getElementById('ph-thumb-strip');
+  if (strip) { strip.innerHTML = ''; strip.classList.remove('has-photos'); }
 }
 
 function switchProfileTab(tab, btn) {
@@ -7753,6 +7963,103 @@ async function loadMenuItemsIntoSearch() {
     console.warn('Could not load menu items for search:', e);
   }
 }
+
+// ===================== PROFILE BANNER PHOTOS =====================
+let profileDefaultPhoto = null;
+
+function setProfileBanner(photoUrl, isDefault) {
+  const wrap = document.getElementById('ph-banner-wrap');
+  const placeholder = document.getElementById('ph-banner-placeholder');
+  if (!wrap) return;
+  
+  if (photoUrl) {
+    // Remove placeholder, show image
+    placeholder.style.display = 'none';
+    let img = wrap.querySelector('img.profile-hero-banner');
+    if (!img) {
+      img = document.createElement('img');
+      img.className = 'profile-hero-banner';
+      img.style.cssText = 'width:100%;height:220px;object-fit:cover;display:block;';
+      wrap.appendChild(img);
+    }
+    img.src = photoUrl;
+    img.style.display = 'block';
+    if (isDefault) profileDefaultPhoto = photoUrl;
+  } else {
+    // Show placeholder
+    if (placeholder) placeholder.style.display = 'flex';
+    const img = wrap.querySelector('img.profile-hero-banner');
+    if (img) img.style.display = 'none';
+    if (isDefault) profileDefaultPhoto = null;
+  }
+}
+
+function loadProfileThumbs(stand, ownerData) {
+  const strip = document.getElementById('ph-thumb-strip');
+  if (!strip) return;
+  strip.innerHTML = '';
+
+  // Banner = profile photo (or gradient if none)
+  const mainPhoto = ownerData?.photo || stand?.photo || null;
+  setProfileBanner(mainPhoto, true);
+
+  // Update placeholder emoji
+  const placeholder = document.getElementById('ph-banner-placeholder');
+  if (placeholder) placeholder.textContent = stand?.emoji || '🌾';
+
+  // Thumbnails = GALLERY photos only (not the profile photo)
+  if (ownerData?.id) {
+    sb.from('gallery_photos')
+      .select('url')
+      .eq('owner_id', ownerData.id)
+      .order('created_at')
+      .limit(10)
+      .then(({ data: galleryPhotos }) => {
+        if (galleryPhotos?.length) {
+          renderThumbs(galleryPhotos.map(p => ({ url: p.url })), strip, stand, mainPhoto);
+        } else {
+          strip.classList.remove('has-photos');
+        }
+      })
+      .catch(() => { strip.classList.remove('has-photos'); });
+  } else {
+    strip.classList.remove('has-photos');
+  }
+}
+
+function renderThumbs(galleryPhotos, strip, stand, profilePhoto) {
+  strip.classList.add('has-photos');
+  strip.innerHTML = '';
+
+  // First thumb = profile photo (goes back to default banner)
+  if (profilePhoto) {
+    const mainThumb = document.createElement('div');
+    mainThumb.className = 'profile-thumb active';
+    mainThumb.title = 'Profile photo';
+    mainThumb.innerHTML = `<img src="${profilePhoto}" onerror="this.parentElement.innerHTML='<div class=\"profile-thumb-placeholder\">${stand?.emoji||'🌾'}</div>'">`;
+    mainThumb.onclick = () => {
+      setProfileBanner(profilePhoto, false);
+      strip.querySelectorAll('.profile-thumb').forEach(t => t.classList.remove('active'));
+      mainThumb.classList.add('active');
+    };
+    strip.appendChild(mainThumb);
+  }
+
+  // Gallery photo thumbnails
+  galleryPhotos.forEach((photo, i) => {
+    const thumb = document.createElement('div');
+    thumb.className = 'profile-thumb';
+    thumb.innerHTML = `<img src="${photo.url}" onerror="this.parentElement.innerHTML='<div class=\"profile-thumb-placeholder\">${stand?.emoji||'🌾'}</div>'">`;
+    thumb.onclick = () => {
+      setProfileBanner(photo.url, false);
+      strip.querySelectorAll('.profile-thumb').forEach(t => t.classList.remove('active'));
+      thumb.classList.add('active');
+    };
+    strip.appendChild(thumb);
+  });
+}
+
+// Banner reset handled in closeProfileDirect above
 // ===================== TOAST =====================
 function showToast(msg) {
   const t = document.getElementById('toast');
