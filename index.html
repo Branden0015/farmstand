@@ -4132,8 +4132,8 @@ function createMarker(s) {
       // Where the popup center currently is on screen
       const popupCenterY = rect.top - mapRect.top + rect.height / 2;
 
-      // Where we want it: true middle of the full map height, ignoring top bars
-      const targetCenterY = mapRect.height / 2;
+      // Where we want it: slightly above center (1/8 up from middle)
+      const targetCenterY = mapRect.height / 2 - mapRect.height / 8;
 
       const panY = popupCenterY - targetCenterY;
       if (Math.abs(panY) > 5) {
