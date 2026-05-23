@@ -4122,7 +4122,6 @@ function createMarker(s) {
       const isMob = window.innerWidth <= 768;
       const topClearance = isMob ? 145 : 30;
 
-      // Use the actual popup DOM element for real coordinates
       const popupEl = document.querySelector('.leaflet-popup');
       if (!popupEl) return;
 
@@ -4130,11 +4129,11 @@ function createMarker(s) {
       const mapEl = document.getElementById('map');
       const mapRect = mapEl.getBoundingClientRect();
 
-      // Current popup center relative to map
+      // Where the popup center currently is on screen
       const popupCenterY = rect.top - mapRect.top + rect.height / 2;
 
-      // Target: center of visible map area below the top bars
-      const targetCenterY = topClearance + (mapRect.height - topClearance) / 2;
+      // Where we want it: true middle of the full map height, ignoring top bars
+      const targetCenterY = mapRect.height / 2;
 
       const panY = popupCenterY - targetCenterY;
       if (Math.abs(panY) > 5) {
