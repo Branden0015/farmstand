@@ -4117,26 +4117,30 @@ function createMarker(s) {
   marker.bindPopup(buildPopupHTML(s), POPUP_OPTIONS);
   marker.on('click', () => {
     selectStand(s.id);
-    // Pan so the popup is centered in the visible area below the top UI bars
     setTimeout(() => {
       if (marker.isPopupOpen()) {
         const isMob = window.innerWidth <= 768;
-        const topClearance = isMob ? 140 : 30; // height of search + filter bars
+        const topClearance = isMob ? 140 : 30; // search bar + filter strip
         const popupHeight = isMob ? 310 : 290;
+        const pinIconHeight = 50; // approx height of the custom map pin icon
+        const popupOffset = 10; // matches POPUP_OPTIONS offset
+
         const mapHeight = mainMap.getSize().y;
         const px = mainMap.latLngToContainerPoint(marker.getLatLng());
 
-        // Available vertical space below the top bars
-        const availableHeight = mapHeight - topClearance;
-        // We want the popup centered in that available space
-        // Popup sits above the pin, so target pin Y = topClearance + availableHeight/2 + popupHeight/2
-        const targetPinY = topClearance + (availableHeight / 2) + (popupHeight / 2);
-        const panY = px.y - targetPinY;
-        if (Math.abs(panY) > 10) {
+        // Popup top edge is at: pinY - pinIconHeight - popupOffset - popupHeight
+        // Popup center is at:   pinY - pinIconHeight - popupOffset - popupHeight/2
+        const popupCenterY = px.y - pinIconHeight - popupOffset - (popupHeight / 2);
+
+        // We want popup center at the center of the available visible area
+        const targetCenterY = topClearance + (mapHeight - topClearance) / 2;
+
+        const panY = popupCenterY - targetCenterY;
+        if (Math.abs(panY) > 5) {
           mainMap.panBy([0, panY], { animate: true, duration: 0.35 });
         }
       }
-    }, 100);
+    }, 150);
   });
   return marker;
 }
