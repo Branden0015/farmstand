@@ -4119,23 +4119,19 @@ function createMarker(s) {
     selectStand(s.id);
 
     const isMob = window.innerWidth <= 768;
-    const topClearance = isMob ? 145 : 30;
-    const popupHeight = 290; // actual rendered popup height (hero 120 + body ~170)
+    const topClearance = isMob ? 60 : 30;
+    const popupHeight = 290;
     const pinIconHeight = isMob ? 56 : 50;
 
     const mapEl = document.getElementById('map');
     const mapH = mapEl.offsetHeight;
 
-    // Where we want the popup center to appear on screen
     const targetPopupCenterY = topClearance + (mapH - topClearance) / 2;
-
-    // Popup center is above the pin by: pinIconHeight + popupHeight/2
-    // So we want the pin to be at:
     const targetPinY = targetPopupCenterY + pinIconHeight + popupHeight / 2;
-
-    // Current pin position
     const px = mainMap.latLngToContainerPoint(marker.getLatLng());
     const panY = px.y - targetPinY;
+
+    console.log('DEBUG centering:', {isMob, mapH, topClearance, targetPopupCenterY, targetPinY, pinY: px.y, panY});
 
     if (Math.abs(panY) > 5) {
       mainMap.panBy([0, panY], { animate: false });
