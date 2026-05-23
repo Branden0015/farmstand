@@ -4118,29 +4118,29 @@ function createMarker(s) {
   marker.on('click', () => {
     selectStand(s.id);
     setTimeout(() => {
-      if (marker.isPopupOpen()) {
-        const isMob = window.innerWidth <= 768;
-        const topClearance = isMob ? 140 : 30; // search bar + filter strip
-        const popupHeight = isMob ? 310 : 290;
-        const pinIconHeight = 50; // approx height of the custom map pin icon
-        const popupOffset = 10; // matches POPUP_OPTIONS offset
+      if (!marker.isPopupOpen()) return;
+      const isMob = window.innerWidth <= 768;
+      const topClearance = isMob ? 145 : 30;
 
-        const mapHeight = mainMap.getSize().y;
-        const px = mainMap.latLngToContainerPoint(marker.getLatLng());
+      // Use the actual popup DOM element for real coordinates
+      const popupEl = document.querySelector('.leaflet-popup');
+      if (!popupEl) return;
 
-        // Popup top edge is at: pinY - pinIconHeight - popupOffset - popupHeight
-        // Popup center is at:   pinY - pinIconHeight - popupOffset - popupHeight/2
-        const popupCenterY = px.y - pinIconHeight - popupOffset - (popupHeight / 2);
+      const rect = popupEl.getBoundingClientRect();
+      const mapEl = document.getElementById('map');
+      const mapRect = mapEl.getBoundingClientRect();
 
-        // We want popup center at the center of the available visible area
-        const targetCenterY = topClearance + (mapHeight - topClearance) / 2;
+      // Current popup center relative to map
+      const popupCenterY = rect.top - mapRect.top + rect.height / 2;
 
-        const panY = popupCenterY - targetCenterY;
-        if (Math.abs(panY) > 5) {
-          mainMap.panBy([0, panY], { animate: true, duration: 0.35 });
-        }
+      // Target: center of visible map area below the top bars
+      const targetCenterY = topClearance + (mapRect.height - topClearance) / 2;
+
+      const panY = popupCenterY - targetCenterY;
+      if (Math.abs(panY) > 5) {
+        mainMap.panBy([0, panY], { animate: true, duration: 0.35 });
       }
-    }, 150);
+    }, 200);
   });
   return marker;
 }
