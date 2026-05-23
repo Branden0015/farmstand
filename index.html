@@ -4106,7 +4106,7 @@ const POPUP_OPTIONS = {
   minWidth: 290,
   autoClose: false,
   closeOnClick: false,
-  // Offset popup upward from pin so it clears the pin icon
+  autoPan: false,
   offset: [0, -10]
 };
 
@@ -4117,29 +4117,29 @@ function createMarker(s) {
   marker.bindPopup(buildPopupHTML(s), POPUP_OPTIONS);
   marker.on('click', () => {
     selectStand(s.id);
-    setTimeout(() => {
-      if (!marker.isPopupOpen()) return;
-      const isMob = window.innerWidth <= 768;
-      const topClearance = isMob ? 145 : 30;
 
-      const popupEl = document.querySelector('.leaflet-popup');
-      if (!popupEl) return;
+    const isMob = window.innerWidth <= 768;
+    const topClearance = isMob ? 145 : 30;
+    const popupHeight = 290; // actual rendered popup height (hero 120 + body ~170)
+    const pinIconHeight = isMob ? 56 : 50;
 
-      const rect = popupEl.getBoundingClientRect();
-      const mapEl = document.getElementById('map');
-      const mapRect = mapEl.getBoundingClientRect();
+    const mapEl = document.getElementById('map');
+    const mapH = mapEl.offsetHeight;
 
-      // Where the popup center currently is on screen
-      const popupCenterY = rect.top - mapRect.top + rect.height / 2;
+    // Where we want the popup center to appear on screen
+    const targetPopupCenterY = topClearance + (mapH - topClearance) / 2;
 
-      // Where we want it: slightly above center (1/8 up from middle)
-      const targetCenterY = mapRect.height / 2 - mapRect.height / 8;
+    // Popup center is above the pin by: pinIconHeight + popupHeight/2
+    // So we want the pin to be at:
+    const targetPinY = targetPopupCenterY + pinIconHeight + popupHeight / 2;
 
-      const panY = popupCenterY - targetCenterY;
-      if (Math.abs(panY) > 5) {
-        mainMap.panBy([0, panY], { animate: true, duration: 0.35 });
-      }
-    }, 200);
+    // Current pin position
+    const px = mainMap.latLngToContainerPoint(marker.getLatLng());
+    const panY = px.y - targetPinY;
+
+    if (Math.abs(panY) > 5) {
+      mainMap.panBy([0, panY], { animate: false });
+    }
   });
   return marker;
 }
