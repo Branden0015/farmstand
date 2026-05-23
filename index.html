@@ -4117,22 +4117,23 @@ function createMarker(s) {
   marker.bindPopup(buildPopupHTML(s), POPUP_OPTIONS);
   marker.on('click', () => {
     selectStand(s.id);
-    // Pan map to ensure popup is fully visible below the floating search bar
+    // Pan so the popup is centered in the visible area below the top UI bars
     setTimeout(() => {
       if (marker.isPopupOpen()) {
         const isMob = window.innerWidth <= 768;
-        // Mobile: search bar(50) + filter strip(44) + some buffer = 130px
-        // Desktop: just a small buffer
-        const topClearance = isMob ? 140 : 30;
-        // Popup is roughly 300px tall, pin is at marker position
-        // We want: pin position on screen > topClearance + popupHeight
-        const popupHeight = isMob ? 320 : 300;
+        const topClearance = isMob ? 140 : 30; // height of search + filter bars
+        const popupHeight = isMob ? 310 : 290;
+        const mapHeight = mainMap.getSize().y;
         const px = mainMap.latLngToContainerPoint(marker.getLatLng());
-        const neededY = topClearance + popupHeight;
-        if (px.y < neededY) {
-          // Pan down by however much we need
-          const panAmount = neededY - px.y;
-          mainMap.panBy([0, -panAmount], { animate: true, duration: 0.3 });
+
+        // Available vertical space below the top bars
+        const availableHeight = mapHeight - topClearance;
+        // We want the popup centered in that available space
+        // Popup sits above the pin, so target pin Y = topClearance + availableHeight/2 + popupHeight/2
+        const targetPinY = topClearance + (availableHeight / 2) + (popupHeight / 2);
+        const panY = px.y - targetPinY;
+        if (Math.abs(panY) > 10) {
+          mainMap.panBy([0, panY], { animate: true, duration: 0.35 });
         }
       }
     }, 100);
