@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <!-- Cache policy: versioned deployments handle cache busting -->
-<meta name="version" content="v29.1-1779594537">
+<meta name="version" content="v29.0-1779489508">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -288,32 +288,73 @@ body { font-family: 'Outfit', sans-serif; background: var(--cream); color: var(-
 .locate-btn:hover { background: var(--green); color: white; }
 
 /* Popup */
-.leaflet-popup-content-wrapper { border-radius: 14px !important; box-shadow: var(--shadow) !important; padding: 0 !important; overflow: hidden; border: 1px solid var(--border); }
-.leaflet-popup-content { margin: 0 !important; width: 290px !important; }
+.leaflet-popup-content-wrapper { border-radius: 18px !important; box-shadow: 0 8px 40px rgba(42,31,22,0.18) !important; padding: 0 !important; overflow: hidden; border: none !important; }
+.leaflet-popup-content { margin: 0 !important; width: 300px !important; }
 .leaflet-popup-tip-container { display: none; }
-.pop-head { background: linear-gradient(135deg, #1a3d26 0%, #2d5a3d 100%); padding: 14px 14px 12px; display: flex; gap: 11px; align-items: center; cursor: pointer; transition: all 0.2s; }
-.pop-head:hover { background: var(--green2); }
-.pop-head-hint { font-size: 10px; color: rgba(255,255,255,0.65); margin-top: 2px; display: flex; align-items: center; gap: 3px; font-family: "Outfit", sans-serif; letter-spacing: 0.02em; }
-.pop-avi { width: 44px; height: 44px; border-radius: 9px; background: rgba(255,255,255,0.15); font-size: 26px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; border: 2px solid rgba(255,255,255,0.25); overflow: hidden; }
-.pop-name { font-family: 'Fraunces', serif; font-size: 17px; font-weight: 600; color: white; line-height: 1.2; letter-spacing: -0.02em; }
-.pop-meta { font-size: 11px; color: rgba(255,255,255,0.75); margin-top: 2px; font-family: "Outfit", sans-serif; font-weight: 400; letter-spacing: 0.01em; }
+
+/* Popup hero image area */
+.pop-hero {
+  position: relative;
+  width: 100%;
+  height: 120px;
+  overflow: hidden;
+  cursor: pointer;
+  background: linear-gradient(135deg, #1a3d26 0%, #2d5a3d 100%);
+}
+.pop-hero img {
+  width: 100%; height: 100%; object-fit: cover; display: block;
+  transition: transform 0.3s ease;
+}
+.pop-hero:hover img { transform: scale(1.03); }
+.pop-hero-overlay {
+  position: absolute; inset: 0;
+  background: linear-gradient(to top, rgba(15,35,22,0.88) 0%, rgba(15,35,22,0.2) 50%, transparent 100%);
+}
+.pop-hero-emoji {
+  position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+  font-size: 48px;
+}
+.pop-hero-info {
+  position: absolute; bottom: 0; left: 0; right: 0; padding: 10px 14px;
+}
+.pop-name { font-family: 'Fraunces', serif; font-size: 18px; font-weight: 600; color: white; line-height: 1.15; letter-spacing: -0.02em; margin-bottom: 3px; }
+.pop-meta { font-size: 11px; color: rgba(255,255,255,0.82); font-family: "Outfit", sans-serif; font-weight: 400; display: flex; align-items: center; gap: 5px; }
+.pop-status-dot { width: 7px; height: 7px; border-radius: 50%; display: inline-block; flex-shrink: 0; }
+.pop-status-dot.open { background: #4ade80; }
+.pop-status-dot.closed { background: #f87171; }
+.pop-view-hint {
+  position: absolute; top: 10px; right: 10px;
+  background: rgba(255,255,255,0.15); backdrop-filter: blur(8px);
+  border: 1px solid rgba(255,255,255,0.25); border-radius: 20px;
+  padding: 4px 10px; font-size: 10px; font-weight: 600;
+  color: white; font-family: 'Outfit', sans-serif; letter-spacing: 0.03em;
+}
+.pop-featured-badge {
+  position: absolute; top: 10px; left: 10px;
+  background: linear-gradient(135deg,#f0b429,#e8924a);
+  border-radius: 20px; padding: 3px 10px;
+  font-size: 10px; font-weight: 700; color: white; letter-spacing: 0.06em;
+  box-shadow: 0 2px 8px rgba(240,180,41,0.4); font-family:'DM Sans',sans-serif;
+}
+
 .pop-body { 
-  padding: 14px 16px; 
+  padding: 12px 14px 14px; 
   background: #fdf8f0;
-  border-radius: 0 0 16px 16px;
 }
 .pop-desc { font-size: 12px; color: var(--text2); line-height: 1.6; margin-bottom: 10px; font-style: italic; font-family: "Fraunces", serif; opacity: 0.9; }
-.pop-prods { display: flex; gap: 4px; flex-wrap: wrap; margin-bottom: 9px; }
-.pop-prod { font-size: 11px; padding: 2px 7px; background: var(--orange3); color: var(--orange); border-radius: 9px; font-weight: 500; }
-.pop-acts { display: flex; gap: 5px; }
-.pbtn { flex: 1; padding: 8px 4px; border-radius: 0; font-size: 11px; font-weight: 600; cursor: pointer; font-family: 'Outfit', sans-serif; border: none; transition: all 0.2s; text-align: center; letter-spacing: 0.02em; }
-.pbtn-dir { background: linear-gradient(135deg, #1e4a2e, #2d5a3d); color: white; box-shadow: 0 3px 10px rgba(30,74,46,0.3); }
-.pbtn-dir:hover { transform: translateY(-1px); box-shadow: 0 5px 14px rgba(30,74,46,0.35); }
-.pbtn-fav { background: linear-gradient(135deg, #f0a05a, #c96a2a); color: white; box-shadow: 0 3px 10px rgba(201,106,42,0.28); border: none; }
-.pbtn-fav:hover { transform: translateY(-1px); }
-.pbtn-stop { background: linear-gradient(135deg, #4a8c61, #2d5a3d); color: white; border: none; box-shadow: 0 3px 10px rgba(45,90,61,0.25); }
-.pbtn-stop:hover { transform: translateY(-1px); }
-.pbtn-stop.added { background: linear-gradient(135deg, #1e4a2e, #163d24); }
+.pop-prods { display: flex; gap: 5px; flex-wrap: wrap; margin-bottom: 12px; }
+.pop-prod { font-size: 11px; padding: 3px 9px; background: white; color: var(--text2); border-radius: 20px; font-weight: 500; border: 1px solid var(--border); }
+.pop-acts { display: flex; gap: 7px; }
+.pbtn { flex: 1; padding: 9px 6px; border-radius: 10px; font-size: 12px; font-weight: 600; cursor: pointer; font-family: 'Outfit', sans-serif; border: none; transition: all 0.18s; text-align: center; letter-spacing: 0.01em; display: flex; align-items: center; justify-content: center; gap: 5px; }
+.pbtn svg { width: 14px; height: 14px; flex-shrink: 0; }
+.pbtn-dir { background: var(--green); color: white; }
+.pbtn-dir:hover { background: var(--green2); transform: translateY(-1px); }
+.pbtn-fav { background: var(--orange3); color: var(--orange); border: 1px solid rgba(184,92,32,0.2); }
+.pbtn-fav:hover { background: #f8d5b0; transform: translateY(-1px); }
+.pbtn-fav.saved { background: linear-gradient(135deg, #f0a05a, #c96a2a); color: white; border: none; }
+.pbtn-stop { background: var(--green4); color: var(--green); border: 1px solid rgba(30,74,46,0.2); }
+.pbtn-stop:hover { background: var(--green3); transform: translateY(-1px); }
+.pbtn-stop.added { background: var(--green); color: white; border: none; }
 
 /* ===================== DASHBOARD ===================== */
 #screen-dashboard { flex-direction: column; overflow: hidden; position: fixed; inset: 0; z-index: 500; }
@@ -588,22 +629,21 @@ body { font-family: 'Outfit', sans-serif; background: var(--cream); color: var(-
   overflow-x: hidden;
   flex-shrink: 0;
   width: 100%;
-  box-shadow: 0 1px 0 var(--cream2);
+  box-shadow: 0 2px 8px rgba(42,31,22,0.04);
 }
 .profile-tab {
-  flex: 1; min-width: 0; padding: 11px 4px;
+  flex: 1; min-width: 0; padding: 13px 4px;
   border: none; background: none;
-  font-family: 'Outfit', sans-serif; font-size: 10px; font-weight: 600;
+  font-family: 'Outfit', sans-serif; font-size: 11px; font-weight: 600;
   color: var(--text3); cursor: pointer;
-  border-bottom: 3px solid transparent;
-  transition: all 0.2s; white-space: nowrap;
-  letter-spacing: 0.05em; text-transform: uppercase;
-  margin-bottom: -2px;
-  display: flex; flex-direction: row; align-items: center; justify-content: center; gap: 5px;
+  border-bottom: 2px solid transparent;
+  transition: all 0.18s; white-space: nowrap;
+  letter-spacing: 0.04em; text-transform: uppercase;
+  margin-bottom: -1px;
   display: flex; align-items: center; justify-content: center; gap: 4px;
 }
-.profile-tab:hover { color: var(--green2); }
-.profile-tab.active { color: var(--green); border-bottom-color: var(--green); font-weight: 700; }
+.profile-tab:hover { color: var(--green2); background: var(--green4); }
+.profile-tab.active { color: var(--green); border-bottom-color: var(--green); font-weight: 700; background: none; }
 
 /* Body — this is the ONLY thing that scrolls */
 .profile-body { flex: 1; overflow-y: auto; overflow-x: hidden; -webkit-overflow-scrolling: touch; min-height: 0; }
@@ -615,19 +655,20 @@ body { font-family: 'Outfit', sans-serif; background: var(--cream); color: var(-
 .profile-menu-cat:first-child { margin-top: 0; }
 .profile-menu-item {
   display: flex; align-items: center; justify-content: space-between;
-  padding: 10px 12px; background: white; border-radius: 9px;
-  border: 1px solid var(--border); margin-bottom: 5px;
-  transition: border-color 0.15s;
+  padding: 12px 14px; background: white; border-radius: 12px;
+  border: 1px solid var(--border); margin-bottom: 6px;
+  transition: border-color 0.15s, box-shadow 0.15s;
+  box-shadow: 0 1px 4px rgba(42,31,22,0.05);
 }
-.profile-menu-item:hover { border-color: var(--green2); }
+.profile-menu-item:hover { border-color: var(--green2); box-shadow: 0 3px 12px rgba(30,74,46,0.1); }
 .profile-menu-left { flex: 1; }
-.profile-menu-name { font-size: 14px; font-weight: 500; color: var(--text); margin-bottom: 2px; }
+.profile-menu-name { font-size: 14px; font-weight: 600; color: var(--text); margin-bottom: 2px; }
 .profile-menu-desc { font-size: 12px; color: var(--text3); }
-.profile-menu-right { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
-.profile-menu-price { font-size: 15px; font-weight: 700; color: var(--green); }
-.profile-menu-stock { font-size: 11px; font-weight: 600; padding: 2px 7px; border-radius: 4px; }
-.stock-y { background: var(--green3); color: var(--green); }
-.stock-n { background: var(--red2); color: var(--red); }
+.profile-menu-right { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+.profile-menu-price { font-size: 16px; font-weight: 700; color: var(--green); }
+.profile-menu-stock { font-size: 11px; font-weight: 600; padding: 3px 9px; border-radius: 20px; letter-spacing: 0.02em; }
+.stock-y { background: var(--green4); color: var(--green); border: 1px solid rgba(30,74,46,0.15); }
+.stock-n { background: var(--red2); color: var(--red); border: 1px solid rgba(184,60,42,0.15); }
 
 /* News feed */
 .news-post {
@@ -657,25 +698,27 @@ body { font-family: 'Outfit', sans-serif; background: var(--cream); color: var(-
 .info-icon { font-size: 18px; flex-shrink: 0; width: 24px; text-align: center; margin-top: 1px; }
 .info-label { font-size: 11px; font-weight: 600; color: var(--text3); text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 2px; }
 .info-val { font-size: 13px; color: var(--text); }
-.hours-table { width: 100%; font-size: 13px; }
-.hours-table td { padding: 2px 0; }
+.hours-table { width: 100%; font-size: 13px; border-collapse: separate; border-spacing: 0 2px; }
+.hours-table td { padding: 4px 0; }
 .hours-table td:first-child { color: var(--text2); font-weight: 500; width: 90px; }
+.hours-table tr.today td { color: var(--green); font-weight: 700; }
+.hours-table tr.today td:first-child { color: var(--green); }
 
 /* Profile action buttons bar */
 .profile-action-bar {
-  display: flex; gap: 10px; padding: 12px 18px;
+  display: flex; gap: 10px; padding: 14px 18px;
   background: white; border-top: 1px solid var(--cream2); flex-shrink: 0;
 }
 .pab-btn {
-  flex: 1; padding: 10px 8px; border-radius: 0; border: none;
-  font-family: 'Outfit', sans-serif; font-size: 13px; font-weight: 600;
-  cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 6px;
+  flex: 1; padding: 13px 8px; border-radius: 12px; border: none;
+  font-family: 'Outfit', sans-serif; font-size: 13px; font-weight: 700;
+  cursor: pointer; transition: all 0.18s; display: flex; align-items: center; justify-content: center; gap: 6px;
   letter-spacing: 0.02em;
 }
-.pab-dir { background: linear-gradient(135deg, #1e4a2e, #2d5a3d); color: white; box-shadow: 0 4px 14px rgba(30,74,46,0.3); flex: 1.2; border-radius: 0; }
-.pab-dir:hover { transform: translateY(-1px); box-shadow: 0 6px 18px rgba(30,74,46,0.35); }
-.pab-fav { border-radius: 0; background: linear-gradient(135deg, #f0a05a, #c96a2a); color: white; box-shadow: 0 4px 14px rgba(201,106,42,0.28); border: none; }
-.pab-fav:hover { transform: translateY(-1px); box-shadow: 0 6px 18px rgba(201,106,42,0.35); }
+.pab-dir { background: var(--green); color: white; flex: 1.2; }
+.pab-dir:hover { background: var(--green2); transform: translateY(-1px); box-shadow: 0 4px 16px rgba(30,74,46,0.25); }
+.pab-fav { background: linear-gradient(135deg, #f0a05a, #c96a2a); color: white; border: none; }
+.pab-fav:hover { transform: translateY(-1px); box-shadow: 0 4px 16px rgba(201,106,42,0.3); }
 .pab-fav.saved { background: linear-gradient(135deg, #c96a2a, #a85520); }
 
 /* Owner news post composer in dashboard */
@@ -1367,25 +1410,27 @@ body { font-family: 'Outfit', sans-serif; background: var(--cream); color: var(-
 }
 .mobile-list-card {
   background: white;
-  border-radius: 14px;
+  border-radius: 16px;
   border: 1px solid var(--border);
   overflow: hidden;
   cursor: pointer;
-  box-shadow: 0 1px 6px rgba(42,31,22,0.06);
+  box-shadow: 0 2px 12px rgba(42,31,22,0.08);
   display: flex;
   flex-direction: row;
-  height: 100px;
+  height: 112px;
   flex-shrink: 0;
+  transition: box-shadow 0.18s, transform 0.18s;
 }
+.mobile-list-card:hover { box-shadow: 0 6px 24px rgba(42,31,22,0.13); transform: translateY(-1px); }
 .mobile-list-card-img {
-  width: 100px;
-  height: 100px;
-  min-width: 100px;
+  width: 112px;
+  height: 112px;
+  min-width: 112px;
   background: var(--green3);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 48px;
+  font-size: 52px;
   position: relative;
   flex-shrink: 0;
 }
@@ -1395,35 +1440,43 @@ body { font-family: 'Outfit', sans-serif; background: var(--cream); color: var(-
 }
 .mobile-list-card-status {
   position: absolute;
-  bottom: 6px; left: 6px;
-  padding: 2px 8px;
-  border-radius: 10px;
+  bottom: 7px; left: 7px;
+  padding: 3px 9px;
+  border-radius: 20px;
   font-size: 10px;
   font-weight: 700;
   font-family: 'DM Sans', sans-serif;
+  letter-spacing: 0.03em;
 }
 .mobile-list-card-status.open { background: var(--green); color: white; }
-.mobile-list-card-status.closed { background: rgba(0,0,0,0.5); color: white; }
-.mobile-list-card-body { padding: 10px 14px; flex: 1; display: flex; flex-direction: column; justify-content: center; min-width: 0; overflow: hidden; }
+.mobile-list-card-status.closed { background: rgba(0,0,0,0.55); color: white; }
+.mobile-list-card-body { padding: 12px 14px; flex: 1; display: flex; flex-direction: column; justify-content: center; min-width: 0; overflow: hidden; gap: 3px; }
+.mobile-list-card-name-row { display: flex; align-items: center; gap: 7px; margin-bottom: 1px; }
 .mobile-list-card-name {
-  font-family: 'Playfair Display', serif;
-  font-size: 14px; font-weight: 700;
-  color: var(--text); margin-bottom: 2px;
+  font-family: 'Fraunces', serif;
+  font-size: 15px; font-weight: 600;
+  color: var(--text);
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
+.mobile-list-card-status-inline {
+  font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 20px; flex-shrink: 0; letter-spacing: 0.03em;
+}
+.mobile-list-card-status-inline.open { background: var(--green4); color: var(--green); }
+.mobile-list-card-status-inline.closed { background: var(--red2); color: var(--red); }
 .mobile-list-card-dist {
   font-size: 12px; color: var(--text3);
-  margin-bottom: 8px;
+  margin-bottom: 6px; display: flex; align-items: center; gap: 4px;
 }
 .mobile-list-card-tags {
   display: flex; gap: 5px; flex-wrap: wrap;
 }
 .mobile-list-card-tag {
   font-size: 11px; font-weight: 500;
-  padding: 2px 8px;
-  border-radius: 8px;
+  padding: 3px 9px;
+  border-radius: 20px;
   background: var(--cream2);
   color: var(--text2);
+  border: 1px solid var(--border);
 }
 
 @media (max-width: 768px) {
@@ -1759,19 +1812,7 @@ input, select, textarea {
   pointer-events: none;
 }
 
-/* Warmer popup container */
-.leaflet-popup-content-wrapper {
-  border-radius: 0 !important;
-  overflow: hidden !important;
-  box-shadow: 0 12px 40px rgba(20,40,25,0.2) !important;
-  border: none !important;
-  padding: 0 !important;
-}
-.leaflet-popup-content {
-  margin: 0 !important;
-  width: 240px !important;
-}
-.leaflet-popup-tip-container { display: none !important; }
+/* Popup override removed - handled in main popup styles */
 
 /* Warmer profile tabs */
 .profile-tabs {
@@ -2496,7 +2537,7 @@ input, select, textarea {
             <div><div class="featured-price-per">/month</div><div class="featured-price-note">or $89/year — save 2 months</div></div>
           </div>
           <div style="font-size:13px;opacity:0.75;margin-bottom:14px">Cancel anytime. No contracts.</div>
-          <button class="featured-btn" onclick="goToStripe()">⭐ Upgrade to Grow — $9/mo</button>
+          <button class="featured-btn" onclick="showOwnerUpgrade()">⭐ Start FarmStand Grow — Coming Soon</button>
         </div>
       </div>
 
@@ -2774,7 +2815,10 @@ input, select, textarea {
     </div>
 
     <div class="profile-action-bar">
-      <button class="pab-btn pab-dir" id="pab-dir" onclick="getDir(currentProfileId)">🗺 Directions</button>
+      <button class="pab-btn pab-dir" id="pab-dir" onclick="getDir(currentProfileId)">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-1.447-.894L15 9m0 8V9m0 0L9 7"/></svg>
+        Directions
+      </button>
       <button class="pab-btn pab-fav" id="pab-fav" onclick="toggleFav(currentProfileId);updateProfileFavBtn()"></button>
     </div>
   </div>
@@ -2825,7 +2869,7 @@ input, select, textarea {
       <div class="upgrade-feature"><span class="upgrade-feature-check">✓</span><span><strong>Save unlimited lists</strong> — weekly grocery runs made easy</span></div>
       <div class="upgrade-feature"><span class="upgrade-feature-check">✓</span><span><strong>Priority support</strong> — direct line to the FarmStand team</span></div>
     </div>
-    <button class="upgrade-modal-btn" onclick="goToStripe()">⭐ Upgrade to Grow — $9/mo</button>
+    <button class="upgrade-modal-btn" onclick="activatePro()">⭐ Start Pro — Coming Soon</button>
     <div><button class="upgrade-modal-cancel" onclick="closeUpgradeModal()">Maybe later</button></div>
   </div>
 </div>
@@ -4018,29 +4062,41 @@ function renderSidebar(stands) {
 }
 
 function buildPopupHTML(s) {
+  const isOpen = s.hoursDetail ? getStandStatus(s.hoursDetail).isOpen : s.status==='open';
+  const statusLabel = s.hoursDetail ? getStandStatus(s.hoursDetail).label : (s.status==='open' ? 'Open' : 'Closed');
+  const dotClass = isOpen ? 'open' : 'closed';
+  const heroImg = s.photo ? `<img src="${s.photo}" alt="${s.name}">` : `<div class="pop-hero-emoji">${s.emoji}</div>`;
+  const featuredBadge = (s.isGrow||s.isPro) ? `<div class="pop-featured-badge">⭐ FEATURED</div>` : '';
   return `<div class="popup-inner">
-    <div class="pop-head" onclick="openProfile(${s.id})">
-      <div class="pop-avi">${s.photo ? '<img src="' + s.photo + '" style="width:100%;height:100%;object-fit:cover;border-radius:8px">' : s.emoji}</div>
-      <div style="flex:1">
+    <div class="pop-hero" onclick="openProfile(${s.id})">
+      ${heroImg}
+      <div class="pop-hero-overlay"></div>
+      ${featuredBadge}
+      <div class="pop-view-hint">View Profile →</div>
+      <div class="pop-hero-info">
         <div class="pop-name">${s.name}</div>
-        ${(s.isGrow||s.isPro) ? `<div style="display:inline-flex;align-items:center;gap:4px;background:linear-gradient(135deg,#f0b429,#e8924a);border-radius:20px;padding:4px 12px;margin-bottom:6px;font-size:10px;font-weight:700;color:white;letter-spacing:0.08em;box-shadow:0 2px 8px rgba(240,180,41,0.4);font-family:'DM Sans',sans-serif">⭐ FEATURED PROFILE</div>` : ''}
-    <div class="pop-meta">📍 ${s.dist} · ${(()=>{
-      if (s.hoursDetail) {
-        const st = getStandStatus(s.hoursDetail);
-        return st.label;
-      }
-      return s.status==='open' ? '🟢 Open' : '🔴 Closed';
-    })()}</div>
-        <div class="pop-head-hint">👆 Click to view full profile →</div>
+        <div class="pop-meta">
+          <span class="pop-status-dot ${dotClass}"></span>
+          ${s.dist} · ${statusLabel}
+        </div>
       </div>
     </div>
     <div class="pop-body">
       <div class="pop-desc">${s.desc}</div>
       <div class="pop-prods">${[...(s.cats||[]).slice(0,3), ...(s.customItems||[]).slice(0,2)].map(p=>'<span class="pop-prod">'+p.split(' ')[0]+'</span>').join('')}</div>
       <div class="pop-acts">
-        <button class="pbtn pbtn-dir" onclick="getDir(${s.id})">🗺 Directions</button>
-        <button class="pbtn pbtn-stop${manualStops.has(s.id)?' added':''}" id="popup-stop-${s.id}" onclick="toggleStop(${s.id})">${manualStops.has(s.id)?'📍 Added':'📍 Add Stop'}</button>
-        <button class="pbtn pbtn-fav" id="popup-fav-${s.id}" onclick="toggleFav(${s.id});updatePopupFavBtn(${s.id})">${favorites.has(s.id)?'❤️ Saved':'🤍 Save'}</button>
+        <button class="pbtn pbtn-dir" onclick="getDir(${s.id})">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-1.447-.894L15 9m0 8V9m0 0L9 7"/></svg>
+          Directions
+        </button>
+        <button class="pbtn pbtn-stop${manualStops.has(s.id)?' added':''}" id="popup-stop-${s.id}" onclick="toggleStop(${s.id})">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/><circle cx="12" cy="9" r="2.5" fill="currentColor" stroke="none"/></svg>
+          ${manualStops.has(s.id)?'Added':'Add Stop'}
+        </button>
+        <button class="pbtn pbtn-fav${favorites.has(s.id)?' saved':''}" id="popup-fav-${s.id}" onclick="toggleFav(${s.id});updatePopupFavBtn(${s.id})">
+          <svg viewBox="0 0 24 24" fill="${favorites.has(s.id)?'currentColor':'none'}" stroke="currentColor" stroke-width="2.5"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
+          ${favorites.has(s.id)?'Saved':'Save'}
+        </button>
       </div>
     </div></div>`;
 }
@@ -4050,7 +4106,7 @@ const POPUP_OPTIONS = {
   minWidth: 290,
   autoClose: false,
   closeOnClick: false,
-  // Offset popup upward from pin so it clears the pin icon
+  autoPan: false,
   offset: [0, -10]
 };
 
@@ -4061,25 +4117,25 @@ function createMarker(s) {
   marker.bindPopup(buildPopupHTML(s), POPUP_OPTIONS);
   marker.on('click', () => {
     selectStand(s.id);
-    // Pan map to ensure popup is fully visible below the floating search bar
-    setTimeout(() => {
-      if (marker.isPopupOpen()) {
-        const isMob = window.innerWidth <= 768;
-        // Mobile: search bar(50) + filter strip(44) + some buffer = 130px
-        // Desktop: just a small buffer
-        const topClearance = isMob ? 140 : 30;
-        // Popup is roughly 300px tall, pin is at marker position
-        // We want: pin position on screen > topClearance + popupHeight
-        const popupHeight = isMob ? 320 : 300;
-        const px = mainMap.latLngToContainerPoint(marker.getLatLng());
-        const neededY = topClearance + popupHeight;
-        if (px.y < neededY) {
-          // Pan down by however much we need
-          const panAmount = neededY - px.y;
-          mainMap.panBy([0, -panAmount], { animate: true, duration: 0.3 });
-        }
-      }
-    }, 100);
+
+    const isMob = window.innerWidth <= 768;
+    const topClearance = isMob ? 60 : 30;
+    const popupHeight = 290;
+    const pinIconHeight = isMob ? 56 : 50;
+
+    const mapEl = document.getElementById('map');
+    const mapH = mapEl.offsetHeight;
+
+    const targetPopupCenterY = topClearance + (mapH - topClearance) / 2;
+    const targetPinY = targetPopupCenterY + pinIconHeight + popupHeight / 2;
+    const px = mainMap.latLngToContainerPoint(marker.getLatLng());
+    const panY = px.y - targetPinY;
+
+    console.log('DEBUG centering:', {isMob, mapH, topClearance, targetPopupCenterY, targetPinY, pinY: px.y, panY});
+
+    if (Math.abs(panY) > 5) {
+      mainMap.panBy([0, panY], { animate: false });
+    }
   });
   return marker;
 }
@@ -5164,12 +5220,15 @@ async function renderProfileInfo(id) {
     let hoursHTML = '<div style="color:var(--text3);font-size:12px">Hours not listed</div>';
     if (hours) {
       const days = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
-      hoursHTML = `<table class="hours-table">${days.map(day => {
+      const todayIdx = (new Date().getDay() + 6) % 7; // Mon=0
+      hoursHTML = `<table class="hours-table">${days.map((day, i) => {
         const h = hours[day] || {};
+        const isToday = i === todayIdx;
+        const todayClass = isToday ? ' class="today"' : '';
         if (h.closed || (!h.open && !h.close)) {
-          return `<tr><td>${day.slice(0,3)}</td><td style="color:var(--text3)">Closed</td></tr>`;
+          return `<tr${todayClass}><td>${day.slice(0,3)}</td><td style="color:var(--text3)">Closed</td></tr>`;
         }
-        return `<tr><td>${day.slice(0,3)}</td><td>${formatTimeDisplay(h.open)} – ${formatTimeDisplay(h.close)}</td></tr>`;
+        return `<tr${todayClass}><td>${day.slice(0,3)}</td><td>${formatTimeDisplay(h.open)} – ${formatTimeDisplay(h.close)}</td></tr>`;
       }).join('')}</table>`;
     }
 
@@ -5187,7 +5246,9 @@ async function renderProfileInfo(id) {
 function updateProfileFavBtn() {
   const btn = document.getElementById('pab-fav');
   if (!btn || !currentProfileId) return;
-  btn.textContent = favorites.has(currentProfileId) ? '❤️ Saved' : '🤍 Save Stand';
+  btn.classList.toggle('saved', favorites.has(currentProfileId));
+  const isSaved = favorites.has(currentProfileId);
+  btn.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="${isSaved?'currentColor':'none'}" stroke="currentColor" stroke-width="2.5"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>${isSaved ? ' Saved' : ' Save Stand'}`;
 }
 
 // ===================== GROCERY LIST =====================
@@ -5485,16 +5546,9 @@ function closeUpgradeModal(e) {
   }
 }
 
-function goToStripe() {
-  const email = currentUser?.email || '';
-  const stripeUrl = 'https://buy.stripe.com/fZucN40sqajF8UL8Th9oc00' + 
-    (email ? '?prefilled_email=' + encodeURIComponent(email) : '');
-  window.open(stripeUrl, '_blank');
-  closeUpgradeModal();
-}
-
 function activatePro() {
-  goToStripe();
+  closeUpgradeModal();
+  showToast('🚀 FarmStand Pro launching soon — we\'ll notify you!');
 }
 
 // ===================== OWNER ANALYTICS =====================
@@ -6168,11 +6222,16 @@ function renderMobileListView() {
     <div class="mobile-list-card" onclick="openProfileFromList(${s.id})">
       <div class="mobile-list-card-img">
         ${s.photo ? `<img src="${s.photo}" alt="${s.name}">` : `<span>${s.emoji}</span>`}
-        <div class="mobile-list-card-status ${s.status}">${s.status === 'open' ? 'Open' : 'Closed'}</div>
       </div>
       <div class="mobile-list-card-body">
-        <div class="mobile-list-card-name">${s.name}</div>
-        <div class="mobile-list-card-dist">📍 ${s.dist || 'Nearby'} · <span style="color:${s.status==='open'?'var(--green)':'var(--text3)'}">${s.status === 'open' ? '🟢 Open' : '🔴 Closed'}</span></div>
+        <div class="mobile-list-card-name-row">
+          <div class="mobile-list-card-name">${s.name}</div>
+          <span class="mobile-list-card-status-inline ${s.status}">${s.status === 'open' ? 'Open' : 'Closed'}</span>
+        </div>
+        <div class="mobile-list-card-dist">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="var(--text3)" style="flex-shrink:0"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/></svg>
+          ${s.dist || 'Nearby'}
+        </div>
         <div class="mobile-list-card-tags">
           ${s.cats ? s.cats.slice(0,2).map(c => `<span class="mobile-list-card-tag">${c.split(' ')[0]}</span>`).join('') : s.products.slice(0,2).map(p => `<span class="mobile-list-card-tag">${p}</span>`).join('')}
         </div>
@@ -8115,21 +8174,6 @@ renderOwnerNewsList();
 
 // Check if returning from email verification link
 checkEmailVerificationOnLoad();
-
-// Handle return from Stripe payment
-function checkStripeReturn() {
-  const params = new URLSearchParams(window.location.search);
-  if (params.get('upgraded') === 'true') {
-    // Show success message
-    setTimeout(() => {
-      showToast('🎉 Welcome to FarmStand Grow! Your account will be activated shortly.');
-    }, 1000);
-    // Clean URL
-    window.history.replaceState({}, '', window.location.pathname);
-  }
-}
-checkStripeReturn();
-
 </script>
 </body>
 </html>
